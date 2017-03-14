@@ -1,2 +1,3 @@
 #old docker builds
 dockerOld/*
+tests/out/*
