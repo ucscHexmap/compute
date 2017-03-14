@@ -9,11 +9,9 @@ import webUtil
 from webUtil import SuccessResp, ErrorResp, log
 import placeNode_web
 
-class Config(object):
-    DEBUG = os.environ['HUB_DEBUG']
-    TESTING = os.environ['HUB_TESTING']
-
 app = Flask(__name__)
+app.config['TESTING'] = os.environ['HUB_TESTING']
+app.config['DEBUG'] = os.environ['HUB_DEBUG']
 
 # Make cross-origin AJAX possible
 CORS(app)

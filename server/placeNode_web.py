@@ -27,6 +27,9 @@ def validateParameters(data):
     if len(data['nodes'].keys()) < 1:
         raise ErrorResp('there are no nodes in the nodes dictionary')
     
+    # Check for non-printable chars in names
+    # TODO
+    
     # Basic checks on optional parameters
     validateEmail(data)
     validateViewServer(data)
@@ -183,6 +186,7 @@ def calcComplete(result, ctx, app):
 
     return result
 
+if __debug__:
 def calcTestStub(opts):
 
     #print 'opts.newNodes', opts.newNodes
@@ -267,10 +271,7 @@ def calc(dataIn, ctx, app):
     else:
 
         # Call the calc script.
-        try:
             result = placeNode_calc.entryPointFromWebApi(opts)
-        except:
-            raise ErrorResp(traceback.format_exc(), 500)
 
     ctx['dataIn'] = dataIn
     ctx['meta'] = meta
