@@ -9,7 +9,7 @@ rootDir = getRootDir()
 
 # These dirs should depend only on the above rootDir
 # using the repository directory structure starting at 'hexagram/'
-testDir = rootDir + 'tests/pyUnittest/'
+testDir = rootDir + 'compute/tests/'
 inDir = testDir + 'in/stats/'   # The input data
 expDir = testDir + 'exp/stats/' # The expected output data
 outDir = testDir + 'out/stats/' # The actual output data

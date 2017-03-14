@@ -13,7 +13,7 @@ import testUtil as util
 from rootDir import getRootDir
 
 rootDir = getRootDir()
-testDir = rootDir + 'tests/pyUnittest/'
+testDir = rootDir + 'compute/tests/'
 inDir = testDir + 'in/layout/'   # The input data
 outDirBase = testDir + 'out/layoutBasic'
 expDirBase = testDir + 'exp/layoutBasic'
