@@ -1,14 +1,15 @@
 ClusterData:
    class: File
-   path: /home/duncan/Desktop/TumorMap/TMdev/hexagram/hub/tests/data/layout.RPPA.tsv 
+   path: ../tests/in/layout/mcrchopra.data.tab
 
 XYpostions:
    class: File
-   path:  /home/duncan/data/view/Pancan12/SampleMap/xyPreSquiggle_2.tab
+   path:  ../tests/exp/layoutBasic/xyPreSquiggle_0.tab
 
 NewNodesData:
    class: File
-   path: /home/duncan/Desktop/TumorMap/TMdev/hexagram/hub/tests/data/newNodesRPPA.tab
+   path: ../tests/in/layout/mcrchopra.data.tab
+
 TopNeighbors: 6
    
 MapId: "CKCC/V3"
