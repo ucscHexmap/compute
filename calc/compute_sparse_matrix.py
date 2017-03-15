@@ -179,7 +179,7 @@ def common_rows(p1, p2,fractionReq=.5):
     p2rows = set(p2.index)
     rowsInCommon = p1rows.intersection(p2rows)
 
-    if len(rowsInCommon) < (fractionReq * max(len(p1rows),len(p2rows))):
+    if len(rowsInCommon) < (fractionReq * min(len(p1rows),len(p2rows))):
         raise ValueError, "Less than " + str(fractionReq * 100) + " %" \
                           " of features shared in row reduction operation."
 
