@@ -153,14 +153,16 @@ class Nof1CalcTestCase(unittest.TestCase):
         try:
             try:
                #percentage requirement is larger than available rows
-               compute_sparse_matrix.common_rows(pd.DataFrame([1,2,3]),
+               compute_sparse_matrix.common_rows(pd.DataFrame([1,2,3,10,11,45]),
                                                  pd.DataFrame([1,2,3,4,5,6]),
                                                  1.1)
             except ValueError:
 
                #percentage requirement is 50% when only 30% is available
-               compute_sparse_matrix.common_rows(pd.DataFrame([1,2]),
-                                                 pd.DataFrame([1,2,3,4,5,6]),
+               compute_sparse_matrix.common_rows(pd.DataFrame(index =[1,2,
+                                                                     10,86,111]),
+                                                 pd.DataFrame(index=[1,2,3,4,5,
+                                                                   6]),
                                                  )
         except ValueError:
            passed = True
