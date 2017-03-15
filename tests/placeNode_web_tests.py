@@ -1,4 +1,4 @@
-import os, json, tempfile, subprocess, requests
+import os, json, requests
 import unittest
 import testUtil
 import hub

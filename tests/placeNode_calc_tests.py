@@ -1,18 +1,12 @@
 import os
 import unittest
-import tempfile
-import json
 import pandas as pd
-import compute_sparse_matrix
-from rootDir import getRootDir
-import placeNode
 from placeNode_calc import *
 
-rootDir = getRootDir()
-testDir = rootDir + 'compute/tests/'
-inDir = testDir + 'in/layout/'
-inDirCalc = testDir + 'in/placeNode/'
-expDir = testDir + 'exp/layoutBasic/'
+testDir = os.getcwd()
+inDir = os.path.join(testDir, 'in/layout/')
+inDirCalc = os.path.join(testDir,'in/placeNode/')
+expDir = os.path.join(testDir,'exp/layoutBasic/')
 
 class Nof1CalcTestCase(unittest.TestCase):
 

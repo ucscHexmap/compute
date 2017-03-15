@@ -1,18 +1,13 @@
 #!/usr/bin/env python2.7
 
 
-import sys
+import os
 import unittest
-from rootDir import getRootDir
 
-rootDir = getRootDir()
-
-# These dirs should depend only on the above rootDir
-# using the repository directory structure starting at 'hexagram/'
-testDir = rootDir + 'compute/tests/'
-inDir = testDir + 'in/stats/'   # The input data
-expDir = testDir + 'exp/stats/' # The expected output data
-outDir = testDir + 'out/stats/' # The actual output data
+testDir = os.getcwd()
+inDir = os.path.join(testDir, 'in/stats/')   # The input data
+expDir = os.path.join(testDir, 'exp/stats/') # The expected output data
+outDir = os.path.join(testDir, 'out/stats/') # The actual output data
 
 import layout
 import testUtil as util

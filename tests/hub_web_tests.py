@@ -1,7 +1,5 @@
-import os
 import hub
 import unittest
-import tempfile
 
 class hubTestCase(unittest.TestCase):
 

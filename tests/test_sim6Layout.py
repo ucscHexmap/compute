@@ -3,26 +3,24 @@
 # This tests python, using python's easier calls to shell commands
 # from here than from mocha
 
-import sys, os, glob, filecmp, subprocess, json, tempfile, pprint, shutil
-from os import path
-import string
+import os
+
 import unittest
 import testUtil as util
-from rootDir import getRootDir
 
-rootDir = getRootDir()
-testDir = rootDir + 'compute/tests/'
-inDir = testDir + 'in/layout/'   # The input data
-outDirBase = testDir + 'out/layoutBasic'
-expDirBase = testDir + 'exp/layoutBasic'
+testDir = os.getcwd()
+inDir = os.path.join(testDir,'in/layout/')   # The input data
+outDirBase = os.path.join(testDir,'out/layoutBasic')
+expDirBase = os.path.join(testDir, 'exp/layoutBasic')
 expDir = expDirBase + '/'
-outSim6File = testDir + 'out/sim6Layout'
 
-rawDataFile = inDir + 'mcrchopra.data.tab'
-top6SimDataFile = inDir + 'mcr.top6.stable.tab'
+outSim6File = os.path.join(testDir, 'out/sim6Layout')
 
-colorDataFile = inDir + 'mcrchopra.colormaps.tab'
-attsCodedFile = inDir + 'mcrchopra.atts.with_strs.tab'
+rawDataFile = os.path.join(inDir, 'mcrchopra.data.tab')
+top6SimDataFile = os.path.join(inDir, 'mcr.top6.stable.tab')
+
+colorDataFile = os.path.join(inDir, 'mcrchopra.colormaps.tab')
+attsCodedFile = os.path.join(inDir, 'mcrchopra.atts.with_strs.tab')
 
 import compute_sparse_matrix
 import layout

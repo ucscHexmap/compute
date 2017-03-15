@@ -10,11 +10,10 @@ import unittest
 import testUtil as util
 from rootDir import getRootDir
 
-rootDir = getRootDir()
-testDir = rootDir + 'tests/pyUnittest/'
-inDir = testDir + 'in/layout/'   # The input data
-outDir = testDir + 'out/similarity/' # The actual output data
-expDir = testDir + 'exp/similarity/'
+testDir = os.getcwd()
+inDir = os.path.join(testDir,'in/layout/')   # The input data
+outDir = os.path.join(testDir,'out/similarity/') # The actual output data
+expDir = os.path.join(testDir,'exp/similarity/')
 
 import compute_sparse_matrix
 import testUtil as tu

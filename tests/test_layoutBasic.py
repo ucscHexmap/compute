@@ -5,32 +5,29 @@ TODO:
 - fix test names
 """
 
-import sys, os, glob, filecmp, subprocess, json, tempfile, pprint, shutil
-from os import path
-import string
+import os
 import unittest
 import testUtil as util
-from rootDir import getRootDir
 
-rootDir = getRootDir()
-testDir = rootDir + 'compute/tests/'
-inDir = testDir + 'in/layout/'   # The input data
-outDirBase = testDir + 'out/layoutBasic'
-expDirBase = testDir + 'exp/layoutBasic'
+testDir = os.getcwd()
+inDir = os.path.join(testDir , 'in/layout/')   # The input data
+outDirBase = os.path.join(testDir ,'out/layoutBasic')
+expDirBase = os.path.join(testDir,'exp/layoutBasic')
 expDir = expDirBase + '/'
-expNoAttsDir = expDirBase + 'NoAtts/'
+#append to string base
+expNoAttsDir = expDirBase+ 'NoAtts/'
 expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
 
-rawDataFile = inDir + 'mcrchopra.data.tab'
-fullSimDataFile = inDir + 'mcr.fullsim.tab'
-top6SimDataFile = inDir + 'mcr.top6.tab'
-coordDataFile = testDir +'exp/layoutBasic' + '/xyPreSquiggle_0.tab'
+rawDataFile = os.path.join(inDir, 'mcrchopra.data.tab')
+fullSimDataFile = os.path.join(inDir, 'mcr.fullsim.tab')
+top6SimDataFile = os.path.join(inDir, 'mcr.top6.tab')
+coordDataFile = os.path.join(testDir,'exp/layoutBasic', 'xyPreSquiggle_0.tab')
 
-colorDataFile = inDir + 'mcrchopra.colormaps.tab'
-attsStringsFile = inDir + 'mcrchopra.atts.with_strs.tab'
+colorDataFile = os.path.join(inDir, 'mcrchopra.colormaps.tab')
+attsStringsFile = os.path.join(inDir ,'mcrchopra.atts.with_strs.tab')
 #now we never give layout coded attrs
-attsCodedFile = inDir + 'mcrchopra.atts.with_strs.tab'
+attsCodedFile = os.path.join(inDir, 'mcrchopra.atts.with_strs.tab')
 
 import layout
 import compute_sparse_matrix
