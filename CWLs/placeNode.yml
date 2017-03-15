@@ -1,0 +1,16 @@
+ClusterData:
+   class: File
+   path: ../tests/in/layout/mcrchopra.data.tab
+
+XYpostions:
+   class: File
+   path:  ../tests/exp/layoutBasic/xyPreSquiggle_0.tab
+
+NewNodesData:
+   class: File
+   path: ../tests/in/layout/mcrchopra.data.tab
+
+TopNeighbors: 6
+   
+MapId: "CKCC/V3"
+

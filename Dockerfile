@@ -2,7 +2,7 @@
 FROM python:2.7-onbuild
 
 #set path so scripts can be called easily
-ENV PATH="/usr/src/app/www/server/DRL_bin:/usr/src/app/www/server:${PATH}"
+ENV PATH="/usr/src/app/server/DRL_bin:/usr/src/app/calc:${PATH}"
 #
 #opens a shell with -it  
 CMD ["/bin/bash"]

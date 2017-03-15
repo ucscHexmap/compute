@@ -37,7 +37,7 @@ elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
     export HUB_SOCKET=localhost
     export VIEWER_URL=http://localhost:3333
     export HUB_PATH=$(pwd)/../../hub
-    export PYTHONPATH=$HEXMAP/www/server:$HUB_PATH:./
+    #export PYTHONPATH=$HEXMAP/www/server:$HUB_PATH:./
 fi
 
 # Set env vars common to all installations
@@ -63,7 +63,6 @@ HUB=( \
 # these need fixing up:
     #test_createMapUi \
     #test_http \
-    #test_noincludesingletons \
     #test_queryOverlayNodes \
     #test_remoteCalc \
 

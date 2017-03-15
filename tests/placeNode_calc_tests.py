@@ -9,7 +9,7 @@ import placeNode
 from placeNode_calc import *
 
 rootDir = getRootDir()
-testDir = rootDir + 'tests/pyUnittest/'
+testDir = rootDir + 'compute/tests/'
 inDir = testDir + 'in/layout/'
 inDirCalc = testDir + 'in/placeNode/'
 expDir = testDir + 'exp/layoutBasic/'
