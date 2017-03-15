@@ -170,6 +170,23 @@ class Nof1CalcTestCase(unittest.TestCase):
         s.assertTrue(passed,'Exception from compute_sparse_.common_rows not'
                              ' properly thrown')
 
+    def test_commonrow_except_min(s):
+        """
+        make sure that less than 50% of max will pass
+        @return:
+        """
+        passed = True
+        try:
+            #percentage requirement is larger than available rows
+            compute_sparse_matrix.common_rows(pd.DataFrame([1,2]),
+                                                 pd.DataFrame([1,2,3,4,5,6]),
+                                                 )
+
+        except ValueError:
+           passed = False
+
+        s.assertTrue(passed,'Exception from compute_sparse_.common_rows not'
+                             ' properly thrown')
     def test_commonrow(s):
 
         #flag to run multiple tests for incorrect row reduction
