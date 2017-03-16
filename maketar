@@ -1,0 +1,5 @@
+#!/bin/bash
+# make a tarball of the server for web APIs without docker
+
+tar -cf t.tar calc/*py www/config www/*py www/*sh
+scp t.tar kolossus:/hive/groups/hexmap/dev/compute

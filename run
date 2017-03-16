@@ -1,0 +1,5 @@
+#!/bin/bash
+# Call the server start script for this install
+INSTALL=swat
+HUB_PATH=/Users/swat/dev/compute/www
+$HUB_PATH/uwsgi.sh $INSTALL $HUB_PATH
