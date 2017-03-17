@@ -188,9 +188,7 @@ def calcComplete(result, ctx, app):
 
 if __debug__:
     def calcTestStub(opts):
-
         #print 'opts.newNodes', opts.newNodes
-
         if 'testError' in opts.newNodes:
             return {
                 'error': 'Some error message or stack trace'
