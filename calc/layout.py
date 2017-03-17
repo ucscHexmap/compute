@@ -897,33 +897,90 @@ def build_default_scores(options):
     #options.scores = ['fake_layer_0', 'fake_layer_1']
     return file_name
 
-def hexIt(options, cmd_line_list, all_dict):
+def getDefaultOpts():
+    '''
+    @return: dictionary of default opts
+    '''
+    defaults = {  'associations': False,
+                  'attributeTags': None,
+                  'clumpinessStats': False,
+                  'colormaps': None,
+                  'coordinates': None,
+                  'directedGraph': True,
+                  'directory': '.',
+                  'drlpath': None,
+                  'feature_space': None,
+                  'first_attribute': '',
+                  'metric': [['spearman']],
+                  'mi_window_threshold': 5,
+                  'mi_window_threshold_upper': 20,
+                  'mutualinfo': False,
+                  'names': ['layout'],
+                  'output_tar': '',
+                  'output_zip': '',
+                  'rawsim': None,
+                  'role': None,
+                  'scores': None,
+                  'similarity': None,
+                  'similarity_full': None,
+                  'singletons': True,
+                  'truncation_edges': 6,
+                  'type': None,
+                  'window_size': 20
+                  }
+    return defaults
+
+def fillOpts(options):
+    '''
+    fills in default options if not present
+    @param options: arg parse Namespace object
+    @return: modified "options" Namespace object
+    '''
+
+    #grab default options as a dict
+    defaults = getDefaultOpts()
+
+    #namespace class is mutable through vars(), like options.__dict__
+    optionsDict = vars(options)
+
+    #fill in defaults
+    for needed in defaults.keys():
+        try:
+            optionsDict[needed]
+        except KeyError:
+            optionsDict[needed] = defaults[needed]
+
+    return options
+
+def makeMapUIfiles(options):
     '''
     main function, contains entire pipeline for Tumor Map generation
-    :param options: parsed command line, or user supplied arguemnts, see parse_args() for details
+    :param options: parse args namespace object, see getDefaultOpts() for a
+                    dictionary of defaults of the needed object attributes
+
     :param cmd_line_list: the commands parsed off of the command line
     :param all_dict: a dict made from cmd_line_list
     :return: None, writes out a plethora of needed files to a directory specified in 'options'
     '''
 
+    #make sure the common defaults are in the options Namespace
+    options = fillOpts(options)
     #make the destination directpry for output if its not there
     if not os.path.exists(options.directory):
         os.makedirs(options.directory)
     #Set stdout and stderr to a log file in the destination directory
     log_file_name = options.directory + '/log'
     stdoutFd = sys.stdout
-    sys.stdout = open(log_file_name, 'w')
+    #log file may have already been opened from main
+    sys.stdout = open(log_file_name, 'a+')
     sys.stderr = sys.stdout
 
-    #Start chattering to the log file
-    print timestamp(), 'Started'
-    print 'command-line options:'
-    pprint.pprint(cmd_line_list)
+    #print all the options given to the log.
     print 'all options:'
-    pprint.pprint(all_dict)
+    pprint.pprint(options.__dict__)
     sys.stdout.flush()
 
-    ctx = Context();
+    ctx = Context()
     
     options.layout_method = 'DrL'
 
@@ -1395,7 +1452,7 @@ def hexIt(options, cmd_line_list, all_dict):
             f.writerow([name])
 
     # Run pairwise meta data stats
-    if options.associations == True:
+    if options.associations:
         print 'layout independent stats starting'
         indstats_time = time.time()
         statsNoLayout(layers, layer_names, ctx, options)
@@ -1543,9 +1600,26 @@ def compute_silhouette(coordinates, *args):        #YN 20160629: compute average
         features.append(np.array([coordinates[s]["x"], coordinates[s]["y"]]))
     return(sklearn.metrics.silhouette_score(np.array(features), np.array(cluster_assignments_lst), metric='euclidean', sample_size=1000, random_state=None))
 
+def writeMainArgs(args,arg_obj):
+    '''
+    writes the args array supplied to main to a options.directory/log file.
+    @param args: the args array supplied to main function
+    @param arg_obj: namespace object with a directory field
+    @return: None
+    '''
+    log_file_name = arg_obj.directory + '/log'
+    logOut = open(log_file_name, 'w')
+
+    print>>logOut, timestamp() +  ' Started'
+    print>>logOut, 'command-line options:'
+    #print out each arg on its own line
+    print>>logOut, '\n'.join(args)
+    logOut.close()
+
 def main(args):
     arg_obj = parse_args(args)
-    return hexIt(arg_obj, args, arg_obj.__dict__)
+    writeMainArgs(args,arg_obj)
+    return makeMapUIfiles(arg_obj)
 
 def fromNodejs(args):
     return main(args)
@@ -1556,5 +1630,5 @@ if __name__ == "__main__" :
     except:
         traceback.print_exc()
         return_code = 1
-        
+
     sys.exit(return_code)
