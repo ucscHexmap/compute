@@ -901,33 +901,41 @@ def getDefaultOpts():
     '''
     @return: dictionary of default opts
     '''
-    defaults = {  'associations': False,
-                  'attributeTags': None,
-                  'clumpinessStats': False,
-                  'colormaps': None,
-                  'coordinates': None,
-                  'directedGraph': True,
-                  'directory': '.',
-                  'drlpath': None,
-                  'feature_space': None,
-                  'first_attribute': '',
-                  'metric': [['spearman']],
-                  'mi_window_threshold': 5,
-                  'mi_window_threshold_upper': 20,
-                  'mutualinfo': False,
-                  'names': ['layout'],
-                  'output_tar': '',
-                  'output_zip': '',
-                  'rawsim': None,
-                  'role': None,
-                  'scores': None,
-                  'similarity': None,
-                  'similarity_full': None,
-                  'singletons': True,
-                  'truncation_edges': 6,
-                  'type': None,
-                  'window_size': 20
-                  }
+    defaults = parse_args([]).__dict__
+    """
+    This shows the results of the above parse_args([]).__dict__ call on
+    03172016. It will change as argparse changes. Note that the key is the
+    "dest"
+      param of the arg defenition in arg_parse, and the value is the "default"
+    defaults = {'associations': True, #bool
+                'attributeTags': None, #string filepath
+                'clumpinessStats': True, #boolean
+                 'colormaps': '', #string filepath, empty if omitted
+                 'coordinates': None, #[[path,path,path]]
+                 'directedGraph': True, #bool
+                 'directory': '.', #string filepath
+                 'drlpath': None, #string filepath
+                 'feature_space': None, #[[path,path,path]]
+                 'first_attribute': '', sting filepath, empty if omitted
+                 'metric': None, [[metric,metric,metric]]
+                 'mi_window_threshold': 5,
+                 'mi_window_threshold_upper': 20,
+                 'mutualinfo': True, #bool
+                 'names': [], #[string,string,...]
+                 'output_tar': '', #string filepath
+                 'output_zip': '', #string filepath
+                 'rawsim': None, #deprecated
+                 'role': None, #string specifying meaningful role description
+                 'scores': None, #[path,path,path,...]
+                 'similarity': None, #[[path,path,path,...]]
+                 'similarity_full': None, #[[path,path,path,...]]
+                 'singletons': False, #bool
+                 'truncation_edges': 6, #int
+                 'type': None, #deprecated
+                 'window_size': 20 #deprecated
+                 }
+
+    """
     return defaults
 
 def fillOpts(options):
