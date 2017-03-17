@@ -47,13 +47,16 @@ export HUB_DEBUG=true
 # Note: the below are currently order-dependent due to issues with parallel code
 ALL=( \
     test_layoutBasic \
-    test_stats \
+    test_layoutBasicMakeUI \
     placeNode_calc_tests \
     test_similarity \
+    test_stats \
 )
 PARALLEL_CHALLENGED=( \
-    test_dynLayoutAware \
     test_sim6Layout \
+    test_dynLayoutAware \
+
+
 )
 HUB=( \
     hub_web_tests \
