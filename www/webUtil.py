@@ -64,6 +64,9 @@ def availableMapLayouts(operation):
         # by scraping the view directories for meta.json files containing file
         # paths for a full feature matrix, xyPositions and firstAttribute.
         return {
+            'lmsh_ucsc.edu/AllAttr_combat_quartnorm': [
+                'layout',
+            ],
             'lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine': [
                 'layout',
             ],
@@ -110,6 +113,18 @@ def getMetaData(mapId, ctx, app):
                     "xyPositions":
                         ctx['dataRoot'] + "view/unitTest/layoutBasicExp/assignments0.tab",
                 }
+            }
+        }
+    elif mapId == 'lmsh_ucsc.edu/AllAttr_combat_quartnorm':
+        meta =  {
+            "firstAttribute": "Age",
+            "layouts": {
+                "layout": {
+                    "fullFeatureMatrix":
+                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/AllAttr_combat_quartnorm/features.tab",
+                    "xyPositions":
+                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/AllAttr_combat_quartnorm/assignments0.tab",
+                },
             }
         }
     elif mapId == 'lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine':
