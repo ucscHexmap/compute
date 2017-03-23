@@ -3,14 +3,15 @@
 
 if [ $# -eq 0 ]; then
     echo "one argument is needed like this:"
-    echo "  all tests: run all (all except for hub tests)"
-    echo "  hub tests: run hub"
-    echo "   one file: run test_stats"
-    echo "   one test: run test_stats.TestStats.test_stats"
+    echo "  run all (all tests)"
+    echo "  run web (_web_tests.py tests only)"
+    echo "  run test_stats (one test file)"
+    echo "  run test_stats.TestStats.test_stats (one test in one file)"
     exit 1
 fi
 
 # Set env vars specific to the installation
+export PYTHONPATH=$(pwd)/../www:$(pwd)/../calc
 if [ $HEXMAP == '/data' ]; then
     # Production servers on tumormap
     export VIEWER_URL=https://tumormap.ucsc.edu
@@ -22,62 +23,77 @@ elif [ $HEXMAP == '/cluster/home/swat/dev' ]; then
     # Development servers on hexdev
     export VIEWER_URL=https://hexdev.sdsc.edu:8222
     export HUB_SOCKET=hexdev.sdsc.edu:8332
-    export PYTHONPATH=$(pwd)/../www:$(pwd)/../calc
 
 elif [ $HEXMAP == '/Users/swat/dev/hexagram' ]; then
     # Development servers on swat's local
     export VIEWER_URL=http://localhost:3333
     export HUB_SOCKET=localhost
-    export PYTHONPATH=$(pwd)/../www:$(pwd)/../calc
 
 elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
-    # Development servers on swat's local
+    # Development servers on duncan's local
     export HUB_SOCKET=localhost
     export VIEWER_URL=http://localhost:3333
     export HUB_PATH=$(pwd)/../../hub
-    #export PYTHONPATH=$HEXMAP/www/server:$HUB_PATH:./
 else
     echo You must have a config entry in this script
     exit
 fi
 
-echo PYTHONPATH: $PYTHONPATH
-
 # Set env vars common to all installations
 export HUB_TESTING=false
 export HUB_DEBUG=true
 
-# Note: the below are currently order-dependent due to issues with parallel code
-ALL=( \
+# Test only the *_web_tests.py files
+WEB=( \
+    hub_web_tests \
+    placeNode_web_tests \
+)
+
+# Deprecated with hexagram server code moving to the compute server
+DEPRECATED=( \
+    test_http \
+    test_remoteCalc \
+)
+# The rest of the tests, order-dependent due to issues with parallel code
+REST=( \
     test_layoutBasic \
     test_layoutBasicMakeUI \
     placeNode_calc_tests \
     test_similarity \
     test_stats \
 )
+
+# Combine the lists above to get ALL of the tests
+ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${REST[@]}" )
+
+# These tests have issues with the parallelizm running them with the rest of the test
 PARALLEL_CHALLENGED=( \
     test_sim6Layout \
     test_dynLayoutAware \
-
-
 )
-HUB=( \
+
+# local mac tests are those that normally pass on a mac
+MAC=( \
     hub_web_tests \
+    placeNode_calc_tests \
     placeNode_web_tests \
+    test_dynLayoutAware \
+    test_http \
+    test_dynLayoutAware \
+    test_remoteCalc \
+    test_similarity \
 )
 
-# these need fixing up:
+# this really needs selenium rather than manually building maps from the UI
     #test_createMapUi \
-    #test_http \
-    #test_queryOverlayNodes \
-    #test_remoteCalc \
 
 TO_RUN=($1)
 if [ $1 == 'all' ]
     then TO_RUN="${ALL[@]}"
-elif [ $1 == 'hub' ]
-    then TO_RUN="${HUB[@]}"
-
+elif [ $1 == 'web' ]
+    then TO_RUN="${WEB[@]}"
+elif [ $1 == 'mac' ]
+    then TO_RUN="${MAC[@]}"
 fi
 
 # Run our well-behaved tests in parallel
