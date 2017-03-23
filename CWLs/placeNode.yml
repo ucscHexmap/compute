@@ -12,5 +12,7 @@ NewNodesData:
 
 TopNeighbors: 6
    
+numJobs : 4
+
 MapId: "CKCC/V3"
 
