@@ -16,8 +16,6 @@ if [ $HEXMAP == '/data' ]; then
     # Production servers on tumormap
     export VIEWER_URL=https://tumormap.ucsc.edu
     export HUB_SOCKET=hexdev.sdsc.edu:8332
-    export HUB_PATH=/hive/groups/hexmap/prod/hub
-    export PYTHONPATH=/cluster/home/swat/dev/www/server:$HUB_PATH:./
 
 elif [ $HEXMAP == '/cluster/home/swat/dev' ]; then
     # Development servers on hexdev
@@ -33,7 +31,6 @@ elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
     # Development servers on duncan's local
     export HUB_SOCKET=localhost
     export VIEWER_URL=http://localhost:3333
-    export HUB_PATH=$(pwd)/../../hub
 else
     echo You must have a config entry in this script
     exit
