@@ -960,28 +960,31 @@ def fillOpts(options):
 
     return options
 
-def makeMapUIfiles(options):
+def makeMapUIfiles(options, cmd_line_list=None):
     '''
     main function, contains entire pipeline for Tumor Map generation
     :param options: parse args namespace object, see getDefaultOpts() for a
                     dictionary of defaults of the needed object attributes
-
     :param cmd_line_list: the commands parsed off of the command line
-    :param all_dict: a dict made from cmd_line_list
     :return: None, writes out a plethora of needed files to a directory specified in 'options'
     '''
 
     #make sure the common defaults are in the options Namespace
     options = fillOpts(options)
-    #make the destination directpry for output if its not there
+    #make the destination directory for output if its not there
     if not os.path.exists(options.directory):
         os.makedirs(options.directory)
     #Set stdout and stderr to a log file in the destination directory
     log_file_name = options.directory + '/log'
     stdoutFd = sys.stdout
-    #log file may have already been opened from main
-    sys.stdout = open(log_file_name, 'a+')
+    sys.stdout = open(log_file_name, 'w')
     sys.stderr = sys.stdout
+
+    if cmd_line_list:
+        print timestamp(), 'Started'
+        print 'command-line options:'
+        #print out each arg on its own line
+        print '\n'.join(cmd_line_list)
 
     #print all the options given to the log.
     print 'all options:'
@@ -1608,26 +1611,9 @@ def compute_silhouette(coordinates, *args):        #YN 20160629: compute average
         features.append(np.array([coordinates[s]["x"], coordinates[s]["y"]]))
     return(sklearn.metrics.silhouette_score(np.array(features), np.array(cluster_assignments_lst), metric='euclidean', sample_size=1000, random_state=None))
 
-def writeMainArgs(args,arg_obj):
-    '''
-    writes the args array supplied to main to a options.directory/log file.
-    @param args: the args array supplied to main function
-    @param arg_obj: namespace object with a directory field
-    @return: None
-    '''
-    log_file_name = arg_obj.directory + '/log'
-    logOut = open(log_file_name, 'w')
-
-    print>>logOut, timestamp() +  ' Started'
-    print>>logOut, 'command-line options:'
-    #print out each arg on its own line
-    print>>logOut, '\n'.join(args)
-    logOut.close()
-
 def main(args):
     arg_obj = parse_args(args)
-    writeMainArgs(args,arg_obj)
-    return makeMapUIfiles(arg_obj)
+    return makeMapUIfiles(arg_obj, args)
 
 def fromNodejs(args):
     return main(args)
