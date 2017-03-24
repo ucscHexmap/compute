@@ -38,25 +38,25 @@ class Test_createMapUi(unittest.TestCase):
     
         outDir = outDirBase + 'raw_no_atts'
         expDir = testDir + 'exp/layoutBasicNoAtts/'
-        util.compareActualVsExpectedDir(s, outDir, expDir)
+        util.compareActualVsExpectedDir(s, expDir, outDir)
 
     def test_raw_no_colors(s):
     
         outDir = outDirBase + 'raw_no_colors'
         expDir = testDir + 'exp/layoutBasicNoColor/'
-        util.compareActualVsExpectedDir(s, outDir, expDir)
+        util.compareActualVsExpectedDir(s, expDir, outDir)
 
     def test_full_no_atts(s):
     
         outDir = outDirBase + 'full_no_atts'
         expDir = testDir + 'exp/layoutBasicNoAtts/'
-        util.compareActualVsExpectedDir(s, outDir, expDir)
+        util.compareActualVsExpectedDir(s, expDir, outDir)
 
     def test_top6_no_atts(s):
     
         outDir = outDirBase + 'top6_no_atts'
         expDir = testDir + 'exp/layoutBasicNoAtts/'
-        util.compareActualVsExpectedDir(s, outDir, expDir)
+        util.compareActualVsExpectedDir(s, expDir, outDir)
 
     def test_xy_no_atts(s):
     
@@ -74,9 +74,9 @@ class Test_createMapUi(unittest.TestCase):
         # These files for xy coords are not expected to be the same as other
         # runs, but to make sure they are correct we have but previous runs in a
         # different expected directory.
-        util.compareActualVsExpectedFile(s,'/neighbors_0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'/assignments0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'/xyPreSquiggle_0.tab',outDir,expXyDir)
+        util.compareActualVsExpectedFile(s,'/neighbors_0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'/assignments0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'/xyPreSquiggle_0.tab',expXyDir,outDir)
 
 if __name__ == '__main__':
     unittest.main()

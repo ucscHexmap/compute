@@ -64,7 +64,7 @@ class Test_dynLayoutAware(unittest.TestCase):
 
         #compare all stats files individually
         for attribute in binLayers:
-            util.compareActualVsExpectedFile(s, 'statsL_' + leesL.getLayerIndex(attribute,layers) + '_0.tab', outDir, expDir)
+            util.compareActualVsExpectedFile(s, 'statsL_' + leesL.getLayerIndex(attribute,layers) + '_0.tab', expDir, outDir)
 
 if __name__ == '__main__':
     unittest.main()

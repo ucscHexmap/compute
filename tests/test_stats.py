@@ -34,7 +34,7 @@ class Test_stats(unittest.TestCase):
 
     def test_stats(s):
         s.runPy()
-        util.compareActualVsExpectedDir(s, outDir, expDir)
+        util.compareActualVsExpectedDir(s, expDir, outDir)
 
 
 if __name__ == '__main__':
