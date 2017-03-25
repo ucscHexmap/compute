@@ -53,7 +53,6 @@ class Test_sim6Layout(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 

@@ -43,7 +43,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--metric", 'spearman',
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -60,7 +59,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--scores", attsStringsFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -90,7 +88,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -107,7 +104,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--metric", 'spearman',
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -125,7 +121,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--scores", attsStringsFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -144,7 +139,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -160,7 +154,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -177,7 +170,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -195,7 +187,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -211,7 +202,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -237,7 +227,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -270,7 +259,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 

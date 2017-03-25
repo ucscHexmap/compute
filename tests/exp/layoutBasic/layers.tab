@@ -1,10 +1,10 @@
-DNA_signature	layer_8.tab	60		-inf
-TP63_expression altered	layer_4.tab	60	40	-inf
-Apoptosis	layer_5.tab	60		-inf
-TP63_mutated	layer_2.tab	60	20	-inf
-Random	layer_6.tab	60		-inf
-TP53_expression altered	layer_3.tab	60	40	-inf
-Subtype	layer_0.tab	60		-inf
-TP53_mutated	layer_1.tab	60	20	-inf
-RB1 level	layer_9.tab	60		-inf
-DNA_Repair	layer_7.tab	60	20	-inf
+DNA_signature	layer_8.tab	60		0.07750259
+TP63_expression altered	layer_4.tab	60	40.0	0.0803329
+Apoptosis	layer_5.tab	60		0.4992475
+TP63_mutated	layer_2.tab	60	20.0	0.3450573
+Random	layer_6.tab	60		0.01881926
+TP53_expression altered	layer_3.tab	60	40.0	0.0803329
+Subtype	layer_0.tab	60		0.46317
+TP53_mutated	layer_1.tab	60	20.0	0.3450573
+RB1 level	layer_9.tab	60		0.03400514
+DNA_Repair	layer_7.tab	60	20.0	0.0803329

@@ -88,7 +88,6 @@ class Test_remoteCalc(unittest.TestCase):
             '"--names", "layout", ' + \
             '"--directory", "' + outDir + '", ' + \
             '"--include-singletons", ' + \
-            '"--no_density_stats", ' + \
             '"--no_layout_independent_stats", ' + \
             '"--no_layout_aware_stats" ]'
         curl_opts = ['-d', data, '-H', 'Content-Type:application/json', '-X', 'POST', '-v']
