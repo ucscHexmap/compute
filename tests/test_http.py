@@ -92,7 +92,7 @@ class Test_http(unittest.TestCase):
     def test_pythonCallGoodDataLocal(s):
         util.removeOldOutFiles(outDir)
         data = '[ ' + \
-            '"--coordinates", "' + path.join(inDir, "example_features_xy.tab") + '", ' + \
+            '"--coordinates", "' + path.join(inDir, "coordinates.tab") + '", ' + \
             '"--names", "layout", ' + \
             '"--directory", "' + outDir + '", ' + \
             '"--include-singletons", ' + \

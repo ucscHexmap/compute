@@ -84,7 +84,7 @@ class Test_remoteCalc(unittest.TestCase):
 
     def test_createMap(s):
         data = '[ ' + \
-            '"--coordinates", "' + path.join(inDir, "example_features_xy.tab") + '", ' + \
+            '"--coordinates", "' + path.join(inDir, "coordinates.tab") + '", ' + \
             '"--names", "layout", ' + \
             '"--directory", "' + outDir + '", ' + \
             '"--include-singletons", ' + \
