@@ -1,4 +1,4 @@
 ClusterData:
    class: File
-   path: ../tests/in/layout/mcrchopra.data.tab 
+   path: ../tests/in/layout/full_matrix.tab 
 

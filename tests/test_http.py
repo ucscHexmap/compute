@@ -106,9 +106,9 @@ class Test_http(unittest.TestCase):
     def test_createMap_sparse(s):
         util.removeOldOutFiles(outDir)
         data = '[ ' + \
-            '"--similarity", "' + path.join(inDir, "mcr.top6.tab") + '", ' + \
+            '"--similarity", "' + path.join(inDir, "similarity.tab") + '", ' + \
             '"--names", "mRNA", ' + \
-            '"--scores", "' + path.join(inDir, "mcrchopra.atts.with_strs.tab") + '", ' + \
+            '"--scores", "' + path.join(inDir, "attributes.tab") + '", ' + \
             '"--directory", "' + outDir + '", ' + \
             '"--include-singletons", ' + \
             '"--first_attribute", "' + "DNA_Repair" + '",' \

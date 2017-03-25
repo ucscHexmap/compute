@@ -16,11 +16,11 @@ expDir = expDirBase + '/'
 
 outSim6File = os.path.join(testDir, 'out/sim6Layout')
 
-rawDataFile = os.path.join(inDir, 'mcrchopra.data.tab')
+rawDataFile = os.path.join(inDir, 'full_matrix.tab')
 top6SimDataFile = os.path.join(inDir, 'mcr.top6.stable.tab')
 
-colorDataFile = os.path.join(inDir, 'mcrchopra.colormaps.tab')
-attsCodedFile = os.path.join(inDir, 'mcrchopra.atts.with_strs.tab')
+colorDataFile = os.path.join(inDir, 'colormaps.tab')
+attsCodedFile = os.path.join(inDir, 'attributes.tab')
 
 import compute_sparse_matrix
 import layout

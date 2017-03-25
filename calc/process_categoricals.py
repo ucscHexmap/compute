@@ -430,9 +430,9 @@ def transformToColormapInts(attrDF,colormaps,debug=False):
 
     return attrDF
 '''
-create_colormaps_file(['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/mcrchopra.atts.with_strs.tab'],
+create_colormaps_file(['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/attributes.tab'],
                       out_file='/home/duncan/trash/trash.cmaps.tab',
-                      colormaps='/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/mcrchopra.colormaps.tab',
+                      colormaps='/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/colormaps.tab',
                       attrsfile='/home/duncan/trash/trash_attr.tab')
 '''
 def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrsfile='',debug=False):

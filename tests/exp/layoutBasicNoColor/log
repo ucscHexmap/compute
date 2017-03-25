@@ -1,13 +1,13 @@
 01-20 15:08:01 Started
 command-line options:
 ['--feature_space',
- '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab',
+ '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab',
  '--names',
  'mRNA',
  '--metric',
  'spearman',
  '--scores',
- '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.atts.with_strs.tab',
+ '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/attributes.tab',
  '--directory',
  '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/out/computeSim/',
  '--include-singletons',
@@ -23,7 +23,7 @@ all options:
  'directedGraph': True,
  'directory': '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/out/computeSim/',
  'drlpath': None,
- 'feature_space': [['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab']],
+ 'feature_space': [['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab']],
  'first_attribute': '',
  'layout_method': 'DrL',
  'metric': [['spearman']],
@@ -37,7 +37,7 @@ all options:
  'raw': None,
  'rawsim': None,
  'role': None,
- 'scores': ['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.atts.with_strs.tab'],
+ 'scores': ['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/attributes.tab'],
  'similarity': None,
  'similarity_full': None,
  'singletons': True,
@@ -65,10 +65,10 @@ Created nodes_multiple list...
 About to open matrices...
 DRL method
 None
-['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab']
+['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab']
 None
 Feature matrices
-Opening Matrix 0 /home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab
+Opening Matrix 0 /home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab
 8 x 60
 
 S1	S12	0.95238095238

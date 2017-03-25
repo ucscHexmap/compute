@@ -1,9 +1,9 @@
 ClusterData:
    class: File
-   path: ../tests/in/layout/mcrchopra.data.tab
+   path: ../tests/in/layout/full_matrix.tab
 Colormap:
    class: File
-   path: ../tests/in/layout/mcrchopra.colormaps.tab
+   path: ../tests/in/layout/colormaps.tab
 MetaData:
    class: File
-   path: ../tests/in/layout/mcrchopra.atts.with_strs.tab
+   path: ../tests/in/layout/attributes.tab

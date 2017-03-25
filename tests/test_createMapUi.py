@@ -15,8 +15,8 @@ appropriate feature data type.
 Then run this script to compare the output with the expected.
 
     MAP NAME       INPUT DATA in in/layout/
-    raw_no_atts    mcrchopra.data.tab
-    raw_no_colors  mcrchopra.data.tab, mcrchopra.atts.with_strs.tab
+    raw_no_atts    full_matrix.tab
+    raw_no_colors  full_matrix.tab, attributes.tab
     full_no_atts   mcr.fullsim.stable.tab
     top6_no_atts   mcr.top6.stable.tab
     xy_no_atts     exp/layoutBasic/xyPreSquiggle_0.tab

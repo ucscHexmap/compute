@@ -19,15 +19,15 @@ expNoAttsDir = expDirBase+ 'NoAtts/'
 expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
 
-rawDataFile = os.path.join(inDir, 'mcrchopra.data.tab')
+rawDataFile = os.path.join(inDir, 'full_matrix.tab')
 fullSimDataFile = os.path.join(inDir, 'mcr.fullsim.tab')
-top6SimDataFile = os.path.join(inDir, 'mcr.top6.tab')
+top6SimDataFile = os.path.join(inDir, 'similarity.tab')
 coordDataFile = os.path.join(testDir,'exp/layoutBasic', 'xyPreSquiggle_0.tab')
 
-colorDataFile = os.path.join(inDir, 'mcrchopra.colormaps.tab')
-attsStringsFile = os.path.join(inDir ,'mcrchopra.atts.with_strs.tab')
+colorDataFile = os.path.join(inDir, 'colormaps.tab')
+attsStringsFile = os.path.join(inDir ,'attributes.tab')
 #now we never give layout coded attrs
-attsCodedFile = os.path.join(inDir, 'mcrchopra.atts.with_strs.tab')
+attsCodedFile = os.path.join(inDir, 'attributes.tab')
 
 import layout
 import compute_sparse_matrix

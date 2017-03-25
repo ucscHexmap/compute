@@ -109,7 +109,7 @@ def getMetaData(mapId, ctx, app):
             "layouts": {
                 "layout": {
                     "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/unitTest/layoutBasicExp/mcrchopra.data.tab",
+                        ctx['dataRoot'] + "featureSpace/unitTest/layoutBasicExp/full_matrix.tab",
                     "xyPositions":
                         ctx['dataRoot'] + "view/unitTest/layoutBasicExp/assignments0.tab",
                 }
