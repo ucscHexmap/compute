@@ -4,7 +4,7 @@ ClusterData:
 
 XYpostions:
    class: File
-   path:  ../tests/exp/layoutBasic/xyPreSquiggle_0.tab
+   path:  ../tests/in/layout/coordinates.tab
 
 NewNodesData:
    class: File

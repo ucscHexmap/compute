@@ -22,7 +22,7 @@ expXyDir = expDirBase + 'Xy/'
 rawDataFile = os.path.join(inDir, 'full_matrix.tab')
 fullSimDataFile = os.path.join(inDir, 'mcr.fullsim.tab')
 top6SimDataFile = os.path.join(inDir, 'similarity.tab')
-coordDataFile = os.path.join(testDir,'exp/layoutBasic', 'xyPreSquiggle_0.tab')
+coordDataFile = os.path.join(inDir,'coordinates.tab')
 
 colorDataFile = os.path.join(inDir, 'colormaps.tab')
 attsStringsFile = os.path.join(inDir ,'attributes.tab')

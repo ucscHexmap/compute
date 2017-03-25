@@ -13,13 +13,6 @@ outDirBase = '/hive/groups/hexmap/dev/view/swat_soe.ucsc.edu/'
 First create maps from the UI using the map names and input data below and the 
 appropriate feature data type.
 Then run this script to compare the output with the expected.
-
-    MAP NAME       INPUT DATA in in/layout/
-    raw_no_atts    full_matrix.tab
-    raw_no_colors  full_matrix.tab, attributes.tab
-    full_no_atts   mcr.fullsim.stable.tab
-    top6_no_atts   mcr.top6.stable.tab
-    xy_no_atts     exp/layoutBasic/xyPreSquiggle_0.tab
 """
 
 rootDir = getRootDir()

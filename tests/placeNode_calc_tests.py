@@ -6,7 +6,6 @@ from placeNode_calc import *
 testDir = os.getcwd()
 inDir = os.path.join(testDir, 'in/layout/')
 inDirCalc = os.path.join(testDir,'in/placeNode/')
-expDir = os.path.join(testDir,'exp/layoutBasic/')
 
 class Nof1CalcTestCase(unittest.TestCase):
 
@@ -18,7 +17,7 @@ class Nof1CalcTestCase(unittest.TestCase):
 
         #make expected input from json:
         featMat = inDir+ 'full_matrix.tab'
-        preSquig = expDir + '/xyPreSquiggle_0.tab'
+        preSquig = inDir + '/coordinates.tab'
         nodesDict = pd.read_csv(featMat,index_col=0,sep='\t').to_dict()
 
         refDF,xyDF,newNodesDF = putDataIntoPythonStructs(featMat,
@@ -36,7 +35,7 @@ class Nof1CalcTestCase(unittest.TestCase):
 
         #make expected input from json:
         featMat = inDir+ 'full_matrix.tab'
-        preSquig = expDir + '/xyPreSquiggle_0.tab'
+        preSquig = inDir + '/coordinates.tab'
         nodesDict = pd.read_csv(featMat,index_col=0,sep='\t').to_dict()
 
 
@@ -54,7 +53,7 @@ class Nof1CalcTestCase(unittest.TestCase):
 
         #make expected input from json:
         featMat = inDir+ 'full_matrix.tab'
-        preSquig = expDir + '/xyPreSquiggle_0.tab'
+        preSquig = inDir + '/coordinates.tab'
         nodesDict = pd.read_csv(featMat,index_col=0,sep='\t').to_dict()
 
 
