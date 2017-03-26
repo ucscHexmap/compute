@@ -8,7 +8,7 @@ from os import path
 import string
 import unittest
 from scipy import stats
-
+import StringIO
 from rootDir import getRootDir
 import pandas as pd
 
@@ -108,6 +108,16 @@ def compareActualVsExpectedFile(s, fname, outDir, expDir):
     s.assertTrue(filecmp.cmp(path.join(outDir,fname),path.join(expDir,fname)),
                  msg='file did not match: ' + fname)
     
+def dataFrameToStrBuf(df):
+    '''
+    makes a dataframe into a type that can be read as a file object
+    @param df:
+    @return:
+    '''
+    s_buf = StringIO.StringIO()
+    df.to_csv(s_buf,sep='\t',index_col=0)
+    s_buf.seek(0)
+    return s_buf
 
 def gen_dat(nrows=50,ncols=40,mu=0,std=1):
     '''
