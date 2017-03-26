@@ -56,7 +56,7 @@ def removeOldOutFiles(outDir):
         pass
     os.makedirs(outDir)
 
-def compareActualVsExpectedDir(s, outDir, expDir,excludeFiles=['log']):
+def compareActualVsExpectedDir(s, expDir, outDir, excludeFiles=['log']):
     os.chdir(expDir)
     expFiles = glob.glob('*')
     expFiles.sort()
@@ -69,7 +69,8 @@ def compareActualVsExpectedDir(s, outDir, expDir,excludeFiles=['log']):
     #print 'expFiles', expFiles
     s.assertTrue(outFiles == expFiles,
                  msg='Differences in file names: ' +
-                     str( set(expFiles).symmetric_difference(set(outFiles)))
+                     str( set(expFiles).symmetric_difference(set(outFiles))) +
+                     ' between ' + expDir + ' and ' + outDir
                  )
 
     # Compare the file contents with the expected
@@ -85,28 +86,36 @@ def compareActualVsExpectedDir(s, outDir, expDir,excludeFiles=['log']):
     mismatch = diff[1]
 
     s.assertTrue(mismatch == [] or mismatch == None,
-                 msg='mismatching files: ' + str(mismatch)
+                 msg='mismatching files: ' + str(mismatch) +
+                     ' between ' + expDir + ' and ' + outDir
+
                  ) # mismatched files
     
     # There should be no errors resulting from the diff
     #if diff[2] != []:
     #    print 'errors comparing files: ' + str(diff[2])
     s.assertTrue(diff[2] == [],
-                 msg='Errors with diff: ' + str(diff[2])
+                 msg='Errors with diff: ' + str(diff[2]) +
+                     ' between ' + expDir + ' and ' + outDir
+
                  ) # errors
 
-def compareActualVsExpectedFile(s, fname, outDir, expDir):
+def compareActualVsExpectedFile(s, fname, expDir, outDir):
     
     # Verify the directory exists
     s.assertTrue(path.exists(outDir))
 
     # Verify the file exists
     s.assertTrue(path.isfile(path.join(outDir,fname)),
-                 msg='is not a file: ' + path.join(outDir,fname))
+                 msg='is not a file: ' + path.join(outDir,fname) +
+                     ' between ' + expDir + ' and ' + outDir
+                )
 
     # Compare the file contents
     s.assertTrue(filecmp.cmp(path.join(outDir,fname),path.join(expDir,fname)),
-                 msg='file did not match: ' + fname)
+                 msg='file did not match: ' + fname +
+                     ' between ' + expDir + ' and ' + outDir
+                )
     
 def dataFrameToStrBuf(df):
     '''

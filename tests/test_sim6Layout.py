@@ -16,18 +16,18 @@ expDir = expDirBase + '/'
 
 outSim6File = os.path.join(testDir, 'out/sim6Layout')
 
-rawDataFile = os.path.join(inDir, 'mcrchopra.data.tab')
+rawDataFile = os.path.join(inDir, 'full_matrix.tab')
 top6SimDataFile = os.path.join(inDir, 'mcr.top6.stable.tab')
 
-colorDataFile = os.path.join(inDir, 'mcrchopra.colormaps.tab')
-attsCodedFile = os.path.join(inDir, 'mcrchopra.atts.with_strs.tab')
+colorDataFile = os.path.join(inDir, 'colormaps.tab')
+attsCodedFile = os.path.join(inDir, 'attributes.tab')
 
 import compute_sparse_matrix
 import layout
 
 class Test_sim6Layout(unittest.TestCase):
 
-    def test_sim6Layout(s):
+    def test_sim6Layout_check(s):
         '''
         This test insures that if you start from the same data,
           the output does not depend on the input form
@@ -53,7 +53,6 @@ class Test_sim6Layout(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 

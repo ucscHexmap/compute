@@ -35,8 +35,7 @@ def getAttributes(fileNameList,dir='',debug=False):
         print fileNameList
 
     # TODO: the standard way to handle this is always use os.path.join() to
-    # join a dir with a file, or to join any sort of paths. That utility
-    # adds a '/' if needed.  It can take two or more paths to join.
+    # join any sort of paths.
     if (len(dir) > 0 and dir[-1]!= '/'):
         dir+='/'
 

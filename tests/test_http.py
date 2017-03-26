@@ -92,11 +92,10 @@ class Test_http(unittest.TestCase):
     def test_pythonCallGoodDataLocal(s):
         util.removeOldOutFiles(outDir)
         data = '[ ' + \
-            '"--coordinates", "' + path.join(inDir, "example_features_xy.tab") + '", ' + \
+            '"--coordinates", "' + path.join(inDir, "coordinates.tab") + '", ' + \
             '"--names", "layout", ' + \
             '"--directory", "' + outDir + '", ' + \
             '"--include-singletons", ' + \
-            '"--no_density_stats", ' + \
             '"--no_layout_independent_stats", ' + \
             '"--no_layout_aware_stats" ]'
         curl_opts = ['-d', data, '-H', 'Content-Type:application/json', '-X', 'POST', '-v']
@@ -107,14 +106,12 @@ class Test_http(unittest.TestCase):
     def test_createMap_sparse(s):
         util.removeOldOutFiles(outDir)
         data = '[ ' + \
-            '"--similarity", "' + path.join(inDir, "TGCT_IlluminaHiSeq_RNASeqV2.vs_self.top6.tab") + '", ' + \
+            '"--similarity", "' + path.join(inDir, "similarity.tab") + '", ' + \
             '"--names", "mRNA", ' + \
-            '"--scores", "' + path.join(inDir, "clin.tumormap.tab") + '", ' + \
-            '"--colormaps", "' + path.join(inDir, "clin.colormaps.final.tab") + '", ' + \
+            '"--scores", "' + path.join(inDir, "attributes.tab") + '", ' + \
             '"--directory", "' + outDir + '", ' + \
             '"--include-singletons", ' + \
-            '"--first_attribute", "' + "KIT_mutated" + '",' \
-            '"--no_density_stats", ' + \
+            '"--first_attribute", "' + "DNA_Repair" + '",' \
             '"--no_layout_independent_stats", ' + \
             '"--no_layout_aware_stats" ]'
         

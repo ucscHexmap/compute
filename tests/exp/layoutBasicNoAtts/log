@@ -1,7 +1,7 @@
 01-20 15:44:00 Started
 command-line options:
 ['--feature_space',
- '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab',
+ '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab',
  '--names',
  'mRNA',
  '--metric',
@@ -21,7 +21,7 @@ all options:
  'directedGraph': True,
  'directory': '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/out/computeSim/',
  'drlpath': None,
- 'feature_space': [['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab']],
+ 'feature_space': [['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab']],
  'first_attribute': '',
  'layout_method': 'DrL',
  'metric': [['spearman']],
@@ -54,10 +54,10 @@ Created nodes_multiple list...
 About to open matrices...
 DRL method
 None
-['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab']
+['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab']
 None
 Feature matrices
-Opening Matrix 0 /home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/mcrchopra.data.tab
+Opening Matrix 0 /home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/createMap/full_matrix.tab
 8 x 60
 
 S1	S12	0.95238095238

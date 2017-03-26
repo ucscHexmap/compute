@@ -19,15 +19,15 @@ expNoAttsDir = expDirBase+ 'NoAtts/'
 expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
 
-rawDataFile = os.path.join(inDir, 'mcrchopra.data.tab')
+rawDataFile = os.path.join(inDir, 'full_matrix.tab')
 fullSimDataFile = os.path.join(inDir, 'mcr.fullsim.tab')
-top6SimDataFile = os.path.join(inDir, 'mcr.top6.tab')
-coordDataFile = os.path.join(testDir,'exp/layoutBasic', 'xyPreSquiggle_0.tab')
+top6SimDataFile = os.path.join(inDir, 'similarity.tab')
+coordDataFile = os.path.join(inDir,'coordinates.tab')
 
-colorDataFile = os.path.join(inDir, 'mcrchopra.colormaps.tab')
-attsStringsFile = os.path.join(inDir ,'mcrchopra.atts.with_strs.tab')
+colorDataFile = os.path.join(inDir, 'colormaps.tab')
+attsStringsFile = os.path.join(inDir ,'attributes.tab')
 #now we never give layout coded attrs
-attsCodedFile = os.path.join(inDir, 'mcrchopra.atts.with_strs.tab')
+attsCodedFile = os.path.join(inDir, 'attributes.tab')
 
 import layout
 import compute_sparse_matrix
@@ -43,7 +43,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--metric", 'spearman',
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -60,7 +59,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--scores", attsStringsFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -90,7 +88,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -107,7 +104,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--metric", 'spearman',
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -125,7 +121,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--scores", attsStringsFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -144,7 +139,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -160,7 +154,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -177,7 +170,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -195,7 +187,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -211,7 +202,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -224,9 +214,9 @@ class Test_layoutBasic(unittest.TestCase):
                                                         'hexNames.tab',
                                                         'xyPreSquiggle_0.tab']
                                         )
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'assignments0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',outDir,expXyDir)
+        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
 
     def test_xy_no_color(s):
         outDir = outDirBase + '_xy_no_color/'
@@ -237,7 +227,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--names", "layout",
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -255,9 +244,9 @@ class Test_layoutBasic(unittest.TestCase):
         #theese files are not expected to be the same as other runs,
         # but to make sure they are correct we have but previous runs in a different
         # expected directory.
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'assignments0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',outDir,expXyDir)
+        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
 
     def test_xy(s):
         outDir = outDirBase + '_xy/'
@@ -270,7 +259,6 @@ class Test_layoutBasic(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 
@@ -285,9 +273,9 @@ class Test_layoutBasic(unittest.TestCase):
                                                         'hexNames.tab',
                                                         'xyPreSquiggle_0.tab']
                                         )
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'assignments0.tab',outDir,expXyDir)
-        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',outDir,expXyDir)
+        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
 
 if __name__ == '__main__':
     unittest.main()

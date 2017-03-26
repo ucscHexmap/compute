@@ -73,7 +73,7 @@ def parse_args(args):
     #parser.add_argument("--tsne_pca_dimensions", type=str, default="11",
     #    help="Number of PCA dimensions to reduce data to prior to performing t-SNE")
     parser.add_argument("--names", type=str, action="append", default=[],
-        help="human-readable unique name/label for one the similarity matrix")
+        help="human-readable unique label for one similarity matrix")
     parser.add_argument("--scores", type=str,
         action="append",
         help="values for each signature as TSV")
@@ -94,15 +94,15 @@ def parse_args(args):
     parser.add_argument("--attributeTags", type=str,
         default=None,
         help="tags for filtering attributes for display, as TSV")
-    parser.add_argument("--min_window_nodes", type=int, default=5,
-        dest="mi_window_threshold",
-        help="min nodes per window for layout-aware stats")
-    parser.add_argument("--max_window_nodes", type=int, default=20,
-        dest="mi_window_threshold_upper",
-        help="max nodes per window for layout-aware stats")
-    parser.add_argument("--no_density_stats", dest="clumpinessStats",
-        action="store_false", default=True,
-        help="don't calculate density stats")
+    #parser.add_argument("--min_window_nodes", type=int, default=5,
+    #    dest="mi_window_threshold",
+    #    help="min nodes per window for layout-aware stats")
+    #parser.add_argument("--max_window_nodes", type=int, default=20,
+    #    dest="mi_window_threshold_upper",
+    #    help="max nodes per window for layout-aware stats")
+    #parser.add_argument("--no_density_stats", dest="clumpinessStats",
+    #    action="store_false", default=True,
+    #    help="don't calculate density stats")
     parser.add_argument("--no_layout_independent_stats", dest="associations",
         action="store_false", default=True,
         help="don't calculate layout-independent stats")
@@ -117,36 +117,36 @@ def parse_args(args):
         help="DrL binaries")
 
     # Rarely used, if ever, parameters:
-    parser.add_argument("--type", type=str, nargs='+',
-        help="the data types of the raw data matrices")
+    #parser.add_argument("--type", type=str, nargs='+',
+    #    help="the data types of the raw data matrices")
     parser.add_argument("--rawsim", type=str, nargs='+',
         help="correlates the raw data file to its similarity matrix")
     parser.add_argument("--directed_graph", dest="directedGraph",
         action="store_true", default=True,
-        help="generate the data to draw the directed graph")
+        help="generate the data to draw the directed graph in the node" +
+            "density view")
     parser.add_argument("--output_zip", type=str, default="",
         help="compress the output files into a zip file")
     parser.add_argument("--output_tar", type=str, default="",
         help="compress the output files into a tar file")
 
     # Deprecated parameters:
-    parser.add_argument("--mi_window_threshold", type=int, default=5,
-        help="deprecated, use --min_window_nodes instead")
-    parser.add_argument("--mi_window_threshold_upper", type=int, default=20,
-        help="deprecated, use --max_window_nodes instead")
-    parser.add_argument("--no-stats", dest="clumpinessStats",
-        action="store_false", default=True,
-        help="deprecated, use --no_density_stats instead")
-    parser.add_argument("--no-associations", dest="associations",
-        action="store_false", default=True,
-        help="deprecated, use --no_layout_independent_stats instead")
-    parser.add_argument("--no-mutualinfo", dest="mutualinfo",
-        action="store_false", default=True,
-        help="deprecated, use --no_layout_aware_stats instead")
+    #parser.add_argument("--mi_window_threshold", type=int, default=5,
+    #    help="deprecated, use --min_window_nodes instead")
+    #parser.add_argument("--mi_window_threshold_upper", type=int, default=20,
+    #    help="deprecated, use --max_window_nodes instead")
+    #parser.add_argument("--no-stats", dest="clumpinessStats",
+    #    action="store_false", default=True,
+    #    help="deprecated, use --no_density_stats instead")
+    #parser.add_argument("--no-associations", dest="associations",
+    #    action="store_false", default=True,
+    #    help="deprecated, use --no_layout_independent_stats instead")
+    #parser.add_argument("--no-mutualinfo", dest="mutualinfo",
+    #    action="store_false", default=True,
+    #    help="deprecated, use --no_layout_aware_stats instead")
     parser.add_argument("--include-singletons", dest="singletons",
-        action="store_true", default=False,
+    action="store_true", default=False,
         help="deprecated, use --self-connected-edges instead")
-
 
     return parser.parse_args(args)
 
@@ -161,9 +161,6 @@ Notes about peculiarities in code:
     2.) --truncate_edges option: This is defaulted to 6, and gets fed into the DRL clustering algorithm.
                                  The name suggests that even if you provided 20 neighbors, downstream the
                                  DRL clustering algorthm would trim it down to six.
-
-    3.) if --first_attribute is not specified then the first attribute is arbitraily selected.
-              This messes with the ordering given by the density values and may not be desired behavior
 '''
 ##
 #DCM helpers
@@ -844,7 +841,7 @@ def write_similarity_names(options):
 
 def copy_files_for_UI(options, layer_files, layers, layer_positives, clumpiness_scores):
     """
-    Copy some files over to the tumor map space so it may access them.
+    Copy some files over to the view space so it may access them.
     """
     # Write an index of all the layers we have, in the form:
     # <layer>\t<file>\t<number of signatures with data>\t<number of signatures
@@ -971,6 +968,11 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
     #make sure the common defaults are in the options Namespace
     options = fillOpts(options)
+    
+    # Override some old options
+    options.clumpinessStats = True
+    options.layout_method = 'DrL'
+
     #make the destination directory for output if its not there
     if not os.path.exists(options.directory):
         os.makedirs(options.directory)
@@ -992,8 +994,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
     sys.stdout.flush()
 
     ctx = Context()
-    
-    options.layout_method = 'DrL'
 
     if options.role != None:
     
@@ -1036,7 +1036,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
     
     #if no colormaps file is specified then assume it needs to be created
     # and annotations need to be converted to tumor map mappings.
-    # If attributes are not specified then there's no colormaps to create
+    # If attributes are not specified then there is no colormap to create.
     if not(options.scores == None):
 
         create_colormaps_file(options.scores,os.path.join(options.directory,'colormaps.tab'),

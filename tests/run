@@ -4,6 +4,7 @@
 if [ $# -eq 0 ]; then
     echo "one argument is needed like this:"
     echo "  run all (all tests)"
+    echo "  run docker_safe (tests known to run under docker)"
     echo "  run web (_web_tests.py tests only)"
     echo "  run test_stats (one test file)"
     echo "  run test_stats.TestStats.test_stats (one test in one file)"
@@ -52,7 +53,7 @@ DEPRECATED=( \
     test_remoteCalc \
 )
 # The rest of the tests, order-dependent due to issues with parallel code
-REST=( \
+DOCKER_SAFE=( \
     test_layoutBasic \
     test_layoutBasicMakeUI \
     placeNode_calc_tests \
@@ -62,7 +63,7 @@ REST=( \
 )
 
 # Combine the lists above to get ALL of the tests
-ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${REST[@]}" )
+ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${DOCKER_SAFE[@]}" )
 
 # These tests have issues with the parallelizm running them with the rest of the test
 PARALLEL_CHALLENGED=( \
@@ -88,6 +89,8 @@ MAC=( \
 TO_RUN=($1)
 if [ $1 == 'all' ]
     then TO_RUN="${ALL[@]}"
+elif [ $1 == 'docker_safe' ]
+    then TO_RUN="${DOCKER_SAFE[@]}"
 elif [ $1 == 'web' ]
     then TO_RUN="${WEB[@]}"
 elif [ $1 == 'mac' ]
@@ -98,7 +101,7 @@ fi
 python2.7 -m unittest $TO_RUN
 
 # Run our parallel-challenged tests independently
-if [ $1 == 'all' ]
+if [ $1 == 'all' ] || [ $1 == 'docker_safe' ]
     then
     echo Running parallel-challenged tests independently
     for TEST in "${PARALLEL_CHALLENGED[@]}"
