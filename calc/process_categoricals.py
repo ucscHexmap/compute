@@ -466,10 +466,14 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     datatypes = attributes.dtypes
 
     #find categorical attributes
+    # TODO this does not identify values of true/false as categorical.
+    # Later on the .to_numeric() call silently drops the attribute because it
+    # does not know how to convert it, and an error is thrown later due to
+    # an expected index missing.
     catAtts = attributes.columns[datatypes=='object']
     nCategoricals = len(catAtts)
 
-    chatter( str(nCategoricals) + " categorical attributes detected in metadata")
+    chatter( str(nCategoricals) + " potential categorical attributes detected in metadata")
 
     #make sure there are not duplicate attribute names because things will likely break down the line
     dups = duplicatesCheck(catAtts)
