@@ -230,8 +230,12 @@ def write_colormaps(outfile,cmaps):
     :param cmaps: a colormap object, list of lists in specified format
     :return: None
     '''
-    
-    fout = open(outfile,'w')
+    #try except allows for buffers to be passed in as 'outfile'
+    try:
+        fout = open(outfile,'w')
+    except TypeError:
+        fout = outfile
+        pass
 
     #copying the colormaps object to a file entry by entry
     for attrentry in cmaps:
@@ -242,8 +246,12 @@ def write_colormaps(outfile,cmaps):
             else:
                 fout.write(str(value))
         fout.write('\n')
-    
-    fout.close()
+
+    #if you leave the file object open it gives more flexiblity passing a
+    # buffer in as 'outfile', meaning you don't have to write out to a file
+    # to grab and analyze a colormap. If uncomment expect the test_bool in
+    # test_process_categoricals.py to fail
+    #fout.close()
 
 def duplicatesCheck(attrList):
     '''
@@ -463,6 +471,11 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
         print attributes.head()
 
     #grab all the datatypes from the pandas dataframe
+
+    #make sure true/false values are read as strings
+    bmsk = np.array(attributes.dtypes == np.bool)
+    attributes.iloc[:,bmsk] = attributes.select_dtypes(include=[
+       'bool']).astype('object')
     datatypes = attributes.dtypes
 
     #find categorical attributes
