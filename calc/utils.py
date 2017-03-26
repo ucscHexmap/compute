@@ -42,7 +42,11 @@ def getAttributes(fileNameList,dir='',debug=False):
 
     dfs = [] #list to hold individual dfs
     for filename in fileNameList:
-        filename = dir + filename
+        #try except allows filname to be a str buffer
+        try:
+            filename = dir + filename
+        except TypeError:
+            pass
 
         #assume first column is row name and do below to get rid of duplicates
         df = pd.read_csv(filename,sep='\t')#,index_col=0)
