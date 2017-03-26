@@ -482,7 +482,8 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     catAtts = attributes.columns[datatypes=='object']
     nCategoricals = len(catAtts)
 
-    chatter( str(nCategoricals) + " categorical attributes detected in metadata")
+    if debug:
+        chatter( str(nCategoricals) + " categorical attributes detected in metadata")
 
     #make sure there are not duplicate attribute names because things will likely break down the line
     dups = duplicatesCheck(catAtts)
