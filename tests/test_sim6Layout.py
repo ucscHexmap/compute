@@ -27,7 +27,7 @@ import layout
 
 class Test_sim6Layout(unittest.TestCase):
 
-    def test_sim6Layout(s):
+    def test_sim6Layout_check(s):
         '''
         This test insures that if you start from the same data,
           the output does not depend on the input form
