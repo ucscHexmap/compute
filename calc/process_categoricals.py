@@ -215,7 +215,10 @@ def read_colormaps(colormapsFile):
     if colormapsFile == '':
         return []
     else:
-        cfin = open(colormapsFile,'r')
+        try:
+            cfin = open(colormapsFile,'r')
+        except TypeError as e:
+            cfin = colormapsFile
 
         cmaps = []
         for line in cfin:
@@ -430,7 +433,9 @@ def transformToColormapInts(attrDF,colormaps,debug=False):
 
         for cat in catIndexDict.keys():
             #replace each category with the proper index
-            attrDF[attrName].iloc[np.array(attrDF[attrName] == cat)] = catIndexDict[cat]
+            attrDF.iloc[np.array(attrDF[attrName] == cat),
+                        np.array(attrDF.columns==attrName)] = \
+                catIndexDict[cat]
 
         #attrDF[attrName].astype('uint')
 
