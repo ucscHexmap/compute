@@ -5,8 +5,11 @@ import process_categoricals as pc
 import testUtil as tu
 import StringIO
 import unittest
+import os
 
-class Test_layoutBasic(unittest.TestCase):
+testDir = os.getcwd()
+
+class Test_colormapGeneration(unittest.TestCase):
 
     def test_bool(s):
         '''
@@ -38,3 +41,25 @@ class Test_layoutBasic(unittest.TestCase):
                             'passing booleans '
                              'to '
                             'create_colormaps_file' + str(e))
+
+    def test_attrs(s):
+        '''
+        makes sure our edge case file performs as expected..
+        @return:
+        '''
+        #make random boolean data
+        out = StringIO.StringIO()
+
+        try:
+            pc.create_colormaps_file([os.path.join(testDir,
+                                                   'in/layout/attributes.tab')],
+                                     out)
+        except Exception as e:
+            s.assertTrue(False,'exception thrown when processing edge cases'
+                         + str(e))
+
+        #get colormaps to interogate
+        colormaps = pc.read_colormaps(StringIO.StringIO(out.getvalue()))
+
+        s.assertTrue(len(colormaps) ==7,'did not find the correct amount of'
+                ' colormap vars')
