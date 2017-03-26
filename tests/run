@@ -58,6 +58,7 @@ REST=( \
     placeNode_calc_tests \
     test_similarity \
     test_stats \
+    test_process_categoricals \
 )
 
 # Combine the lists above to get ALL of the tests
