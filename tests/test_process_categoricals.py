@@ -1,11 +1,12 @@
 #!/usr/bin/env python2.7
 
 
-import process_categoricals as pc
 import testUtil as tu
 import StringIO
+import pandas as pd
 import unittest
 import os
+import process_categoricals as pc
 
 testDir = os.getcwd()
 
@@ -22,9 +23,6 @@ class Test_colormapGeneration(unittest.TestCase):
         df[1] = df[1] < 0
 
         df = tu.dataFrameToStrBuf(df)
-        #df = '/home/duncan/hex/compute/tests/in/layout/mcrchopra.atts
-        # .with_strs.tab'
-        #print df
         out = StringIO.StringIO()
         passed = True
         e = None
@@ -47,7 +45,6 @@ class Test_colormapGeneration(unittest.TestCase):
         makes sure our edge case file performs as expected..
         @return:
         '''
-        #make random boolean data
         out = StringIO.StringIO()
 
         try:
@@ -63,3 +60,24 @@ class Test_colormapGeneration(unittest.TestCase):
 
         s.assertTrue(len(colormaps) ==7,'did not find the correct amount of'
                 ' colormap vars')
+
+    def test_many_categories(s):
+        '''
+
+        @return:
+        '''
+        #length of categorical descriptors
+        lenStr=3
+        #generate categorical vectors of varying length and make colormaps
+        for i in [19,22,33]:
+            #generate 'i' random strings
+            df = pd.DataFrame([tu.randStr(lenStr) for x in range(i)])
+            #switch over to a string buffer so can pass to process_cat*
+            df = tu.dataFrameToStrBuf(df)
+            out = StringIO.StringIO()
+            try:
+                pc.create_colormaps_file([df],out)
+            except Exception as e:
+                s.assertTrue(False,'exception thrown when doing cat vector of '
+                                   'size ' + str(i) + ' with exception '
+                                   + str(e))
