@@ -11,6 +11,7 @@ from scipy import stats
 import StringIO
 from rootDir import getRootDir
 import pandas as pd
+import string, random
 
 rootDir = getRootDir()
 testDir = rootDir + 'tests/pyUnittest/'
@@ -160,3 +161,7 @@ def getdf(fin='',type_='tab',rownamecol=0,nrows=50,ncols=40):
                             columns=range(0,ncols))
     else:
         return "SOME WENT WRONG"
+
+def randStr(N):
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _
+                  in range(N))
