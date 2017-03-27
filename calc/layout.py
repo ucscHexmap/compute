@@ -239,7 +239,8 @@ def getDataTypes(attributeDF,colormapFile,debug=False):
     for attrName in categoricals:
         if debug:
             print attrName
-        if attrName in attributeDF.columns.tolist():
+        if attrName in attributeDF.columns.tolist() and \
+            attrName not in prunedCats:
             prunedCats.append(attrName)
         else:
             if debug:
