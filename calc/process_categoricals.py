@@ -193,7 +193,13 @@ def convertLabToHexStr(labColor):
     :param labColor: a Lab colormath object 
     :return: a hex-string color code
     '''
-    return convert_color(labColor,sRGBColor).get_rgb_hex()
+    hexstr = convert_color(labColor,sRGBColor).get_rgb_hex()
+
+    #make sure the hexstring is the appropriate length
+    if len(hexstr)>7:
+        hexstr = hexstr[:7]
+
+    return hexstr
 
 def chatter(str, prefix = ''):
     '''
