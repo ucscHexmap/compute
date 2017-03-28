@@ -34,6 +34,25 @@ import compute_sparse_matrix
 
 class Test_layoutBasic(unittest.TestCase):
 
+    def test_full_no_feature_file(s):
+        outDir = outDirBase + '_layoutMissingRequiredParm/'
+
+        opts = [
+            "--names", "layout",
+            "--metric", 'spearman',
+            "--directory", outDir,
+            "--include-singletons",
+            "--no_layout_independent_stats",
+            "--no_layout_aware_stats"]
+
+        util.removeOldOutFiles(outDir)
+        try:
+            rc = 0
+            rc = layout.main(opts)
+            s.assertTrue(rc, 'this should have failed')
+        except ValueError as e:
+            s.assertTrue(e, e)
+
     def test_full_no_atts(s):
         outDir = outDirBase + '_full_no_atts/'
 
