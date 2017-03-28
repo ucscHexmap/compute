@@ -482,11 +482,6 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
         print attributes.head()
 
     #grab all the datatypes from the pandas dataframe
-
-    #make sure true/false values are read as strings
-    bmsk = np.array(attributes.dtypes == np.bool)
-    attributes.iloc[:,bmsk] = attributes.select_dtypes(include=[
-       'bool']).astype('object')
     datatypes = attributes.dtypes
 
     #find categorical attributes
