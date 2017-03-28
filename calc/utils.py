@@ -48,7 +48,7 @@ def getAttributes(fileNameList,dir='',debug=False):
             pass
 
         #assume first column is row name and do below to get rid of duplicates
-        df = pd.read_csv(filename,sep='\t')#,index_col=0)
+        df = pd.read_csv(filename,sep='\t',dtype='str')#,index_col=0)
 
         if debug:
             print "column names for attr file: " + str(df.columns)
@@ -56,7 +56,16 @@ def getAttributes(fileNameList,dir='',debug=False):
         dfs.append(df.drop_duplicates(subset=df.columns[0], keep='last').set_index(df.columns[0]))
 
     #stich all attributes together
-    return(pd.concat(dfs,axis=1))
+    allAtts = pd.concat(dfs,axis=1)
+
+    #turn what attributes that don't throw an error into a float
+    for colname in allAtts.columns:
+        try:
+            allAtts[colname] = allAtts[colname].astype(np.float)
+        except ValueError as e:
+            pass
+
+    return allAtts
 
 def sigDigs(x, sig=7,debug=False):
 
