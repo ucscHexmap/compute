@@ -2,6 +2,6 @@
 mutated/not	0	Has mutation	#0000ff	1	No mutation	#ff7f00
 yes/No	0	No	#0000ff	1	yes	#ff7f00
 bad_indices	0	Medium	#0000ff	1	Low	#ff7f00	2	High	#007f7f
-true/False	0	True	#0000ff	1	False	#ff7f00
+true/False	0	true	#0000ff	1	False	#ff7f00
 On/off	0	On	#0000ff	1	off	#ff7f00
 true/No	0	true	#0000ff	1	No	#ff7f00
