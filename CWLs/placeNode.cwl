@@ -48,7 +48,7 @@ inputs:
         prefix: "--mapID"
     doc: the map identifier used to generate primitive URLs
 
-    - id: numJobs
+  - id: numJobs
     type: int
     inputBinding:
       position: 5
