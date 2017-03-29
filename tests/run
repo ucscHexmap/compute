@@ -33,8 +33,8 @@ elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
     export HUB_SOCKET=localhost
     export VIEWER_URL=http://localhost:3333
 else
-    echo You must have a config entry in this script
-    exit
+    echo WARNING: You do not have a config entry for the test script
+
 fi
 
 # Set env vars common to all installations
