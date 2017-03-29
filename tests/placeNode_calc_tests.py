@@ -1,6 +1,9 @@
 import os
 import unittest
 import pandas as pd
+from placeNode_web import *
+import placeNode
+import compute_sparse_matrix
 
 testDir = os.getcwd()
 inDir = os.path.join(testDir, 'in/layout/')

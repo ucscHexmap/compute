@@ -12,6 +12,12 @@ from webUtil import SuccessResp, ErrorResp, getMetaData, log, \
     availableMapLayouts, validateMap, validateLayout, validateEmail, \
     validateViewServer
 import placeNode
+import compute_sparse_matrix
+import utils
+import pandas as pd
+import StringIO
+import numpy as np
+
 def validateParameters(data):
 
     # Validate an overlayNodes query
