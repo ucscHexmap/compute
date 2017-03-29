@@ -1,7 +1,6 @@
 import os
 import unittest
 import pandas as pd
-from placeNode_calc import *
 
 testDir = os.getcwd()
 inDir = os.path.join(testDir, 'in/layout/')
