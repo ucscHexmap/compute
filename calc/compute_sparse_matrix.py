@@ -368,10 +368,12 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
 
     return output
 
+'''
+unused
 def compute_similarities_old(dt, sample_labels, metric_type, num_jobs, output_type, top, log):
-    '''
-    This function was erroring with an index error (on output to string) of unknown cause for some inputs.
-    '''
+
+    #This function was erroring with an index error (on output to string) of unknown cause for some inputs.
+
     if not(log == None):
         print >> log, "Computing similarities..."
     curr_time = time.time()
@@ -403,6 +405,7 @@ def compute_similarities_old(dt, sample_labels, metric_type, num_jobs, output_ty
     if not(log == None):
         print >> log, str(time.time() - curr_time) + " seconds"
     return(output)
+'''
 
 def main(args):
 

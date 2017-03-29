@@ -94,15 +94,6 @@ def parse_args(args):
     parser.add_argument("--attributeTags", type=str,
         default=None,
         help="tags for filtering attributes for display, as TSV")
-    #parser.add_argument("--min_window_nodes", type=int, default=5,
-    #    dest="mi_window_threshold",
-    #    help="min nodes per window for layout-aware stats")
-    #parser.add_argument("--max_window_nodes", type=int, default=20,
-    #    dest="mi_window_threshold_upper",
-    #    help="max nodes per window for layout-aware stats")
-    #parser.add_argument("--no_density_stats", dest="clumpinessStats",
-    #    action="store_false", default=True,
-    #    help="don't calculate density stats")
     parser.add_argument("--no_layout_independent_stats", dest="associations",
         action="store_false", default=True,
         help="don't calculate layout-independent stats")
@@ -117,8 +108,6 @@ def parse_args(args):
         help="DrL binaries")
 
     # Rarely used, if ever, parameters:
-    #parser.add_argument("--type", type=str, nargs='+',
-    #    help="the data types of the raw data matrices")
     parser.add_argument("--rawsim", type=str, nargs='+',
         help="correlates the raw data file to its similarity matrix")
     parser.add_argument("--directed_graph", dest="directedGraph",
@@ -131,19 +120,6 @@ def parse_args(args):
         help="compress the output files into a tar file")
 
     # Deprecated parameters:
-    #parser.add_argument("--mi_window_threshold", type=int, default=5,
-    #    help="deprecated, use --min_window_nodes instead")
-    #parser.add_argument("--mi_window_threshold_upper", type=int, default=20,
-    #    help="deprecated, use --max_window_nodes instead")
-    #parser.add_argument("--no-stats", dest="clumpinessStats",
-    #    action="store_false", default=True,
-    #    help="deprecated, use --no_density_stats instead")
-    #parser.add_argument("--no-associations", dest="associations",
-    #    action="store_false", default=True,
-    #    help="deprecated, use --no_layout_independent_stats instead")
-    #parser.add_argument("--no-mutualinfo", dest="mutualinfo",
-    #    action="store_false", default=True,
-    #    help="deprecated, use --no_layout_aware_stats instead")
     parser.add_argument("--include-singletons", dest="singletons",
     action="store_true", default=False,
         help="deprecated, use --self-connected-edges instead")
@@ -916,8 +892,6 @@ def getDefaultOpts():
                  'feature_space': None, #[[path,path,path]]
                  'first_attribute': '', sting filepath, empty if omitted
                  'metric': None, [[metric,metric,metric]]
-                 'mi_window_threshold': 5,
-                 'mi_window_threshold_upper': 20,
                  'mutualinfo': True, #bool
                  'names': [], #[string,string,...]
                  'output_tar': '', #string filepath
@@ -956,6 +930,49 @@ def fillOpts(options):
         except KeyError:
             optionsDict[needed] = defaults[needed]
 
+    # Override some old options
+    options.clumpinessStats = True
+    options.layout_method = 'DrL'
+
+    # Only allow one feature format to be applied to all layouts,
+    # so find the first one and ignore the rest.
+    formats = ['similarity', 'similarity_full', 'feature_space', 'coordinates']
+    theFormat = None
+    for format in formats:
+        if not getattr(options, format) == None and theFormat == None:
+            theFormat = format
+            break
+
+    newVal = []
+    for format in formats:
+        if format == theFormat:
+            
+            # Make sure arguments are lists instead of list of lists
+            # needed for backward compatibility of scripts
+            newVal = \
+                [val for sublist in getattr(options, format) for val in sublist]
+            setattr(options, format, newVal)
+            
+            if format == 'feature_space':
+                # Set all layouts to the same metric
+                if options.metric == None:
+                    options.metric = ['spearman'] * len(newVal)
+                else:
+                    options.metric = \
+                        [val for sublist in options.metric for val in sublist]
+    
+        else:
+        
+            # Clear other formats
+            setattr(options, format, None)
+            
+
+    if len(newVal) < 1:
+        raise ValueError("Error: one of these feature layout options " +
+            "must be specified: feature_space similarity, " +
+            "similarity_full, coordinates.")
+
+
     return options
 
 def makeMapUIfiles(options, cmd_line_list=None):
@@ -970,10 +987,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
     #make sure the common defaults are in the options Namespace
     options = fillOpts(options)
     
-    # Override some old options
-    options.clumpinessStats = True
-    options.layout_method = 'DrL'
-
     #make the destination directory for output if its not there
     if not os.path.exists(options.directory):
         os.makedirs(options.directory)
@@ -1018,23 +1031,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
     if options.scores == None:
         options.scores = [build_default_scores(options)]
 
-    #Make sure arguements are lists instead of list of lists
-    # needed for backward compatibiliy of scripts
-    if not (options.similarity == None):
-        options.similarity = [val for sublist in options.similarity for val in sublist]
-        print "Using sparse similarity"
-    if not (options.similarity_full == None):
-        options.similarity_full = [val for sublist in options.similarity_full for val in sublist]
-        print "Using full similarity"
-    if not (options.feature_space == None):
-        options.feature_space = [val for sublist in options.feature_space for val in sublist]
-        print "Using full feature space"
-    if not (options.metric == None):
-        options.metric = [val for sublist in options.metric for val in sublist]
-    if not (options.coordinates == None):
-        options.coordinates = [val for sublist in options.coordinates for val in sublist]
-        print "Using coordinates"
-    
     #if no colormaps file is specified then assume it needs to be created
     # and annotations need to be converted to tumor map mappings.
     # If attributes are not specified then there is no colormap to create.

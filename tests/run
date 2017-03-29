@@ -16,7 +16,7 @@ export PYTHONPATH=$(pwd)/../www:$(pwd)/../calc
 if [ $HEXMAP == '/data' ]; then
     # Production servers on tumormap
     export VIEWER_URL=https://tumormap.ucsc.edu
-    export HUB_SOCKET=hexdev.sdsc.edu:8332
+    export HUB_SOCKET=hexmap.sdsc.edu:8332
 
 elif [ $HEXMAP == '/cluster/home/swat/dev' ]; then
     # Development servers on hexdev
