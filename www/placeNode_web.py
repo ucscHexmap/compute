@@ -11,7 +11,6 @@ from flask import Response
 from webUtil import SuccessResp, ErrorResp, getMetaData, log, \
     availableMapLayouts, validateMap, validateLayout, validateEmail, \
     validateViewServer
-import placeNode_calc
 import placeNode
 def validateParameters(data):
 
