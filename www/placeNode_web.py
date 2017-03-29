@@ -12,7 +12,7 @@ from webUtil import SuccessResp, ErrorResp, getMetaData, log, \
     availableMapLayouts, validateMap, validateLayout, validateEmail, \
     validateViewServer
 import placeNode_calc
-
+import placeNode
 def validateParameters(data):
 
     # Validate an overlayNodes query
@@ -186,14 +186,80 @@ def calcComplete(result, ctx, app):
 
     return result
 
+def outputToDict(neighboorhood, xys, urls):
+    '''
+    This function takes the output from the newplacement call
+      into the expected format
+    @param neighboorhood: pandas df
+    @param xys: pandas df
+    @param urls: an array of URLs
+    @return: dictionary to be turned into a JSON str
+    '''
+    #return dictionary to populate with results
+    retDict = {"nodes":{}}
+
+    #seperating the columns of the neighborhood df
+    # for processing
+    newNodes  = neighboorhood[neighboorhood.columns[0]]
+    neighbors = neighboorhood[neighboorhood.columns[1]]
+    scores    = neighboorhood[neighboorhood.columns[2]]
+    #grab column names for indexing
+    xcol = xys.columns[0]
+    ycol = xys.columns[1]
+
+    for i,node in enumerate(set(newNodes)):
+        maskArr = np.array(newNodes == node)
+        retDict['nodes'][node] = {}
+        retDict['nodes'][node]['neighbors'] = dict(zip(neighbors.iloc[maskArr],
+                                                       scores.iloc[maskArr]))
+        #add urls to the return struct
+        #retDict['nodes'][node]['url'] = urls[i]
+        retDict['nodes'][node]['x'] = xys.loc[node,xcol]
+        retDict['nodes'][node]['y'] = xys.loc[node,ycol]
+
+    return retDict
+
+def putDataIntoPythonStructs(featurePath,xyPath,nodesDict):
+    '''
+    takes in the filenames and nodes dictionary needed for placement calc
+    @param featurePath:
+    @param xyPath:
+    @param tabSepArray:
+    @return:
+    '''
+    return (compute_sparse_matrix.numpyToPandas(
+            *compute_sparse_matrix.read_tabular(featurePath)
+                                                ),
+            utils.readXYs(xyPath),
+            nodesToPandas(nodesDict)
+          )
+
+def nodesToPandas(pydict):
+    '''
+    input the json['nodes'] structure and outputs pandas df
+    This looks crazy because we needed to read in the new node data
+    in the same way as the original feature matrix.
+    @param pydict: the dataIn['nodes'] structure,
+                   currently a dict of dicts {columns -> {rows -> values}}
+    @return: a pandas dataframe
+    '''
+    df = pd.DataFrame(pydict)
+    s_buf = StringIO.StringIO()
+    #dump pandas data frame into buffer
+    df.to_csv(s_buf,sep='\t')
+    s_buf.seek(0)
+    return compute_sparse_matrix.numpyToPandas(
+            *compute_sparse_matrix.read_tabular(s_buf)
+                                                )
+
 if __debug__:
-    def calcTestStub(opts):
+    def calcTestStub(newNodes):
         #print 'opts.newNodes', opts.newNodes
-        if 'testError' in opts.newNodes:
+        if 'testError' in newNodes:
             return {
                 'error': 'Some error message or stack trace'
             }
-        elif len(opts.newNodes) == 1:
+        elif len(newNodes) == 1:
             return {'nodes': {
                 'newNode1': {
                     'x': 73,
@@ -204,7 +270,7 @@ if __debug__:
                     }
                 },
             }}
-        elif len(opts.newNodes) > 1:
+        elif len(newNodes) > 1:
             return {'nodes': {
                 'newNode1': {
                     'x': 73,
@@ -247,29 +313,33 @@ def calc(dataIn, ctx, app):
         if not os.path.exists(files['xyPositions']):
             raise ErrorResp('xy positions file not found: ' +
                 files['xyPositions'], 500)
-    
-    # Put the options to be passed to the calc script in a Namespace object,
-    # the same object returned by argparse.parse_args().
-    opts = Namespace(
-        fullFeatureMatrix = files['fullFeatureMatrix'],
-        xyPositions = files['xyPositions'],
-        newNodes = dataIn['nodes'],
-        mapId = dataIn['map']
-    )
+
     
     # Set any optional parms, letting the calc script set defaults.
     if 'neighborCount' in dataIn:
-        opts.top = dataIn['neighborCount']
+        top = dataIn['neighborCount']
+    else:
+        top = 6
 
     #log('debug', 'opts: ' + str(opts), app);
 
     if 'testStub' in dataIn:
-        result = calcTestStub(opts)
+        result = calcTestStub(dataIn['nodes'])
         
     else:
 
+        #make expected python data structs
+        referenceDF, xyDF, newNodesDF = \
+         putDataIntoPythonStructs(files['fullFeatureMatrix'],
+                                  files['xyPositions'],
+                                  dataIn['nodes'])
         # Call the calc script.
-            result = placeNode_calc.entryPointFromWebApi(opts)
+        neighboorhood, xys, urls = placeNode.placeNew(newNodesDF,referenceDF,
+                                                      xyDF,top,dataIn['map'],
+                                                      num_jobs=1)
+        #format into JSON-like struct
+        result = outputToDict(neighboorhood,xys,urls)
+
 
     ctx['dataIn'] = dataIn
     ctx['meta'] = meta
