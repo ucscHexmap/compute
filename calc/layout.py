@@ -77,9 +77,6 @@ def parse_args(args):
     parser.add_argument("--scores", type=str,
         action="append",
         help="values for each signature as TSV")
-    parser.add_argument("--self-connected-edges", dest="singletons",
-        action="store_true", default=False,
-        help="add self-edges to input of DRL algorithm")
     parser.add_argument("--colormaps", type=str,
         default='',
         help="colormap for categorical attributes as TSV")
@@ -933,6 +930,7 @@ def fillOpts(options):
     # Override some old options
     options.clumpinessStats = True
     options.layout_method = 'DrL'
+    options.singletons = True
 
     # Only allow one feature format to be applied to all layouts,
     # so find the first one and ignore the rest.
