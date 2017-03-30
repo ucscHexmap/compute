@@ -23,6 +23,9 @@ VALID_METRICS = ['canberra','cosine','euclidean','manhattan','chebyshev','correl
                  'jaccard','rogerstanimoto','spearman']
 VALID_OUTPUT_TYPE = ['SPARSE','FULL','SPARSE_PERCENT']
 
+def valid_metrics():
+    return str(VALID_METRICS)
+
 def parse_args(args):
 
     parser = argparse.ArgumentParser(description=__doc__,
@@ -35,7 +38,7 @@ def parse_args(args):
     parser.add_argument("--top", type=int, default=6,
         help="number of top neighbors to use in DrL layout")
     parser.add_argument("--metric", type=str, default="correlation",
-        help="valid metrics: spearman,canberra,cosine,euclidean,manhattan,chebyshev,correlation,hamming,jaccard,rogerstanimoto")
+        help="valid metrics: " + str(VALID_METRICS))
     parser.add_argument("--output_type",type=str, default="sparse",
         help="either sparse or full")
     parser.add_argument("--log",type=str, default="",

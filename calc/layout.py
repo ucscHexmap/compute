@@ -32,6 +32,7 @@ from topNeighbors import topNeighbors_from_sparse
 from compute_sparse_matrix import read_tabular
 from compute_sparse_matrix import compute_similarities
 from compute_sparse_matrix import extract_similarities
+import compute_sparse_matrix
 import StringIO, gc
 from compute_layout import computePCA
 from compute_layout import computetSNE
@@ -66,7 +67,8 @@ def parse_args(args):
         help="file containing coordinates for the samples")
     parser.add_argument("--distanceMetric", nargs='+',action = 'append',
         dest="metric",
-        help="metric corresponding to the cluster matrix of the same index")
+        help="metric corresponding to the cluster matrix of the same index, " +
+        "one of: " + compute_sparse_matrix.valid_metrics())
     #parser.add_argument("--layout_method", type=str, default="DrL",
     #    help="DrL, tSNE, MDS, PCA, ICA, isomap, spectralembedding")
     #parser.add_argument("--preprocess_method", type=str, default="",
@@ -1533,7 +1535,10 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
             leesL.writeToDirectoryLee(options.directory + '/',leeMatrix,corMat,attrOnMap.columns.tolist(),layers,index)
 
-    # Find the top neighbors of each node
+    # Find the top neighbors of each node.
+    # TODO This is only running to produce the directed graph data,
+    # 'neighbors_*.tab' to display the node density view. Seems like this is
+    # redundant.
     if not(options.coordinates == None):
         for index, i in enumerate(ctx.sparse):
             topNeighbors_from_sparse(ctx.sparse[index], options.directory, options.truncation_edges, index)

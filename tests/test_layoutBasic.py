@@ -18,6 +18,7 @@ expDir = expDirBase + '/'
 expNoAttsDir = expDirBase+ 'NoAtts/'
 expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
+expParmDir = expDirBase + 'Parm/'
 
 rawDataFile = os.path.join(inDir, 'full_matrix.tab')
 fullSimDataFile = os.path.join(inDir, 'mcr.fullsim.tab')
@@ -34,8 +35,96 @@ import compute_sparse_matrix
 
 class Test_layoutBasic(unittest.TestCase):
 
+    def test_parms_renaming_deprecated_parms(s):
+        outDir = outDirBase + '_parmsRenamingDeprecatedParms/'
+
+        opts = [
+            # parms renaming deprecated parms
+            "--outputDirectory", outDir,
+            "--firstAttribute", "mutated/not",
+            "--layoutName", "layout",
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats",
+            "--distanceMetric", "cosine",
+            "--outputTar", os.path.join(outDir, 'tar.tar'),
+            "--outputZip", os.path.join(outDir, 'zip.zip'),
+            "--authGroup", "myRole",
+            "--colorAttributeFile", attsStringsFile,
+            "--neighborCount", "9",
+            
+            "--feature_space", rawDataFile]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expParmDir, outDir,
+            ['log', 'tar.tar', 'zip.zip'])
+
+    def test_deprecated_parms_renamed(s):
+        outDir = outDirBase + '_deprecatedParmsRenamed/'
+
+        opts = [
+            # parms deprecated in favor of new names
+            "--directory", outDir,
+            "--first_attribute", "mutated/not",
+            "--names", "layout",
+            "--no_layout_independent_stats",
+            "--no_layout_aware_stats",
+            "--metric", "cosine",
+            "--output_tar", os.path.join(outDir, 'tar.tar'),
+            "--output_zip", os.path.join(outDir, 'zip.zip'),
+            "--role", "myRole",
+            "--scores", attsStringsFile,
+            "--truncation_edges", "9",
+            
+            "--feature_space", rawDataFile]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expParmDir, outDir,
+            ['log', 'tar.tar', 'zip.zip'])
+    
+    def test_constants_replacing_deprecated_parms(s):
+        outDir = outDirBase + '_constantsReplacingdeprecatedParms/'
+
+        opts = [
+            # deprecated parms replaced with constant values
+            #"--directed_graph",
+            #"--include-singletons",
+            #"--window_size", "9999",
+
+            # unchanged parms:
+            "--feature_space", rawDataFile,
+            "--names", "layout",
+            "--directory", outDir,
+            "--no_layout_independent_stats",
+            "--no_layout_aware_stats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
+    def test_deprecated_parms_replaced_with_constants(s):
+        outDir = outDirBase + '_deprecatedParmsReplacedWithConstants/'
+
+        opts = [
+            # deprecated parms replaced with constant values
+            "--directed_graph",
+            "--include-singletons",
+            "--window_size", "9999",
+
+            # unchanged parms:
+            "--feature_space", rawDataFile,
+            "--names", "layout",
+            "--directory", outDir,
+            "--no_layout_independent_stats",
+            "--no_layout_aware_stats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
     def test_full_no_feature_file(s):
-        outDir = outDirBase + '_layoutMissingRequiredParm/'
+        outDir = outDirBase + '_junk/'
 
         opts = [
             "--names", "layout",
