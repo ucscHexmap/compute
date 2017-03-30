@@ -99,27 +99,29 @@ def parse_args(args):
         help="don't calculate layout-aware stats")
     parser.add_argument("--truncation_edges", type=int, default=6,
         help="edges per node for DrL and the directed graph")
-    parser.add_argument("--window_size", type=int, default=20,
-        help="clustering window count is this value squared")
     parser.add_argument("--drlpath", "-r", type=str,
         help="DrL binaries")
-
-    # Rarely used, if ever, parameters:
-    parser.add_argument("--rawsim", type=str, nargs='+',
-        help="correlates the raw data file to its similarity matrix")
-    parser.add_argument("--directed_graph", dest="directedGraph",
-        action="store_true", default=True,
-        help="generate the data to draw the directed graph in the node" +
-            "density view")
     parser.add_argument("--output_zip", type=str, default="",
         help="compress the output files into a zip file")
     parser.add_argument("--output_tar", type=str, default="",
         help="compress the output files into a tar file")
 
     # Deprecated parameters:
+    parser.add_argument("--directed_graph", dest="directedGraph",
+        action="store_true", default=True,
+        help="deprecated with constant value of true")
+        # old help="generate the data to draw the directed graph in the node" +
+        #    "density view")
     parser.add_argument("--include-singletons", dest="singletons",
-    action="store_true", default=False,
-        help="deprecated, use --self-connected-edges instead")
+        action="store_true", default=False,
+        help="deprecated with a constant value of true")
+    parser.add_argument("--self-connected-edges", dest="singletons",
+        action="store_true", default=False,
+        help="deprecated with a constant value of true")
+        # old help="add self-edges to input of DRL algorithm")
+    parser.add_argument("--window_size", type=int, default=20,
+        help="deprecated with no substitute")
+        # old help="clustering window count is this value squared")
 
     return parser.parse_args(args)
 
@@ -279,7 +281,6 @@ class Context:
         s.binary_layers = [] # Binary layer_names in the first layout
         s.continuous_layers = [] # Continuous layer_names in the first layout
         s.categorical_layers = [] # categorical layer_names in the first layout
-        s.beta_computation_data = {} # data formatted to compute beta values
         s.sparse = []
 
     def printIt(s):
@@ -901,7 +902,6 @@ def getDefaultOpts():
                  'singletons': False, #bool
                  'truncation_edges': 6, #int
                  'type': None, #deprecated
-                 'window_size': 20 #deprecated
                  }
 
     """
@@ -927,8 +927,9 @@ def fillOpts(options):
         except KeyError:
             optionsDict[needed] = defaults[needed]
 
-    # Override some old options
+    # Override some options that have become constants.
     options.clumpinessStats = True
+    options.directedGraph = True
     options.layout_method = 'DrL'
     options.singletons = True
 
