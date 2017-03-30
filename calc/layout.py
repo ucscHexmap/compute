@@ -64,47 +64,51 @@ def parse_args(args):
         help="full feature space matrix")
     parser.add_argument("--coordinates", nargs='+',action = 'append',
         help="file containing coordinates for the samples")
-    parser.add_argument("--metric", nargs='+',action = 'append',
-        help="metric corresponding to the feature matrix of the same index")
+    parser.add_argument("--distanceMetric", nargs='+',action = 'append',
+        dest="metric",
+        help="metric corresponding to the cluster matrix of the same index")
     #parser.add_argument("--layout_method", type=str, default="DrL",
     #    help="DrL, tSNE, MDS, PCA, ICA, isomap, spectralembedding")
     #parser.add_argument("--preprocess_method", type=str, default="",
     #    help="Preprocessing methods for feature data when tSNE, MDS, PCA, ICA, isomap, or spectralembedding methods are used; valid options are: standardize, normalize")
     #parser.add_argument("--tsne_pca_dimensions", type=str, default="11",
     #    help="Number of PCA dimensions to reduce data to prior to performing t-SNE")
-    parser.add_argument("--names", type=str, action="append", default=[],
-        help="human-readable unique label for one similarity matrix")
-    parser.add_argument("--scores", type=str,
+    parser.add_argument("--layoutName", type=str, action="append", dest="names",
+        default=[],
+        help="human-readable unique label for one layout in the map")
+    parser.add_argument("--colorAttributeFile", type=str, dest="scores",
         action="append",
-        help="values for each signature as TSV")
+        help="file containing the color attribute data as TSV")
     parser.add_argument("--colormaps", type=str,
         default='',
         help="colormap for categorical attributes as TSV")
-    parser.add_argument("--first_attribute", type=str, default="",
+    parser.add_argument("--firstAttribute", type=str, dest="first_attribute",
+        default="",
         help="attribute by which to color the map upon first display")
-    parser.add_argument("--directory", "-d", type=str, default=".",
-        help="directory in which to create other output files")
-    parser.add_argument("--role", type=str, default=None,
-        help="authorization role for this map")
+    parser.add_argument("--outputDirectory", "-d", type=str, dest="directory",
+        help="directory in which to create view output files")
+    parser.add_argument("--authGroup", type=str, default=None, dest="role",
+        help="authorization group that may view this map")
 
     # Lesser used parameters:
     parser.add_argument("--attributeTags", type=str,
         default=None,
         help="tags for filtering attributes for display, as TSV")
-    parser.add_argument("--no_layout_independent_stats", dest="associations",
+    parser.add_argument("--noLayoutIndependentStats", dest="associations",
         action="store_false", default=True,
         help="don't calculate layout-independent stats")
-    parser.add_argument("--no_layout_aware_stats", dest="mutualinfo",
+    parser.add_argument("--noLayoutAwareStats", dest="mutualinfo",
         action="store_false", default=True,
         help="don't calculate layout-aware stats")
-    parser.add_argument("--truncation_edges", type=int, default=6,
+    parser.add_argument("--neighborCount", type=int, default=6,
+        dest="truncation_edges",
         help="edges per node for DrL and the directed graph")
-    parser.add_argument("--drlpath", "-r", type=str,
+    parser.add_argument("--drlPath", "-r", type=str, dest="drlpath",
         help="DrL binaries")
-    parser.add_argument("--output_zip", type=str, default="",
+    parser.add_argument("--outputZip", type=str, default="", dest="output_zip",
         help="compress the output files into a zip file")
-    parser.add_argument("--output_tar", type=str, default="",
-        help="compress the output files into a tar file")
+    parser.add_argument("--outputTar", type=str, default="", dest="output_tar",
+        help="compress the output files into this tar file")
 
     # Deprecated parameters:
     parser.add_argument("--directed_graph", dest="directedGraph",
@@ -112,13 +116,39 @@ def parse_args(args):
         help="deprecated with constant value of true")
         # old help="generate the data to draw the directed graph in the node" +
         #    "density view")
+    parser.add_argument("--directory", type=str, default=".",
+        help="deprecated, use 'outputDirectory' instead")
+    parser.add_argument("--drlpath", type=str, dest="drlpath",
+        help="deprecated, use 'drlPath' instead")
+    parser.add_argument("--first_attribute", type=str, default="",
+        help="deprecated, use 'firstAttribute' instead")
     parser.add_argument("--include-singletons", dest="singletons",
         action="store_true", default=False,
         help="deprecated with a constant value of true")
+    parser.add_argument("--names", type=str, action="append", default=[],
+        help="deprecated, use 'layoutName' instead")
+    parser.add_argument("--no_layout_independent_stats", dest="associations",
+        action="store_false", default=True,
+        help="deprecated, use 'noLayoutIndependentStats' instead")
+    parser.add_argument("--no_layout_aware_stats", dest="mutualinfo",
+        action="store_false", default=True,
+        help="deprecated, use 'noLayoutAwareStats' instead")
+    parser.add_argument("--metric", nargs='+',action = 'append',
+        help="deprecated, use 'distanceMetric' instead")
+    parser.add_argument("--output_tar", type=str, default="",
+        help="deprecated, use 'outputTar' instead")
+    parser.add_argument("--output_zip", type=str, default="",
+        help="deprecated, use 'output_zip' instead")
+    parser.add_argument("--role", type=str, default=None,
+        help="deprecated, use 'authGroup' instead")
+    parser.add_argument("--scores", type=str, action="append",
+        help="deprecated, use 'colorAttributeFile' instead")
     parser.add_argument("--self-connected-edges", dest="singletons",
         action="store_true", default=False,
         help="deprecated with a constant value of true")
         # old help="add self-edges to input of DRL algorithm")
+    parser.add_argument("--truncation_edges", type=int, default=6,
+        help="deprecated, use 'neighborCount' instead")
     parser.add_argument("--window_size", type=int, default=20,
         help="deprecated with no substitute")
         # old help="clustering window count is this value squared")
