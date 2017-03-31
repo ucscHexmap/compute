@@ -65,8 +65,7 @@ def parse_args(args):
         help="full feature space matrix")
     parser.add_argument("--coordinates", nargs='+',action = 'append',
         help="file containing coordinates for the samples")
-    parser.add_argument("--distanceMetric", nargs='+',action = 'append',
-        dest="metric",
+    parser.add_argument("--distanceMetric", type=str,
         help="metric corresponding to the cluster matrix of the same index, " +
         "one of: " + compute_sparse_matrix.valid_metrics())
     #parser.add_argument("--layout_method", type=str, default="DrL",
@@ -984,14 +983,18 @@ def fillOpts(options):
                 [val for sublist in getattr(options, format) for val in sublist]
             setattr(options, format, newVal)
             
-            if format == 'feature_space':
-                # Set all layouts to the same metric
-                if options.metric == None:
-                    options.metric = ['spearman'] * len(newVal)
+            # Convert deprecated metric of form [['spearman']] to 'spearman'.
+            # Or set the distanceMetric default.
+            if not options.distanceMetric:
+                if options.metric:
+            
+                    # Set the single metric
+                    try:
+                        options.distanceMetric = options.metric[0][0]
+                    except:
+                        options.distanceMetric = 'spearman'
                 else:
-                    options.metric = \
-                        [val for sublist in options.metric for val in sublist]
-    
+                    options.distanceMetric = 'spearman'
         else:
         
             # Clear other formats
@@ -1186,7 +1189,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     dt,sample_labels,feature_labels = read_tabular(genomic_filename, True)
                     print str(len(dt))+" x "+str(len(dt[0]))
                     dt_t = np.transpose(dt)
-                    result = sparsePandasToString(compute_similarities(dt=dt_t, sample_labels=sample_labels, metric_type=options.metric[i], num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
+                    result = sparsePandasToString(compute_similarities(dt=dt_t, sample_labels=sample_labels, metric_type=options.distanceMetric, num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
