@@ -99,7 +99,7 @@ class Test_layoutBasic(unittest.TestCase):
         opts = Namespace(
             feature_space = [[rawDataFile]],
             names =  ["layout"],
-            metric= [['spearman']],
+            metric= 'spearman',
             directory= outDir,
             singletons=True,
             clumpinessStats=True,
@@ -117,7 +117,7 @@ class Test_layoutBasic(unittest.TestCase):
         opts = Namespace(
             feature_space= [[rawDataFile]],
             names= ["layout"],
-            metric= [['spearman']],
+            metric= 'spearman',
             scores= [attsStringsFile],
             directory= outDir,
             singletons=True,
@@ -136,7 +136,7 @@ class Test_layoutBasic(unittest.TestCase):
         opts = Namespace(
             feature_space= [[rawDataFile]],
             names= ["layout"],
-            metric= [['spearman']],
+            metric= 'spearman',
             scores= [attsCodedFile],
             colormaps= colorDataFile,
             directory= outDir,
@@ -266,7 +266,7 @@ class Test_layoutBasic(unittest.TestCase):
         opts = Namespace(
             coordinates= [[coordDataFile]],
             names= ["layout"],
-            metric= [['spearman']],
+            metric= 'spearman',
             scores= [attsCodedFile],
             colormaps= colorDataFile,
             directory= outDir,

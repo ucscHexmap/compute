@@ -65,8 +65,7 @@ def parse_args(args):
         help="full feature space matrix")
     parser.add_argument("--coordinates", nargs='+',action = 'append',
         help="file containing coordinates for the samples")
-    parser.add_argument("--distanceMetric", nargs='+',action = 'append',
-        dest="metric",
+    parser.add_argument("--distanceMetric", default="spearman",
         help="metric corresponding to the cluster matrix of the same index, " +
         "one of: " + compute_sparse_matrix.valid_metrics())
     #parser.add_argument("--layout_method", type=str, default="DrL",
@@ -135,7 +134,7 @@ def parse_args(args):
     parser.add_argument("--no_layout_aware_stats", dest="mutualinfo",
         action="store_false", default=True,
         help="deprecated, use 'noLayoutAwareStats' instead")
-    parser.add_argument("--metric", nargs='+',action = 'append',
+    parser.add_argument("--metric", dest="distanceMetric", default="spearman",
         help="deprecated, use 'distanceMetric' instead")
     parser.add_argument("--output_tar", type=str, default="",
         help="deprecated, use 'outputTar' instead")
@@ -984,25 +983,15 @@ def fillOpts(options):
                 [val for sublist in getattr(options, format) for val in sublist]
             setattr(options, format, newVal)
             
-            if format == 'feature_space':
-                # Set all layouts to the same metric
-                if options.metric == None:
-                    options.metric = ['spearman'] * len(newVal)
-                else:
-                    options.metric = \
-                        [val for sublist in options.metric for val in sublist]
-    
         else:
         
             # Clear other formats
             setattr(options, format, None)
-            
 
     if len(newVal) < 1:
         raise ValueError("Error: one of these feature layout options " +
             "must be specified: feature_space similarity, " +
             "similarity_full, coordinates.")
-
 
     return options
 
@@ -1186,7 +1175,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     dt,sample_labels,feature_labels = read_tabular(genomic_filename, True)
                     print str(len(dt))+" x "+str(len(dt[0]))
                     dt_t = np.transpose(dt)
-                    result = sparsePandasToString(compute_similarities(dt=dt_t, sample_labels=sample_labels, metric_type=options.metric[i], num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
+                    result = sparsePandasToString(compute_similarities(dt=dt_t, sample_labels=sample_labels, metric_type=options.distanceMetric, num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
