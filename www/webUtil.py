@@ -115,6 +115,30 @@ def getMetaData(mapId, ctx, app):
                 }
             }
         }
+    elif mapId == 'lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2':
+        meta =  {
+            "firstAttribute": "AgeCollapsed",
+            "layouts": {
+                "layout": {
+                    "fullFeatureMatrix":
+                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2/features.tab",
+                    "xyPositions":
+                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2/assignments0.tab",
+                },
+            }
+        }
+    elif mapId == 'lmsh_ucsc.edu/allmonje_combat_UCSF500v2':
+        meta =  {
+            "firstAttribute": "AgeCollapsed",
+            "layouts": {
+                "layout": {
+                    "fullFeatureMatrix":
+                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/allmonje_combat_UCSF500v2/features.tab",
+                    "xyPositions":
+                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/allmonje_combat_UCSF500v2/assignments0.tab",
+                },
+            }
+        }
     elif mapId == 'lmsh_ucsc.edu/AllAttr_combat_quartnorm':
         meta =  {
             "firstAttribute": "Age",
