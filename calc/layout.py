@@ -49,34 +49,26 @@ import numpy as np
 from process_categoricals import create_colormaps_file
 import utils
 
+validLayoutInputFormats = \
+    ['clusterData', 'fullSimilarity', 'sparseSimilarity', 'xyPositions']
+
 def parse_args(args):
-    """
-    This just defines parser arguments but does not actually parse the values
-    """
     parser = argparse.ArgumentParser(description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     # The primary parameters:
-    parser.add_argument("--similarity", nargs='+',action = 'append',
-        help="similarity sparse matrix file")
-    parser.add_argument("--similarity_full", nargs='+',action = 'append',
-        help="similarity full matrix file")
-    parser.add_argument("--feature_space", nargs='+',action = 'append',
-        help="full feature space matrix")
-    parser.add_argument("--coordinates", nargs='+',action = 'append',
-        help="file containing coordinates for the samples")
-    parser.add_argument("--distanceMetric", default="spearman",
-        help="metric corresponding to the cluster matrix of the same index, " +
-        "one of: " + compute_sparse_matrix.valid_metrics())
-    #parser.add_argument("--layout_method", type=str, default="DrL",
-    #    help="DrL, tSNE, MDS, PCA, ICA, isomap, spectralembedding")
-    #parser.add_argument("--preprocess_method", type=str, default="",
-    #    help="Preprocessing methods for feature data when tSNE, MDS, PCA, ICA, isomap, or spectralembedding methods are used; valid options are: standardize, normalize")
-    #parser.add_argument("--tsne_pca_dimensions", type=str, default="11",
-    #    help="Number of PCA dimensions to reduce data to prior to performing t-SNE")
+    parser.add_argument("--layoutInputFile", action='append',
+        help="file containing the layout data as TSV")
+    parser.add_argument("--layoutInputFormat", type=str,
+        default='clusterData',
+        help="format of the layout data, one of: " +
+        str(validLayoutInputFormats))
+    parser.add_argument("--distanceMetric", type=str, default="spearman",
+        help="metric corresponding to the layout input data of the same " +
+        "index, one of: " + compute_sparse_matrix.valid_metrics())
     parser.add_argument("--layoutName", type=str, action="append", dest="names",
         default=[],
-        help="human-readable unique label for one layout in the map")
+        help="human-readable unique label for the layout of the same index")
     parser.add_argument("--colorAttributeFile", type=str, dest="scores",
         action="append",
         help="file containing the color attribute data as TSV")
@@ -112,6 +104,8 @@ def parse_args(args):
         help="compress the output files into this tar file")
 
     # Deprecated parameters:
+    parser.add_argument("--coordinates", type=str, action='append',
+        help="deprecated, use layoutInputFile and layoutInputFormat instead")
     parser.add_argument("--directed_graph", dest="directedGraph",
         action="store_true", default=True,
         help="deprecated with constant value of true")
@@ -121,6 +115,8 @@ def parse_args(args):
         help="deprecated, use 'outputDirectory' instead")
     parser.add_argument("--drlpath", type=str, dest="drlpath",
         help="deprecated, use 'drlPath' instead")
+    parser.add_argument("--feature_space", type=str, action='append',
+        help="deprecated, use layoutInputFile and layoutInputFormat instead")
     parser.add_argument("--first_attribute", type=str, default="",
         help="deprecated, use 'firstAttribute' instead")
     parser.add_argument("--include-singletons", dest="singletons",
@@ -134,7 +130,8 @@ def parse_args(args):
     parser.add_argument("--no_layout_aware_stats", dest="mutualinfo",
         action="store_false", default=True,
         help="deprecated, use 'noLayoutAwareStats' instead")
-    parser.add_argument("--metric", dest="distanceMetric", default="spearman",
+    parser.add_argument("--metric", type=str, dest="distanceMetric",
+        default="spearman",
         help="deprecated, use 'distanceMetric' instead")
     parser.add_argument("--output_tar", type=str, default="",
         help="deprecated, use 'outputTar' instead")
@@ -148,11 +145,22 @@ def parse_args(args):
         action="store_true", default=False,
         help="deprecated with a constant value of true")
         # old help="add self-edges to input of DRL algorithm")
+    parser.add_argument("--similarity", type=str, action='append',
+        help="deprecated, use layoutInputFile and layoutInputFormat instead")
+    parser.add_argument("--similarity_full", type=str, action='append',
+        help="deprecated, use layoutInputFile and layoutInputFormat instead")
     parser.add_argument("--truncation_edges", type=int, default=6,
         help="deprecated, use 'neighborCount' instead")
     parser.add_argument("--window_size", type=int, default=20,
         help="deprecated with no substitute")
         # old help="clustering window count is this value squared")
+
+    #parser.add_argument("--layout_method", type=str, default="DrL",
+    #    help="DrL, tSNE, MDS, PCA, ICA, isomap, spectralembedding")
+    #parser.add_argument("--preprocess_method", type=str, default="",
+    #    help="Preprocessing methods for feature data when tSNE, MDS, PCA, ICA, isomap, or spectralembedding methods are used; valid options are: standardize, normalize")
+    #parser.add_argument("--tsne_pca_dimensions", type=str, default="11",
+    #    help="Number of PCA dimensions to reduce data to prior to performing t-SNE")
 
     return parser.parse_args(args)
 
@@ -964,34 +972,36 @@ def fillOpts(options):
     options.layout_method = 'DrL'
     options.singletons = True
 
-    # Only allow one feature format to be applied to all layouts,
-    # so find the first one and ignore the rest.
-    formats = ['similarity', 'similarity_full', 'feature_space', 'coordinates']
-    theFormat = None
-    for format in formats:
-        if not getattr(options, format) == None and theFormat == None:
-            theFormat = format
-            break
+    # Handle input layout parameters
+    operatingVars = \
+        ['feature_space', 'similarity_full', 'similarity', 'coordinates']
 
-    newVal = []
-    for format in formats:
-        if format == theFormat:
-            
-            # Make sure arguments are lists instead of list of lists
-            # needed for backward compatibility of scripts
-            newVal = \
-                [val for sublist in getattr(options, format) for val in sublist]
-            setattr(options, format, newVal)
-            
-        else:
+    # If using the current layout input parameters rather than deprecated,
+    # map them to the operating variables.
+    if options.layoutInputFile != None:
+        try:
+            i = validLayoutInputFormats.index(options.layoutInputFormat)
+        except:
+            raise ValueError("One of these layoutInputFormats " +
+                "must be specified: " + str(validLayoutInputFormats))
+        setattr(options, operatingVars[i], options.layoutInputFile)
+
+    else:
+    
+        # Using the deprecated parameters so they are already mapped to the
+        # operating variables. Only allow one format and ignore the rest.
+        formats = filter(lambda x: getattr(options, x), operatingVars)
         
-            # Clear other formats
-            setattr(options, format, None)
+        if len(formats) < 1:
+            raise ValueError("One of these feature layout options " +
+                "must be specified: feature_space similarity, " +
+                "similarity_full, coordinates.")
+        theFormat = formats[0]
 
-    if len(newVal) < 1:
-        raise ValueError("Error: one of these feature layout options " +
-            "must be specified: feature_space similarity, " +
-            "similarity_full, coordinates.")
+        # Keep the first format encountered and clear the rest.
+        for format in operatingVars:
+            if format != theFormat:
+                setattr(options, format, None)
 
     return options
 
@@ -1005,6 +1015,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
     '''
 
     #make sure the common defaults are in the options Namespace
+    givenOptions = options
     options = fillOpts(options)
     
     #make the destination directory for output if its not there
@@ -1023,7 +1034,11 @@ def makeMapUIfiles(options, cmd_line_list=None):
         print '\n'.join(cmd_line_list)
 
     #print all the options given to the log.
-    print 'all options:'
+    print 'all given options:'
+    pprint.pprint(givenOptions.__dict__)
+    
+    #print all the options after adjustment to the log.
+    print 'all adjusted options:'
     pprint.pprint(options.__dict__)
     sys.stdout.flush()
 
@@ -1201,7 +1216,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                 #do nothing.
                 '''already have x-y coords so don't need to do anything.'''
             else:    #no matrix is given
-                raise InvalidAction("Invalid matrix input is provided")
+                raise InvalidAction("Invalid matrix input was provided")
             
             # Index for drl.tab and drl.layout file naming. With indexes we can match
             # file names, to matrices, to drl output files.
@@ -1437,7 +1452,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
             clumpiness_scores = [collections.defaultdict(lambda: float("-inf"))
                 for _ in options.coordinates]
         else:    #no matrix is given
-            raise InvalidAction("Invalid matrix input is provided")
+            raise InvalidAction("Invalid matrix input was provided")
 
 
 
@@ -1554,7 +1569,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     for index, i in enumerate(ctx.sparse):
                         topNeighbors_from_sparse(ctx.sparse[index], options.directory, options.truncation_edges, index)
             else:    #no matrix is given
-                raise InvalidAction("Invalid matrix input is provided")
+                raise InvalidAction("Invalid matrix input was provided")
 
     print timestamp(), "Visualization generation complete!"
     

@@ -39,7 +39,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_full_no_atts/'
 
         opts = Namespace(
-                similarity_full = [[fullSimDataFile]],
+                similarity_full = [fullSimDataFile],
                 names = ["layout"],
                 metric = 'spearman',
                 directory = outDir,
@@ -59,7 +59,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_full_no_color/'
 
         opts = Namespace(
-            similarity_full = [[fullSimDataFile]],
+            similarity_full = [fullSimDataFile],
             names = ["layout"],
             scores = [attsStringsFile],
             directory = outDir,
@@ -78,7 +78,7 @@ class Test_layoutBasic(unittest.TestCase):
 
         #options for different layout.py executions
         opts = Namespace(
-            similarity_full = [[fullSimDataFile]],
+            similarity_full = [fullSimDataFile],
             names = ["layout"],
             scores = [attsCodedFile],
             colormaps = colorDataFile,
@@ -97,7 +97,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_raw_no_atts/'
 
         opts = Namespace(
-            feature_space = [[rawDataFile]],
+            feature_space = [rawDataFile],
             names =  ["layout"],
             metric= 'spearman',
             directory= outDir,
@@ -115,7 +115,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_raw_no_color/'
 
         opts = Namespace(
-            feature_space= [[rawDataFile]],
+            feature_space= [rawDataFile],
             names= ["layout"],
             metric= 'spearman',
             scores= [attsStringsFile],
@@ -134,7 +134,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_raw/'
 
         opts = Namespace(
-            feature_space= [[rawDataFile]],
+            feature_space= [rawDataFile],
             names= ["layout"],
             metric= 'spearman',
             scores= [attsCodedFile],
@@ -153,7 +153,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_top6_no_atts/'
 
         opts = Namespace(
-            similarity= [[top6SimDataFile]],
+            similarity= [top6SimDataFile],
             names= ["layout"],
             directory= outDir,
             singletons= True,
@@ -170,7 +170,7 @@ class Test_layoutBasic(unittest.TestCase):
 
         opts = Namespace(
             scores= [attsStringsFile],
-            similarity=[[ top6SimDataFile]],
+            similarity=[ top6SimDataFile],
             names= ["layout"],
             directory= outDir,
             singletons=True,
@@ -187,7 +187,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_top6/'
 
         opts = Namespace(
-            similarity= [[top6SimDataFile]],
+            similarity= [top6SimDataFile],
             names= ["layout"],
             scores= [attsCodedFile],
             colormaps= colorDataFile,
@@ -206,7 +206,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_xy_no_atts/'
 
         opts = Namespace(
-            coordinates= [[coordDataFile]],
+            coordinates= [coordDataFile],
             names= ["layout"],
             directory= outDir,
             singletons=True,
@@ -232,7 +232,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_xy_no_color/'
 
         opts = Namespace(
-            coordinates= [[coordDataFile]],
+            coordinates= [coordDataFile],
             scores= [attsStringsFile],
             names= ["layout"],
             directory= outDir,
@@ -264,7 +264,7 @@ class Test_layoutBasic(unittest.TestCase):
         outDir = outDirBase + '_xy/'
 
         opts = Namespace(
-            coordinates= [[coordDataFile]],
+            coordinates= [coordDataFile],
             names= ["layout"],
             metric= 'spearman',
             scores= [attsCodedFile],

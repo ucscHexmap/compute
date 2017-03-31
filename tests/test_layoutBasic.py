@@ -16,11 +16,14 @@ expDirBase = os.path.join(testDir,'exp/layoutBasic')
 expDir = expDirBase + '/'
 #append to string base
 expNoAttsDir = expDirBase+ 'NoAtts/'
+expNoAtts2Dir = expDirBase+ 'NoAtts2/'
 expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
 expParmDir = expDirBase + 'Parm/'
+expNoAttsLayoutParmsDir = expDirBase + 'noAttsParm/'
 
 rawDataFile = os.path.join(inDir, 'full_matrix.tab')
+rawDataFile_2 = os.path.join(inDir, 'full_matrix_2.tab')
 fullSimDataFile = os.path.join(inDir, 'similarity_full.tab')
 top6SimDataFile = os.path.join(inDir, 'similarity.tab')
 coordDataFile = os.path.join(inDir,'coordinates.tab')
@@ -34,9 +37,219 @@ import layout
 import compute_sparse_matrix
 
 class Test_layoutBasic(unittest.TestCase):
+    
+    def test_bad_layout_format(s):
+        outDir = outDirBase + '_junk/'
 
+        opts = [
+            "--layoutInputFile", rawDataFile,
+            "--layoutInputFormat", 'junk',
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        try:
+            rc = 0
+            rc = layout.main(opts)
+            s.assertTrue(rc, "ValueError: One of these layoutInputFormats " +
+                "must be specified: ['clusterData', 'fullSimilarity', " +
+                "'sparseSimilarity', 'xyPositions']")
+        except ValueError as e:
+            s.assertTrue(e, e)
+    
+    def test_renaming_2_raw_layout(s):
+        outDir = outDirBase + '_renaming_2_raw_layout/'
+
+        opts = [
+            "--layoutInputFile", rawDataFile,
+            "--layoutInputFile", rawDataFile_2,
+            "--layoutInputFormat", 'clusterData',
+            "--layoutName", "layout",
+            "--layoutName", "layout_2",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAtts2Dir, outDir)
+    
+    def test_raw_layout_2_parms_renamed(s):
+        outDir = outDirBase + '_2_raw_layout_parms_renamed/'
+
+        opts = [
+            "--feature_space", rawDataFile,
+            "--feature_space", rawDataFile_2,
+            "--layoutInputFormat", 'clusterData',
+            "--layoutName", "layout",
+            "--layoutName", "layout_2",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAtts2Dir, outDir)
+    
+    def test_parms_renaming_raw_layout(s):
+        outDir = outDirBase + '_parms_renaming_raw_layout/'
+
+        opts = [
+            "--layoutInputFile", rawDataFile,
+            "--layoutInputFormat", 'clusterData',
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
+    def test_raw_layout_parms_renamed(s):
+        outDir = outDirBase + '_raw_layout_parms_renamed/'
+
+        opts = [
+            "--feature_space", rawDataFile,
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
+    def test_parms_renaming_full_layout(s):
+        outDir = outDirBase + 'parms_renaming_full_layout/'
+
+        opts = [
+            "--layoutInputFile", fullSimDataFile,
+            "--layoutInputFormat", "fullSimilarity",
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
+    def test_full_layout_parms_renamed(s):
+        outDir = outDirBase + '_raw_layout_parms_renamed/'
+
+        opts = [
+            "--similarity_full", fullSimDataFile,
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
+    def test_parms_renaming_top6_layout(s):
+        outDir = outDirBase + '_renaming_top6_layout/'
+
+        opts = [
+            "--layoutInputFile", top6SimDataFile,
+            "--layoutInputFormat", "sparseSimilarity",
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
+    def test_top6_layout_parms_renamed(s):
+        outDir = outDirBase + '_top6_layout_parms_renamed/'
+
+        opts = [
+            "--similarity", top6SimDataFile,
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+    
+    def test_parms_renaming_coordinates_layout(s):
+        outDir = outDirBase + '_parms_renaming_coordinates_layout/'
+
+        opts = [
+            "--layoutInputFile", coordDataFile,
+            "--layoutInputFormat", "xyPositions",
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        
+        #check that it is mostly the same as the other files
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir,
+                                        excludeFiles = ['log',
+                                                        'neighbors_0.tab',
+                                                        'assignments0.tab',
+                                                        'hexNames.tab',
+                                                        'xyPreSquiggle_0.tab']
+                                        )
+        #theese files are not expected to be the same as other runs,
+        # but to make sure they are correct we have but previous runs in a different
+        # expected directory.
+        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
+    
+    def test_coordinates_layout_parms_renamed(s):
+        outDir = outDirBase + '_coordinates_layout_parms_renamed/'
+
+        opts = [
+            "--coordinates", coordDataFile,
+            "--layoutName", "layout",
+            "--distanceMetric", 'spearman',
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        
+        #check that it is mostly the same as the other files
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir,
+                                        excludeFiles = ['log',
+                                                        'neighbors_0.tab',
+                                                        'assignments0.tab',
+                                                        'hexNames.tab',
+                                                        'xyPreSquiggle_0.tab']
+                                        )
+        #theese files are not expected to be the same as other runs,
+        # but to make sure they are correct we have but previous runs in a different
+        # expected directory.
+        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
+        util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
+    
     def test_parms_renaming_deprecated_parms(s):
-        outDir = outDirBase + '_parmsRenamingDeprecatedParms/'
+        outDir = outDirBase + '_renamingDeprecatedParms/'
 
         opts = [
             # parms renaming deprecated parms
@@ -123,7 +336,7 @@ class Test_layoutBasic(unittest.TestCase):
         layout.main(opts)
         util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
     
-    def test_full_no_feature_file(s):
+    def test_no_feature_file(s):
         outDir = outDirBase + '_junk/'
 
         opts = [
