@@ -21,7 +21,7 @@ expXyDir = expDirBase + 'Xy/'
 expParmDir = expDirBase + 'Parm/'
 
 rawDataFile = os.path.join(inDir, 'full_matrix.tab')
-fullSimDataFile = os.path.join(inDir, 'mcr.fullsim.tab')
+fullSimDataFile = os.path.join(inDir, 'similarity_full.tab')
 top6SimDataFile = os.path.join(inDir, 'similarity.tab')
 coordDataFile = os.path.join(inDir,'coordinates.tab')
 
@@ -34,56 +34,7 @@ import layout
 import compute_sparse_matrix
 
 class Test_layoutBasic(unittest.TestCase):
-    
-    def test_deprecated_parms_hacked_metric_twice(s):
-        outDir = outDirBase + '_deprecatedParmsRenamed/'
 
-        opts = [
-            # parms deprecated in favor of new names
-            "--directory", outDir,
-            "--first_attribute", "mutated/not",
-            "--names", "layout",
-            "--no_layout_independent_stats",
-            "--no_layout_aware_stats",
-            "--distanceMetric", "cosine",
-            "--metric", "spearman",
-            "--output_tar", os.path.join(outDir, 'tar.tar'),
-            "--output_zip", os.path.join(outDir, 'zip.zip'),
-            "--role", "myRole",
-            "--scores", attsStringsFile,
-            "--truncation_edges", "9",
-            
-            "--feature_space", rawDataFile]
-
-        util.removeOldOutFiles(outDir)
-        layout.main(opts)
-        util.compareActualVsExpectedDir(s, expParmDir, outDir,
-            ['log', 'tar.tar', 'zip.zip'])
-    
-    def test_deprecated_parms_hacked_metric(s):
-        outDir = outDirBase + '_deprecatedParmsRenamed/'
-
-        opts = [
-            # parms deprecated in favor of new names
-            "--directory", outDir,
-            "--first_attribute", "mutated/not",
-            "--names", "layout",
-            "--no_layout_independent_stats",
-            "--no_layout_aware_stats",
-            "--metric", "cosine",
-            "--output_tar", os.path.join(outDir, 'tar.tar'),
-            "--output_zip", os.path.join(outDir, 'zip.zip'),
-            "--role", "myRole",
-            "--scores", attsStringsFile,
-            "--truncation_edges", "9",
-            
-            "--feature_space", rawDataFile]
-
-        util.removeOldOutFiles(outDir)
-        layout.main(opts)
-        util.compareActualVsExpectedDir(s, expParmDir, outDir,
-            ['log', 'tar.tar', 'zip.zip'])
-    
     def test_parms_renaming_deprecated_parms(s):
         outDir = outDirBase + '_parmsRenamingDeprecatedParms/'
 
