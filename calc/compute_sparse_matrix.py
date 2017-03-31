@@ -13,7 +13,7 @@ Note: NaN's in the input matrix are replaced by 0. In cases where this is inappr
                                     --output_type sparse --out_file temp.out.tab --log log.tab --num_jobs 0
 '''
 
-import argparse, sys, numpy, multiprocessing, time,traceback
+import os, argparse, sys, numpy, multiprocessing, time,traceback
 import sklearn.metrics.pairwise as sklp
 import scipy.stats
 import pandas as pd
@@ -297,6 +297,9 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
     :param dt2: a second, optional two dimensional numpy.array, if used similarities between dt and dt2 returned.
     :return: returns a pandas dataframe
     '''
+    # the unit tests get confused when running parallel jobs via sklearn
+    if os.environ['UNITTEST']:
+        num_jobs = 1
 
     #chatter to log file if one is given
     if not(log == None):

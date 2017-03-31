@@ -20,7 +20,7 @@ expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
 
 rawDataFile = os.path.join(inDir, 'full_matrix.tab')
-fullSimDataFile = os.path.join(inDir, 'mcr.fullsim.tab')
+fullSimDataFile = os.path.join(inDir, 'similarity_full.tab')
 top6SimDataFile = os.path.join(inDir, 'similarity.tab')
 coordDataFile = os.path.join(inDir,'coordinates.tab')
 

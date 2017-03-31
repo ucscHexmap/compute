@@ -15,6 +15,17 @@ from utils import readXYs
 
 from utils import getAttributes
 import  math
+
+# The unit tests get confused when running parallel jobs via sklearn.
+# We need the try because the viewer calls this and does not have this defined.
+try:
+    if os.environ['UNITTEST']:
+        n_jobs = 1
+    else:
+        n_jobs = 8
+except:
+    n_jobs = 8
+
 #input/output helpers
 def readLayers(layerFile):
     return pd.read_csv(layerFile,sep='\t',index_col=0,header=None)
@@ -284,7 +295,7 @@ def densityOpt(allAtts,datatypes,xys,debug=False):
             subAtts = allAtts[datatypes[type_]]
 
             #group by NaN profile. An attribute X attribute matrix
-            distMat = sklp.pairwise_distances(subAtts.isnull().transpose(),metric='hamming',n_jobs=8)
+            distMat = sklp.pairwise_distances(subAtts.isnull().transpose(),metric='hamming',n_jobs=n_jobs)
             #we will be going through the distance matrix and find groups
             # of attributes with the same NaN profile (distance == 0 )
 
@@ -409,7 +420,7 @@ def dynamicCallLeesL(parm):
         '''do nothing'''
 
     #get pearson correlation of all attributes
-    simV= 1-(sklp.pairwise_distances(dynamicAttr.reshape(1,-1),attrDF.transpose(),metric='correlation',n_jobs=8)[0,:])
+    simV= 1-(sklp.pairwise_distances(dynamicAttr.reshape(1,-1),attrDF.transpose(),metric='correlation',n_jobs=n_jobs)[0,:])
 
     leeslV = singleLeesL(spatialWieghtMatrix(xys),dynamicAttr,attrDF)
 

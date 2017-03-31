@@ -12,7 +12,7 @@ testDir = os.getcwd()
 inDir = path.join(testDir, 'in/layout/')
 outDir = path.join(testDir, 'out/http/')
 
-class Test_http(unittest.TestCase):
+class Test_http_parallel(unittest.TestCase):
 
     viewServer = os.environ['VIEWER_URL']
 
@@ -68,26 +68,39 @@ class Test_http(unittest.TestCase):
         os.remove(outfile)
         os.remove(errfile)
         return {'data': data, 'code': code}
-   
-    def test_methodCheckLocal(s):
-        opts = ['-X', 'GET', '-v']
-        rc = s.doCurl(opts)
-        s.assertTrue(rc['code'] == '405')
-        s.assertTrue(rc['data'] == '"Only the POST method is understood here"')
 
-    def test_contentTypeCheckLocal(s):
-        opts = ['-H', 'Content-Type:apjson', '-X', 'POST', '-v']
-        rc = s.doCurl(opts)
-        s.assertTrue(rc['code'] == '400')
-        s.assertTrue(rc['data'] == '"Only content-type of application/json is understood here"')
+    def test_pythonCallGoodDataLocal(s):
+        util.removeOldOutFiles(outDir)
+        data = '[ ' + \
+            '"--coordinates", "' + path.join(inDir, "coordinates.tab") + '", ' + \
+            '"--names", "layout", ' + \
+            '"--directory", "' + outDir + '", ' + \
+            '"--include-singletons", ' + \
+            '"--no_layout_independent_stats", ' + \
+            '"--no_layout_aware_stats" ]'
+        curl_opts = ['-d', data, '-H', 'Content-Type:application/json', '-X', 'POST', '-v']
+        rc = s.doCurl(curl_opts)
+        #print 'code, data:', rc['code'], rc['data']
+        s.assertTrue(rc['code'] == '200')
     
-    def test_jsonCheckLocal(s):
-        data = '{data: oh boy, data!}'
-        opts = ['-d', data, '-H', 'Content-Type:application/json', '-X', 'POST', '-v']
-        rc = s.doCurl(opts)
-        #print 'rc: code, data', rc['code'],rc['data']
-        s.assertTrue(rc['code'] == '400')
-        s.assertTrue(rc['data'] == '"Malformed JSON data given"')
-    
+    def test_createMap_sparse(s):
+        util.removeOldOutFiles(outDir)
+        data = '[ ' + \
+            '"--similarity", "' + path.join(inDir, "similarity.tab") + '", ' + \
+            '"--names", "mRNA", ' + \
+            '"--scores", "' + path.join(inDir, "attributes.tab") + '", ' + \
+            '"--directory", "' + outDir + '", ' + \
+            '"--include-singletons", ' + \
+            '"--first_attribute", "' + "DNA_Repair" + '",' \
+            '"--no_layout_independent_stats", ' + \
+            '"--no_layout_aware_stats" ]'
+        
+        curl_opts = ['-d', data, '-H', 'Content-Type:application/json', '-X', 'POST', '-v']
+        rc = s.doCurl(curl_opts)
+        #print 'code, data:', rc['code'], rc['data']
+        s.assertTrue(rc['code'] == '200')
+        success = s.checkLog(outDir + 'log')
+        s.assertTrue(success, True)
+
 if __name__ == '__main__':
     unittest.main()

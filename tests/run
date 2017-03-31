@@ -34,12 +34,12 @@ elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
     export VIEWER_URL=http://localhost:3333
 else
     echo WARNING: You do not have a config entry for the test script
-
 fi
 
 # Set env vars common to all installations
 export HUB_TESTING=false
 export HUB_DEBUG=true
+export UNITTEST=1
 
 # Test only the *_web_tests.py files
 WEB=( \
@@ -50,26 +50,28 @@ WEB=( \
 # Deprecated with hexagram server code moving to the compute server
 DEPRECATED=( \
     test_http \
+)
+
+# Deprecated with hexagram server code moving to the compute server
+DEPRECATED_PARALLEL=( \
+    test_http_parallel \
     test_remoteCalc \
 )
+
 # The rest of the tests, order-dependent due to issues with parallel code
 DOCKER_SAFE=( \
+    test_dynLayoutAware \
     test_layoutBasic \
     test_layoutBasicMakeUI \
-    placeNode_calc_tests \
+    test_process_categoricals \
+    test_sim6Layout \
     test_similarity \
     test_stats \
-    test_process_categoricals \
+    placeNode_calc_tests \
 )
 
 # Combine the lists above to get ALL of the tests
-ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${DOCKER_SAFE[@]}" )
-
-# These tests have issues with the parallelizm running them with the rest of the test
-PARALLEL_CHALLENGED=( \
-    test_sim6Layout \
-    test_dynLayoutAware \
-)
+ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${DOCKER_SAFE[@]}" )
 
 # local mac tests are those that normally pass on a mac
 MAC=( \
@@ -101,10 +103,10 @@ fi
 python2.7 -m unittest $TO_RUN
 
 # Run our parallel-challenged tests independently
-if [ $1 == 'all' ] || [ $1 == 'docker_safe' ]
+if [ $1 == 'all' ]
     then
     echo Running parallel-challenged tests independently
-    for TEST in "${PARALLEL_CHALLENGED[@]}"
+    for TEST in "${DEPRECATED_PARALLEL[@]}"
     do
         python2.7 $TEST.py
     done
