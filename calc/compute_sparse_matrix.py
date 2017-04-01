@@ -298,8 +298,11 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
     :return: returns a pandas dataframe
     '''
     # the unit tests get confused when running parallel jobs via sklearn
-    if os.environ['UNITTEST']:
-        num_jobs = 1
+    try:
+        if os.environ['UNITTEST']:
+            n_jobs = 1
+    except:
+        pass
 
     #chatter to log file if one is given
     if not(log == None):

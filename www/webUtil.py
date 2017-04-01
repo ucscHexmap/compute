@@ -64,13 +64,16 @@ def availableMapLayouts(operation):
         # by scraping the view directories for meta.json files containing file
         # paths for a full feature matrix, xyPositions and firstAttribute.
         return {
+            'lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2': [
+                'layout',
+            ],
+            'lmsh_ucsc.edu/allmonje_combat_UCSF500v2': [
+                'layout',
+            ],
             'lmsh_ucsc.edu/AllAttr_combat_quartnorm': [
                 'layout',
             ],
             'lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine': [
-                'layout',
-            ],
-            'lmsh_ucsc.edu/swatTest': [
                 'layout',
             ],
             'CKCC/v2': [
@@ -103,7 +106,6 @@ def getMetaData(mapId, ctx, app):
     
     # TODO get real meta data from the view/<map>/meta.json file
     if mapId == 'unitTest/layoutBasicExp':
-        
         meta = {
             "firstAttribute": "Apoptosis",
             "layouts": {
@@ -160,18 +162,6 @@ def getMetaData(mapId, ctx, app):
                         ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine/features.tab",
                     "xyPositions":
                         ctx['dataRoot'] + "view/lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine/assignments0.tab",
-                },
-            }
-        }
-    elif mapId == 'lmsh_ucsc.edu/swatTest':
-        meta =  {
-            "firstAttribute": "Batch",
-            "layouts": {
-                "layout": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/swatTest/features.tab",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/swatTest/assignments0.tab",
                 },
             }
         }
