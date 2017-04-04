@@ -58,7 +58,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser(description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    # WebAPI / CDW / CLI: Primary parameters:
+    # WebAPI / CWL / CLI: Primary parameters:
     parser.add_argument("--layoutInputFile", action='append',
         help="file containing the layout data as TSV")
     parser.add_argument("--layoutInputFormat", type=str,
@@ -88,7 +88,7 @@ def parse_args(args):
         default="private",
         help="authorization group that may view this map")
 
-    # WebAPI / CDW / CLI: Lesser used parameters:
+    # WebAPI / CWL / CLI: Lesser used parameters:
     parser.add_argument("--reflectionMapType", type=str, default=None,
         help="generate another map with 90-degree rotated clustering data " +
         "so that clustering features are used as the nodes in the layout. " +
@@ -107,7 +107,7 @@ def parse_args(args):
         dest="truncation_edges",
         help="edges per node for DrL and the directed graph")
         
-    # CDW / CLI:
+    # CWL / CLI:
     parser.add_argument("--outputZip", type=str, default="", dest="output_zip",
         help="compress the output files into a zip file")
     parser.add_argument("--outputTar", type=str, default="", dest="output_tar",
