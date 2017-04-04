@@ -51,12 +51,14 @@ import utils
 
 validLayoutInputFormats = \
     ['clusterData', 'fullSimilarity', 'sparseSimilarity', 'xyPositions']
+validReflectionMapTypes = \
+    ['geneMatrix']
 
 def parse_args(args):
     parser = argparse.ArgumentParser(description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    # The primary parameters:
+    # WebAPI / CDW / CLI: Primary parameters:
     parser.add_argument("--layoutInputFile", action='append',
         help="file containing the layout data as TSV")
     parser.add_argument("--layoutInputFormat", type=str,
@@ -66,24 +68,32 @@ def parse_args(args):
     parser.add_argument("--distanceMetric", type=str, default="spearman",
         help="metric corresponding to the layout input data of the same " +
         "index, one of: " + compute_sparse_matrix.valid_metrics())
+        # TODO Which layout formats use this? All of them to draw edges in
+        # the node density view?
     parser.add_argument("--layoutName", type=str, action="append", dest="names",
         default=[],
         help="human-readable unique label for the layout of the same index")
     parser.add_argument("--colorAttributeFile", type=str, dest="scores",
         action="append",
-        help="file containing the color attribute data as TSV")
+        help="file containing the attributes to color the map, as TSV")
     parser.add_argument("--colormaps", type=str,
         default='',
         help="colormap for categorical attributes as TSV")
     parser.add_argument("--firstAttribute", type=str, dest="first_attribute",
         default="",
-        help="attribute by which to color the map upon first display")
+        help="attribute to color the map upon first display")
     parser.add_argument("--outputDirectory", "-d", type=str, dest="directory",
         help="directory in which to create view output files")
-    parser.add_argument("--authGroup", type=str, default=None, dest="role",
+    parser.add_argument("--authGroup", type=str, dest="role",
+        default="private",
         help="authorization group that may view this map")
 
-    # Lesser used parameters:
+    # WebAPI / CDW / CLI: Lesser used parameters:
+    parser.add_argument("--reflectionMapType", type=str, default=None,
+        help="generate another map with 90-degree rotated clustering data " +
+        "so that clustering features are used as the nodes in the layout. " +
+        "Color attributes are provided and determined by the map type. One " +
+        "of: " + str(validReflectionMapTypes))
     parser.add_argument("--attributeTags", type=str,
         default=None,
         help="tags for filtering attributes for display, as TSV")
@@ -96,12 +106,16 @@ def parse_args(args):
     parser.add_argument("--neighborCount", type=int, default=6,
         dest="truncation_edges",
         help="edges per node for DrL and the directed graph")
-    parser.add_argument("--drlPath", "-r", type=str, dest="drlpath",
-        help="DrL binaries")
+        
+    # CDW / CLI:
     parser.add_argument("--outputZip", type=str, default="", dest="output_zip",
         help="compress the output files into a zip file")
     parser.add_argument("--outputTar", type=str, default="", dest="output_tar",
         help="compress the output files into this tar file")
+
+    # CLI only:
+    parser.add_argument("--drlPath", "-r", type=str, dest="drlpath",
+        help="DrL binaries")
 
     # Deprecated parameters:
     parser.add_argument("--coordinates", type=str, action='append',

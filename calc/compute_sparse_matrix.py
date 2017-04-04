@@ -300,7 +300,7 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
     # the unit tests get confused when running parallel jobs via sklearn
     try:
         if os.environ['UNITTEST']:
-            n_jobs = 1
+            num_jobs = 1
     except:
         pass
 
@@ -326,6 +326,7 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
             print >> log, 'rank transform complete'
 
     #calculate pairwise similarities,
+
     if len(dt2):   #if you have a second matrix then slightly different input
         x_corr = 1 - sklp.pairwise_distances(X=dt, Y=dt2, metric=metric_type, n_jobs=num_jobs)
     else:

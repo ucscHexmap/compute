@@ -5,3 +5,12 @@ The *.yml files are how the arguments are supplied in CWL.
 
 Run with:
  cwl-runner nOf1.cwl nOf1.yml
+
+Information about the CWL parameters and return values may be found in the Web
+API documentation at:
+
+    https://tumormap.ucsc.edu/query/index.html
+
+With more information in the user guide at:
+
+    https://tumormap.ucsc.edu/help/index.html

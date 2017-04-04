@@ -11,6 +11,13 @@ MAX_JOB_COUNT = multiprocessing.cpu_count() / 2
 if MAX_JOB_COUNT < 1:
     MAX_JOB_COUNT = 8
 
+# the unit tests get confused when running parallel jobs via sklearn
+    try:
+        if os.environ['UNITTEST']:
+            MAX_JOB_COUNT = 1
+    except:
+        pass
+
 def timestamp():
     return str(datetime.datetime.now())[8:-7]
 
