@@ -31,29 +31,6 @@ class ErrorResp(Exception):
         rv['error'] = self.message
         return rv
 
-def log(level, message, app):
-
-    # Log a message to the server's console
-
-    # TODO we should report the job id here, and maybe the url of the web API
-
-    # Don't clutter up the testing output
-    # TODO but this only prints this routine's line #, rather than the caller's
-    # info, useless. Just use the std python logging library instead of this.
-    # Setting the level to none when app.config['TESTING'] is true
-    
-    if app.config['TESTING']:
-        return
-    
-    if level == 'info':
-        app.logger.info(message)
-    elif level == 'error':
-        app.logger.error(message)
-    elif level == 'warning':
-        app.logger.warning(message)
-    elif level == 'debug':
-        app.logger.debug(message)
-
 def availableMapLayouts(operation):
 
     # Find the maps and layouts for a specific operation

@@ -4,4 +4,4 @@ t.tar
 maketar
 venv
 xtar
-
+*.log

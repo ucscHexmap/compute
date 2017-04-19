@@ -299,7 +299,7 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
     '''
     # the unit tests get confused when running parallel jobs via sklearn
     try:
-        if os.environ['UNITTEST']:
+        if os.environ['UNIT_TEST']:
             num_jobs = 1
     except:
         pass

@@ -37,9 +37,8 @@ else
 fi
 
 # Set env vars common to all installations
-export HUB_TESTING=false
-export HUB_DEBUG=true
-export UNITTEST=1
+export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
+export DEBUG=1
 
 # Test only the *_web_tests.py files
 WEB=( \

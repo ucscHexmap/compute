@@ -5,7 +5,7 @@ class hubTestCase(unittest.TestCase):
 
     def setUp(self):
         #self.db_fd, hub.app.config['DATABASE'] = tempfile.mkstemp()
-        hub.app.config['TESTING'] = True
+        hub.app.config['UNIT_TEST'] = True
         self.app = hub.app.test_client()
         #with hub.app.app_context():
         #    hub.init_db()

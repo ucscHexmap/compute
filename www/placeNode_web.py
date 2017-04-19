@@ -5,10 +5,10 @@
 #   - mapping between mapID and layout to data file locations
 #   - http response and code
 
-import os.path, json, types, requests, traceback
+import os.path, json, types, requests, traceback, logging
 from argparse import Namespace
 from flask import Response
-from webUtil import SuccessResp, ErrorResp, getMetaData, log, \
+from webUtil import SuccessResp, ErrorResp, getMetaData, \
     availableMapLayouts, validateMap, validateLayout, validateEmail, \
     validateViewServer
 import placeNode
@@ -83,7 +83,7 @@ def calcComplete(result, ctx, app):
     
     dataIn = ctx['dataIn']
 
-    #log('debug', 'calcComplete: result: ' + str(result), app)
+    #logging.debug('calcComplete: result: ' + str(result))
     
     if 'error' in result:
         raise ErrorResp(result['error'])
@@ -326,7 +326,7 @@ def calc(dataIn, ctx, app):
     else:
         top = 6
 
-    #log('debug', 'opts: ' + str(opts), app);
+    #logging.debug('opts: ' + str(opts));
 
     if 'testStub' in dataIn:
         result = calcTestStub(dataIn['nodes'])

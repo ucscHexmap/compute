@@ -4,6 +4,7 @@ File description coming soon.
 '''
 
 import os
+import  math
 import pandas as pd
 import sklearn.metrics.pairwise as sklp
 from scipy import stats
@@ -12,14 +13,12 @@ import scipy.spatial.distance as dist
 from utils import sigDigs
 from utils import truncateNP
 from utils import readXYs
-
 from utils import getAttributes
-import  math
 
 # The unit tests get confused when running parallel jobs via sklearn.
 # We need the try because the viewer calls this and does not have this defined.
 try:
-    if os.environ['UNITTEST']:
+    if os.environ['UNIT_TEST']:
         n_jobs = 1
     else:
         n_jobs = 8

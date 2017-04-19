@@ -9,7 +9,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
     viewServer = os.environ['VIEWER_URL']
 
     def setUp(self):
-        hub.app.config['TESTING'] = True
+        hub.app.config['UNIT_TEST'] = True
         self.app = hub.app.test_client()
 
     def tearDown(self):

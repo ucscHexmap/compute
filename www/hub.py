@@ -1,30 +1,40 @@
 
 # hub.py
 #
-import os, json, traceback
+import os, json, traceback, logging
 from flask import Flask, request, jsonify, current_app
 from flask_cors import CORS, cross_origin
 
 import webUtil
-from webUtil import SuccessResp, ErrorResp, log
+from webUtil import SuccessResp, ErrorResp
 import placeNode_web
 
+# Set up the flask application
 app = Flask(__name__)
-app.config['TESTING'] = os.environ['HUB_TESTING']
-app.config['DEBUG'] = os.environ['HUB_DEBUG']
+app.config['UNIT_TEST'] = int(os.environ.get('UNIT_TEST', 0))
+app.config['DEBUG'] = int(os.environ.get('DEBUG'), 0)
 
 # Make cross-origin AJAX possible
 CORS(app)
 
-# TODO: can ctx be stashed in flask's app.config object?
-# If not, clean up config.py to just dev & prod.
-# Or should ctx be stashed in the request object?]
+# Set up the context, mostly from environment variables
 ctx = {
     # default the view server URL to that of development
     'viewerUrl': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
-    'dataRoot': os.environ.get('DATA_ROOT', ''),
-    #'app': app,
+    'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
 }
+
+# Set up logging
+logFormat = '%(asctime)s %(levelname)s: %(message)s'
+if app.config['UNIT_TEST']:
+
+    # Use critical level to disable all messages so unit tests only output
+    # unit test errors.
+    logging.basicConfig(level=logging.CRITICAL, format=logFormat)
+elif app.config['DEBUG']:
+    logging.basicConfig(level=logging.DEBUG, format=logFormat)
+else:
+    logging.basicConfig(level=logging.WARNING, format=logFormat)
 
 # Validate a post
 def validatePost():
@@ -41,7 +51,7 @@ def validatePost():
 def successResponse(success):
     response = jsonify(success.to_dict())
     response.status_code = 200
-    #log('info', 'response: ' + str(response), current_app)
+    #logging.info('response: ' + str(response))
     return response
 
 # Register the error handler
@@ -54,8 +64,8 @@ def errorResponse(error):
         msg = data['error']
     else:
         msg = 'unknown error'
-    log('error', 'Request failed with: ' + str(response.status_code) + ': ' + \
-        str(response) + " " + msg, current_app)
+    logging.error('Request failed with: ' + str(response.status_code) + ': ' + \
+        str(response) + " " + msg)
     return response
 
 """
@@ -68,7 +78,7 @@ def queryFile(filename, map):
 @app.route('/query/<string:operation>', methods=['POST'])
 def queryRoute(operation):
 
-    log('info', 'Received query operation: ' + operation, current_app)
+    logging.info('Received query operation: ' + operation)
     dataIn = validatePost()
 
     if operation == 'overlayNodes':
@@ -77,7 +87,7 @@ def queryRoute(operation):
     else:
         raise ErrorResp('URL not found', 404)
 
-    log('info', 'Success with query operation: ' + operation, current_app)
+    logging.info('Success with query operation: ' + operation)
     raise SuccessResp(result)
 
 # Handle the route to test

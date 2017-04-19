@@ -13,7 +13,7 @@ if MAX_JOB_COUNT < 1:
 
 # the unit tests get confused when running parallel jobs via sklearn
     try:
-        if os.environ['UNITTEST']:
+        if os.environ['UNIT_TEST']:
             MAX_JOB_COUNT = 1
     except:
         pass
