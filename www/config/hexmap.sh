@@ -19,4 +19,4 @@ CA=$S/chain.crt
 CERT=$S/tumormap.crt
 WWW_SOCKET=tumormap.ucsc.edu:8332
 KEY=$S/tumormap.key
-PID_PATH=$WWW_PATH/../compute.pid
+PID_PATH=$WWW_PATH/../www.pid

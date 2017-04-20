@@ -35,5 +35,5 @@ else
         --pidfile $PID_PATH \
         --processes 1 \
         --threads 1 \
-        &> $WWW_PATH/www.log &)
+        &> $WWW_PATH/../www.log &)
 fi

@@ -17,4 +17,4 @@ CA=$S/chain.crt
 CERT=$S/hexdev.crt
 WWW_SOCKET=hexdev.sdsc.edu:8332
 KEY=$S/hexdev.key
-PID_PATH=$WWW_PATH/../compute.pid
+PID_PATH=$WWW_PATH/../www.pid
