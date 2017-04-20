@@ -57,7 +57,7 @@ def removeOldOutFiles(outDir):
         pass
     os.makedirs(outDir)
 
-def compareActualVsExpectedDir(s, expDir, outDir, excludeFiles=['log']):
+def compareActualVsExpectedDir(s, expDir, outDir, excludeFiles=['log', 'meta.json', 'mapMeta.json']):
     os.chdir(expDir)
     expFiles = glob.glob('*')
     expFiles.sort()
@@ -66,6 +66,15 @@ def compareActualVsExpectedDir(s, expDir, outDir, excludeFiles=['log']):
     outFiles.sort()
     
     # Verify the filenames are those expected
+    for filename in excludeFiles:
+        try:
+            outFiles.remove(filename)
+        except:
+            pass
+        try:
+            expFiles.remove(filename)
+        except:
+            pass
     #print 'outFiles', outFiles
     #print 'expFiles', expFiles
     s.assertTrue(outFiles == expFiles,

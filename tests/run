@@ -17,16 +17,19 @@ if [ $HEXMAP == '/data' ]; then
     # Production servers on tumormap
     export VIEWER_URL=https://tumormap.ucsc.edu
     export WWW_SOCKET=hexmap.sdsc.edu:8332
+    export DATA_ROOT=/hive/groups/hexmap/prod/compute/tests/in/layout
 
 elif [ $HEXMAP == '/cluster/home/swat/dev' ]; then
     # Development servers on hexdev
     export VIEWER_URL=https://hexdev.sdsc.edu:8222
     export WWW_SOCKET=hexdev.sdsc.edu:8332
+    export DATA_ROOT=/hive/groups/hexmap/dev/compute/tests/in/layout
 
 elif [ $HEXMAP == '/Users/swat/dev/hexagram' ]; then
     # Development servers on swat's local
     export VIEWER_URL=http://localhost:3333
     export WWW_SOCKET=localhost
+    export DATA_ROOT=/Users/swat/dev/compute/tests/in/layout
 
 elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
     # Development servers on duncan's local
@@ -59,6 +62,8 @@ DEPRECATED_PARALLEL=( \
 
 # The rest of the tests, order-dependent due to issues with parallel code
 DOCKER_SAFE=( \
+    layout_calc_meta_tests \
+    placeNode_calc_tests \
     test_dynLayoutAware \
     test_layoutBasic \
     test_layoutBasicMakeUI \
@@ -66,7 +71,6 @@ DOCKER_SAFE=( \
     test_sim6Layout \
     test_similarity \
     test_stats \
-    placeNode_calc_tests \
 )
 
 # Combine the lists above to get ALL of the tests
@@ -75,6 +79,7 @@ ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${DOCKER_SAFE[
 # local mac tests are those that normally pass on a mac
 MAC=( \
     www_web_tests \
+    layout_calc_meta_tests \
     placeNode_calc_tests \
     placeNode_web_tests \
     test_dynLayoutAware \

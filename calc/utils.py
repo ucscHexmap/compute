@@ -3,7 +3,7 @@
 utils.py
 Misc. utilities for the server python code
 """
-import math, traceback
+import os, math, traceback
 import numpy as np
 import pandas as pd
 

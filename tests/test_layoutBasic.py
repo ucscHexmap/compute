@@ -270,7 +270,7 @@ class Test_layoutBasic(unittest.TestCase):
         util.removeOldOutFiles(outDir)
         layout.main(opts)
         util.compareActualVsExpectedDir(s, expParmDir, outDir,
-            ['log', 'tar.tar', 'zip.zip'])
+            ['log', 'meta.json', 'mapMeta.json', 'tar.tar', 'zip.zip'])
 
     def test_deprecated_parms_renamed(s):
         outDir = outDirBase + '_deprecatedParmsRenamed/'
@@ -294,7 +294,7 @@ class Test_layoutBasic(unittest.TestCase):
         util.removeOldOutFiles(outDir)
         layout.main(opts)
         util.compareActualVsExpectedDir(s, expParmDir, outDir,
-            ['log', 'tar.tar', 'zip.zip'])
+            ['log', 'meta.json', 'mapMeta.json', 'tar.tar', 'zip.zip'])
     
     def test_constants_replacing_deprecated_parms(s):
         outDir = outDirBase + '_constantsReplacingdeprecatedParms/'
@@ -530,6 +530,7 @@ class Test_layoutBasic(unittest.TestCase):
         layout.main(opts)
         util.compareActualVsExpectedDir(s, expNoAttsDir, outDir,
                                         excludeFiles = ['log',
+                                                        'mapMeta.json',
                                                         'neighbors_0.tab',
                                                         'assignments0.tab',
                                                         'hexNames.tab',
@@ -589,6 +590,7 @@ class Test_layoutBasic(unittest.TestCase):
         #check that it is mostly the same as the other files
         util.compareActualVsExpectedDir(s,expDir, outDir,
                                         excludeFiles = ['log',
+                                                        'mapMeta.json',
                                                         'neighbors_0.tab',
                                                         'assignments0.tab',
                                                         'hexNames.tab',

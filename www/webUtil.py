@@ -1,5 +1,5 @@
 
-import json, types
+import os, json, types, csv
 from argparse import Namespace
 
 class SuccessResp(Exception):
@@ -31,191 +31,49 @@ class ErrorResp(Exception):
         rv['error'] = self.message
         return rv
 
-def availableMapLayouts(operation):
+def getLayerDataTypes(mapId, ctx):
+    filename = os.path.join(
+        ctx['dataRoot'], 'view', mapId, 'Layer_Data_Types.tab')
+    fd = open(filename, 'rU')
+    return csv.reader(fd, delimiter='\t'), fd
 
-    # Find the maps and layouts for a specific operation
+def getFirstAttribute(mapId, ctx):
+    csv, fd = getLayerDataTypes(mapId, ctx)
+    first = None
+    for row in csv:
+        if row[0] == 'FirstAttribute':
+            first = row[1]
+            break
+    fd.close()
+    return first
 
-    if operation == 'Nof1':
-    
-        # TODO: really go get these
-        # by scraping the view directories for meta.json files containing file
-        # paths for a full feature matrix, xyPositions and firstAttribute.
-        return {
-            'lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2': [
-                'layout',
-            ],
-            'lmsh_ucsc.edu/allmonje_combat_UCSF500v2': [
-                'layout',
-            ],
-            'lmsh_ucsc.edu/AllAttr_combat_quartnorm': [
-                'layout',
-            ],
-            'lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine': [
-                'layout',
-            ],
-            'CKCC/v2': [
-                'mRNA',
-            ],
-            'CKCC/v3': [
-                'mRNA',
-            ],
-            'Pancan12/SampleMap': [
-                'mRNA',
-                'miRNA',
-                'RPPA',
-                'Methylation',
-                'SCNV',
-                'Mutations',
-                'PARADIGM (inferred)',
-            ],
-            'unitTest/layoutBasicExp': [
-                'layout'
-            ]
-        }
-    else:
-    
-        # Not a supported operation
-        return None
-    
-def getMetaData(mapId, ctx):
+def getLayoutIndex(layoutName, mapId, ctx):
+    filename = os.path.join(ctx['dataRoot'], 'view', mapId, 'layouts.tab')
+    with open(filename, 'rU') as f:
+        f = csv.reader(f, delimiter='\t')
+        index = None
+        for i, row in enumerate(f.__iter__()):
+            if row[0] == layoutName:
+                index = i
+                break
+        return index
+
+def getMapMetaData(mapId, ctx):
     
     # Retrieve the meta data for this map
-    
-    # TODO get real meta data from the view/<map>/meta.json file
-    if mapId == 'unitTest/layoutBasicExp':
-        meta = {
-            "firstAttribute": "1/0",
-            "layouts": {
-                "layout": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/unitTest/layoutBasicExp/full_matrix.tab",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/unitTest/layoutBasicExp/assignments0.tab",
-                }
-            }
-        }
-    elif mapId == 'lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2':
-        meta =  {
-            "firstAttribute": "AgeCollapsed",
-            "layouts": {
-                "layout": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2/features.tab",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/allmonje_quartnorm_UCSF500v2/assignments0.tab",
-                },
-            }
-        }
-    elif mapId == 'lmsh_ucsc.edu/allmonje_combat_UCSF500v2':
-        meta =  {
-            "firstAttribute": "AgeCollapsed",
-            "layouts": {
-                "layout": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/allmonje_combat_UCSF500v2/features.tab",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/allmonje_combat_UCSF500v2/assignments0.tab",
-                },
-            }
-        }
-    elif mapId == 'lmsh_ucsc.edu/AllAttr_combat_quartnorm':
-        meta =  {
-            "firstAttribute": "Age",
-            "layouts": {
-                "layout": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/AllAttr_combat_quartnorm/features.tab",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/AllAttr_combat_quartnorm/assignments0.tab",
-                },
-            }
-        }
-    elif mapId == 'lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine':
-        meta =  {
-            "firstAttribute": "Batch",
-            "layouts": {
-                "layout": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine/features.tab",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/lmsh_ucsc.edu/combat_allmonje_quartnorm_DatasetasCellLine/assignments0.tab",
-                },
-            }
-        }
-    elif mapId == 'CKCC/v2':
-        meta =  {
-            "firstAttribute": "Disease",
-            "layouts": {
-                "mRNA": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/CKCC/v2/expression.2016-10-24.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/CKCC/v2/assignments0.tab",
-                },
-            }
-        }
-    elif mapId == 'CKCC/v3':
-        meta =  {
-            "firstAttribute": "Disease",
-            "layouts": {
-                "mRNA": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/CKCC/v3/expression.2016.12.21.tab",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/CKCC/v3/assignments0.tab",
-                },
-            }
-        }
-    elif mapId == 'Pancan12/SampleMap':
-        meta =  {
-            "firstAttribute": "Tissue",
-            "layouts": {
-                "mRNA": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/Pancan12/2017_02_21/layout.mRNA.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/Pancan12/SampleMap/assignments0.tab",
-                },
-                "miRNA": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/Pancan12/2017_02_21/layout.miRNA.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/Pancan12/SampleMap/assignments1.tab",
-                },
-                "RPPA": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/Pancan12/2017_02_21/layout.RPPA.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/Pancan12/SampleMap/assignments2.tab",
-                },
-                "Methylation": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/Pancan12/2017_02_21/layout.methylation27.autosomal.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/Pancan12/SampleMap/assignments3.tab",
-                },
-                "SCNV": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/Pancan12/2017_02_21/layout.SCNV.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/Pancan12/SampleMap/assignments4.tab",
-                },
-                "Mutations": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/Pancan12/2017_02_21/layout.mutations.hc.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/Pancan12/SampleMap/assignments5.tab",
-                },
-                "PARADIGM (inferred)": {
-                    "fullFeatureMatrix":
-                        ctx['dataRoot'] + "featureSpace/Pancan12/2017_02_21/layout.paradigm.tsv",
-                    "xyPositions":
-                        ctx['dataRoot'] + "view/Pancan12/SampleMap/assignments6.tab",
-                }
-            }
-        }
+    dataFd = None
+    filename = os.path.join(ctx['dataRoot'], 'view', mapId, 'mapMeta.json')
+    try:
+        dataFd = open(filename, 'r')
+    except:
+        return {}
+    try:
+        data = json.load(dataFd)
+    except:
+        raise ErrorResp('Could not convert json to python for ' + filename)
 
-    return meta
+    dataFd.close()
+    return data
 
 def validateString(name, data, required=False):
     if required and name not in data:

@@ -240,15 +240,17 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 400)
+        #print "### rv.status_code:", rv.status_code
+        #print "### data['error']:", data['error']
+        s.assertTrue(rv.status_code == 500)
         s.assertTrue(data['error'] ==
-            'Map does not have any layouts with background data: someMap')
+            'Clustering data not found for layout: someLayout')
 
     def test_layout_has_background_data(s):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='someLayout',
                 nodes = dict(
                     someNode='someValue',
@@ -259,16 +261,16 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(rv.status_code == 500)
         #print "data['error']", data['error']
         s.assertTrue(data['error'] ==
-            'Layout does not have background data: someLayout')
+            'Clustering data not found for layout: someLayout')
             
     def test_some_calc_error(s):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='mRNA',
                 nodes = dict(
                     testError='something',
@@ -282,7 +284,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             s.assertTrue('', 'no json data in response')
         #print "rv.status_code", rv.status_code
         #print "data['error']", data['error']
-        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(rv.status_code == 400 or rv.status_code == 500)
         s.assertTrue(data['error'] == 'Some error message or stack trace')
 
     def test_create_bookmark(s):
@@ -307,7 +309,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='mRNA',
                 nodes = dict(
                     newNode1= {
@@ -340,7 +342,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='mRNA',
                 individualUrls=False,
                 nodes = dict(
@@ -374,7 +376,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='mRNA',
                 individualUrls=True,
                 nodes = dict(
@@ -408,7 +410,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='mRNA',
                 nodes = dict(
                     newNode1= {
@@ -449,7 +451,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='mRNA',
                 individualUrls=False,
                 nodes = dict(
@@ -493,7 +495,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
-                map='Pancan12/SampleMap',
+                map='unitTest/layoutBasicExp',
                 layout='mRNA',
                 individualUrls=True,
                 nodes = dict(

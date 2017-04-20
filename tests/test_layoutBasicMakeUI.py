@@ -219,6 +219,7 @@ class Test_layoutBasic(unittest.TestCase):
         layout.makeMapUIfiles(opts)
         util.compareActualVsExpectedDir(s, expNoAttsDir, outDir,
                                         excludeFiles = ['log',
+                                                        'mapMeta.json',
                                                         'neighbors_0.tab',
                                                         'assignments0.tab',
                                                         'hexNames.tab',
@@ -282,6 +283,7 @@ class Test_layoutBasic(unittest.TestCase):
         #check that it is mostly the same as the other files
         util.compareActualVsExpectedDir(s,expDir, outDir,
                                         excludeFiles = ['log',
+                                                        'mapMeta.json',
                                                         'neighbors_0.tab',
                                                         'assignments0.tab',
                                                         'hexNames.tab',

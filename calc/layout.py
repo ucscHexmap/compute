@@ -85,7 +85,7 @@ def parse_args(args):
     parser.add_argument("--outputDirectory", "-d", type=str, dest="directory",
         help="directory in which to create view output files")
     parser.add_argument("--authGroup", type=str, dest="role",
-        default="private",
+        default=None,
         help="authorization group that may view this map")
 
     # WebAPI / CWL / CLI: Lesser used parameters:
@@ -867,6 +867,100 @@ def write_similarity_names(options):
         for i, name in enumerate(options.names):
             f.writerow([name])
 
+def writeMetaData(options):
+
+    # Store some metadata in the meta.json file for map group info like role and
+    # into mapMeta.json for map-specific info like clustering data file path.
+    #
+    # If this is called via docker's CWL or via CLI we don't know the data
+    # directory structure and must make some assumptions and so the meta data
+    # file(s) may be incorrect. We expect these users to be more sophistocated
+    # and know about how to fix up the meta data.
+    # When called via the web API we set the data directory structure so the
+    # meta data is reliable.
+    
+    # Find the base map name, without the optional mapGroup.
+    mapBaseI = string.rfind(options.directory[:-1], '/') + 1
+    mapBase = options.directory[mapBaseI:]
+
+    # Start off assuming no mapGroup so it is the same dir as the base map.
+    mapGroupDir = options.directory
+    mapGroup = mapBase
+    
+    # Find the parent name.
+    parentI = string.rfind(options.directory[:mapBaseI-1], '/') + 1
+    parent = options.directory[parentI:mapBaseI-1]
+    
+    if parent != 'view':
+    
+        # The parent is either the map group or this is not our standard data
+        # directory structure.
+
+        # Find the grandparent name
+        gParentI = string.rfind(options.directory[:parentI-1], '/') + 1
+        gParent = options.directory[gParentI:parentI-1]
+        if gParent == 'view':\
+        
+            # This is our standard data directory structure with a mapGroup.
+            mapGroup = options.directory[parentI:mapBaseI-1]
+            mapGroupDir = options.directory[:mapBaseI-1]
+
+    # Save the map group meta data if there is any.
+    if options.role:
+        
+        # Open any existing meta.json file and load its meta data.
+        metaPath = os.path.join(mapGroupDir, 'meta.json')
+        meta = {}
+        try:
+            with open(metaPath, 'r') as f:
+                meta = json.load(f)
+                
+        except:
+            # No meta.json file yet.
+            pass
+        
+        # TODO make this write to an array of roles rather than a single
+        # value. For now do not overwrite any existing role
+        if 'role' not in meta:
+            meta['role'] = options.role
+        
+        try:
+            with open(metaPath, 'w') as f:
+                json.dump(meta, f, indent=4)
+        except:
+            # We assume we could not write to this dir because this was called
+            # via CWL/CLI and the directory is protected.
+            print('Warning: could not write meta.json file')
+                
+    # Save the base-map-specific meta data if there are any. This is for
+    # operations like placing new nodes or sub-maps.
+    if options.feature_space:
+
+        # Open any existing mapMeta.json file and load its meta data.
+        metaPath = os.path.join(options.directory, 'mapMeta.json')
+        meta = {}
+        try:
+            with open(metaPath, 'r') as f:
+                meta = json.load(f)
+        except:
+            # No mapMeta.json file yet
+           pass
+
+        # Build the meta data for each layout. Paths written are relative to the
+        # data root so may not be reliable when called via CWL/CLI where we
+        # don't know the data root.
+        if 'layouts' not in meta:
+            meta['layouts'] = {}
+        for i, name in enumerate(options.names):
+            if name not in meta['layouts']:
+                meta['layouts'][name] = {}
+            meta['layouts'][name]['clusterData'] = os.path.join('featureSpace',
+              'mapGroup', 'mapBase', os.path.basename(options.feature_space[i]))
+            
+        # Write the json file
+        with open(metaPath, 'w') as f:
+            json.dump(meta, f, indent=4)
+
 def copy_files_for_UI(options, layer_files, layers, layer_positives, clumpiness_scores):
     """
     Copy some files over to the view space so it may access them.
@@ -908,10 +1002,13 @@ def copy_files_for_UI(options, layer_files, layers, layer_positives, clumpiness_
         shutil.copy(options.attributeTags, tagsPath)
         print 'Tags file copied to', tagsPath
 
+    if options.feature_space or options.role:
+        writeMetaData(options)
+    
 def build_default_scores(options):
 
     # Build a fake scores file from the node IDs in the first layout. This is a
-    # hack to get around the server & client code expecting at least one layer.
+    # hack to get around the server code expecting at least one layer.
     
     file_name = options.directory + '/fake_layer.tab'
     with open(file_name, 'w') as fout:
@@ -1057,23 +1154,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
     sys.stdout.flush()
 
     ctx = Context()
-
-    if options.role != None:
-    
-        # Create the metadata json file.
-        # We're going to make the assumption that any project being created with
-        # a role will have major and minor project dirs. So insert the metadata
-        # file into the major directory.
-        i = string.rfind(options.directory[:-1], '/')
-        majorDir = options.directory[:i]
-        
-        # If a meta.json file already exists, do not overwrite it because it
-        # may have been changed to allow others to have access.
-        metaPath = os.path.join(majorDir, 'meta.json')
-        if not os.path.isfile(metaPath):
-            with open(metaPath, 'w') as fout:
-                meta = '{ "role": "' + options.role + '" }\n';
-                fout.write(meta)
 
     #javascript expects at least one attribute so put something fake there
     # if none exist
@@ -1467,8 +1547,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
                 for _ in options.coordinates]
         else:    #no matrix is given
             raise InvalidAction("Invalid matrix input was provided")
-
-
 
     # Count how many layer entries are greater than 0 for each binary layer, and
     # store that number in this dict by layer name. Things with the default

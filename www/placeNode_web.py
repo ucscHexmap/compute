@@ -5,12 +5,12 @@
 #   - mapping between mapID and layout to data file locations
 #   - http response and code
 
-import os.path, json, types, requests, traceback, logging
+import os, json, types, requests, traceback, csv, logging
 from argparse import Namespace
 from flask import Response
-from webUtil import SuccessResp, ErrorResp, getMetaData, \
-    availableMapLayouts, validateMap, validateLayout, validateEmail, \
-    validateViewServer
+import webUtil
+from webUtil import SuccessResp, ErrorResp, getMapMetaData, \
+    validateMap, validateLayout, validateEmail, validateViewServer
 import placeNode
 import compute_sparse_matrix
 import utils
@@ -43,22 +43,12 @@ def validateParameters(data):
         data['neighborCount'] < 1):
         raise ErrorResp('neighborCount parameter should be a positive integer')
 
-    # Check that map and layout are available for n-of-1 analysis
-    mapLayouts = availableMapLayouts('Nof1')
-    if not data['map'] in mapLayouts:
-        raise ErrorResp(
-            'Map does not have any layouts with background data: ' +
-            data['map'])
-    if not data['layout'] in mapLayouts[data['map']]:
-        raise ErrorResp('Layout does not have background data: ' +
-            data['layout'])
-
 def createBookmark(state, viewServer, ctx):
 
     # Create a bookmark
 
     # Ask the view server to create a bookmark of this client state
-    # TODO fix the request to the view server
+    # TODO fix the request to the view server to include cert
     try:
         bResult = requests.post(
             viewServer + '/query/createBookmark',
@@ -92,36 +82,22 @@ def calcComplete(result, ctx):
     if not 'viewServer' in dataIn:
         dataIn['viewServer'] = ctx['viewerUrl']
 
-    # TODO find the firstAttribute in Layer_Data_Types.tab
-    if 'firstAttribute' in ctx['meta']:
-        firstAttr = ctx['meta']['firstAttribute']
-    else:
-        firstAttr = None
-
-    # TODO find the layoutIndex from layouts.tab
-    layoutIndex = 0
-    if dataIn['map'] == 'Pancan12/SampleMap':
-        layouts = [
-            'mRNA',
-            'miRNA',
-            'RPPA',
-            'Methylation',
-            'SCNV',
-            'Mutations',
-            'PARADIGM (inferred)',
-        ]
-        layoutIndex = layouts.index(dataIn['layout'])
+    # Find the first attribute if any
+    firstAttribute = webUtil.getFirstAttribute(dataIn['map'], ctx)
+    logging.error('### firstAttribute ' + str(firstAttribute))
 
     # Format the result as client state in preparation to create a bookmark
     state = {
         'page': 'mapPage',
         'project': dataIn['map'] + '/',
-        'layoutIndex': layoutIndex,
-        'shortlist': [firstAttr],
-        'first_layer': [firstAttr],
+        'layoutIndex': ctx['layoutIndex'],
+        'shortlist': [],
         'overlayNodes': {},
         'dynamic_attrs': {},
     }
+    if firstAttribute:
+        state['shortlist'].append(firstAttribute)
+        state['first_layer'] = firstAttribute
 
     # Populate state for each node
     for node in result['nodes']:
@@ -256,88 +232,98 @@ def nodesToPandas(pydict):
     return compute_sparse_matrix.numpyToPandas(
             *compute_sparse_matrix.read_tabular(s_buf)
                                                 )
+def calcTestStub(newNodes, ctx):
+    #print 'opts.newNodes', opts.newNodes
+    
+    ctx['layoutIndex'] = 0
+    
+    if 'testError' in newNodes:
+        raise ErrorResp('Some error message or stack trace')
+    elif len(newNodes) == 1:
+        return {'nodes': {
+            'newNode1': {
+                'x': 73,
+                'y': 91,
+                'neighbors': {
+                    'TCGA-BP-4790': 0.352,
+                    'TCGA-AK-3458': 0.742,
+                }
+            },
+        }}
+    elif len(newNodes) > 1:
+        return {'nodes': {
+            'newNode1': {
+                'x': 73,
+                'y': 91,
+                'neighbors': {
+                    'TCGA-BP-4790': 0.352,
+                    'TCGA-AK-3458': 0.742,
+                }
+            },
+            'newNode2': {
+                'x': 53,
+                'y': 47,
+                'neighbors': {
+                    'neighbor1': 0.567,
+                    'neighbor2': 0.853,
+                }
+            },
+        }}
+    else:
+        raise ErrorResp('unknown test')
 
-if __debug__:
-    def calcTestStub(newNodes):
-        #print 'opts.newNodes', opts.newNodes
-        if 'testError' in newNodes:
-            return {
-                'error': 'Some error message or stack trace'
-            }
-        elif len(newNodes) == 1:
-            return {'nodes': {
-                'newNode1': {
-                    'x': 73,
-                    'y': 91,
-                    'neighbors': {
-                        'TCGA-BP-4790': 0.352,
-                        'TCGA-AK-3458': 0.742,
-                    }
-                },
-            }}
-        elif len(newNodes) > 1:
-            return {'nodes': {
-                'newNode1': {
-                    'x': 73,
-                    'y': 91,
-                    'neighbors': {
-                        'TCGA-BP-4790': 0.352,
-                        'TCGA-AK-3458': 0.742,
-                    }
-                },
-                'newNode2': {
-                    'x': 53,
-                    'y': 47,
-                    'neighbors': {
-                        'neighbor1': 0.567,
-                        'neighbor2': 0.853,
-                    }
-                },
-            }}
-        else:
-            return { 'error': 'unknown test' }
+def getBackgroundData(data, ctx):
+
+    # Find the clustering data file for this map and layout
+    try:
+        layouts = getMapMetaData(data['map'], ctx)['layouts']
+        clusterData = layouts[data['layout']]['clusterData']
+        clusterDataFile = os.path.join(ctx['dataRoot'], clusterData)
+    except:
+        raise ErrorResp(
+            'Clustering data not found for layout: ' + data['layout'], 500)
+
+    # Find the index of the layout
+    ctx['layoutIndex'] = \
+        webUtil.getLayoutIndex(data['layout'], data['map'], ctx)
+
+    # Find the xyPosition file
+    xyPositionFile = os.path.join(
+        ctx['viewDir'], 'assignments' + str(ctx['layoutIndex']) + '.tab')
+    
+    return clusterDataFile, xyPositionFile
 
 def calc(dataIn, ctx):
 
     # The entry point from the www URL routing
-
     validateParameters(dataIn)
-
-    # Find the Nof1 data files for this map and layout
-    meta = getMetaData(dataIn['map'], ctx)
-    
-    files = meta['layouts'][dataIn['layout']]
-    
-    if not 'testStub' in dataIn:
-    
-        # Check to see if the data files exist
-        # TODO: test both of these checks
-        if not os.path.exists(files['fullFeatureMatrix']):
-            raise ErrorResp('full feature matrix file not found: ' +
-                files['fullFeatureMatrix'], 500)
-        if not os.path.exists(files['xyPositions']):
-            raise ErrorResp('xy positions file not found: ' +
-                files['xyPositions'], 500)
-
-    
-    # Set any optional parms, letting the calc script set defaults.
-    if 'neighborCount' in dataIn:
-        top = dataIn['neighborCount']
-    else:
-        top = 6
-
-    #logging.debug('opts: ' + str(opts));
+    ctx['viewDir'] = os.path.join(ctx['dataRoot'], 'view', dataIn['map'])
 
     if 'testStub' in dataIn:
-        result = calcTestStub(dataIn['nodes'])
-        
+        result = calcTestStub(dataIn['nodes'], ctx)
+
+        #print "### ctx['layoutIndex'] 2", ctx['layoutIndex']
+
     else:
 
+        # Find the helper data needed to place nodes
+        clusterDataFile, xyPositionFile = getBackgroundData(dataIn, ctx)
+
+        # Set any optional parms, letting the calc script set defaults.
+        if 'neighborCount' in dataIn:
+            top = dataIn['neighborCount']
+        else:
+            top = 6
+
         #make expected python data structs
-        referenceDF, xyDF, newNodesDF = \
-         putDataIntoPythonStructs(files['fullFeatureMatrix'],
-                                  files['xyPositions'],
-                                  dataIn['nodes'])
+        try:
+            referenceDF, xyDF, newNodesDF = \
+             putDataIntoPythonStructs(clusterDataFile,
+                                      xyPositionFile,
+                                      dataIn['nodes'])
+        except:
+            raise ErrorResp('error on loading data', 500)
+
         # Call the calc script.
         neighboorhood, xys, urls = placeNode.placeNew(newNodesDF,referenceDF,
                                                       xyDF,top,dataIn['map'],
@@ -347,5 +333,4 @@ def calc(dataIn, ctx):
 
 
     ctx['dataIn'] = dataIn
-    ctx['meta'] = meta
     return calcComplete(result, ctx)
