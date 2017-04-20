@@ -13,7 +13,7 @@ class Nof1CalcTestCase(unittest.TestCase):
 
     def test_data_reading(s):
         '''
-        test for Nof1_hubs data input into python structures
+        test for Nof1_wwws data input into python structures
         @return:
         '''
 
@@ -31,7 +31,7 @@ class Nof1CalcTestCase(unittest.TestCase):
 
     def test_data_reading2(s):
         '''
-        test for Nof1_hubs data input into python structures
+        test for Nof1_wwws data input into python structures
         @return:
         '''
 
@@ -49,7 +49,7 @@ class Nof1CalcTestCase(unittest.TestCase):
 
     def test_json_out(s):
         '''
-        test for Nof1_hubs data input into python structures
+        test for Nof1_wwws data input into python structures
         @return:
         '''
 

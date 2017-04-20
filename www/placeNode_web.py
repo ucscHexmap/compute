@@ -299,7 +299,7 @@ if __debug__:
 
 def calc(dataIn, ctx):
 
-    # The entry point from the hub URL routing
+    # The entry point from the www URL routing
 
     validateParameters(dataIn)
 

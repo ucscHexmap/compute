@@ -1,7 +1,7 @@
 import os, json, requests
 import unittest
 import testUtil
-import hub
+import www
 
 class PlaceNodeWebTestCase(unittest.TestCase):
 
@@ -9,8 +9,8 @@ class PlaceNodeWebTestCase(unittest.TestCase):
     viewServer = os.environ['VIEWER_URL']
 
     def setUp(self):
-        hub.app.config['UNIT_TEST'] = True
-        self.app = hub.app.test_client()
+        www.app.config['UNIT_TEST'] = True
+        self.app = www.app.test_client()
 
     def tearDown(self):
         pass

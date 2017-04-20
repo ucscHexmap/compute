@@ -8,31 +8,32 @@
 
 # Run this startup script from an install-specific script similar to:
 # INSTALL=dev
-# HUB_PATH=/hive/groups/hexmap/dev/compute/www/
-# $HUB_PATH/uwsgi.sh $INSTALL $HUB_PATH
+# WWW_PATH=/hive/groups/hexmap/dev/compute/www/
+# $WWW_PATH/uwsgi.sh $INSTALL $WWW_PATH
 
 INSTALL=$1
-HUB_PATH=$2
+WWW_PATH=$2
 
-source $HUB_PATH/config/$INSTALL.sh
+source $WWW_PATH/config/$INSTALL.sh
 
 if [ ${HTTP} ]; then
     echo Starting HTTP server on $INSTALL
     uwsgi \
         --master \
-        --http-socket $HUB_SOCKET \
-        --wsgi-file $HUB_PATH/hub.py \
+        --http-socket $WWW_SOCKET \
+        --wsgi-file $WWW_PATH/www.py \
         --callable app \
         --processes 1 \
         --threads 1
 else
     echo Starting HTTPS server on $INSTALL
-    uwsgi \
+    (nohup uwsgi \
         --master \
-        --https-socket $HUB_SOCKET,$CERT,$KEY,HIGH,$CA \
-        --wsgi-file $HUB_PATH/hub.py \
+        --https-socket $WWW_SOCKET,$CERT,$KEY,HIGH,$CA \
+        --wsgi-file $WWW_PATH/www.py \
         --callable app \
         --pidfile $PID_PATH \
         --processes 1 \
-        --threads 1
+        --threads 1 \
+        &> $WWW_PATH/www.log &)
 fi

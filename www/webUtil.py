@@ -84,7 +84,7 @@ def getMetaData(mapId, ctx):
     # TODO get real meta data from the view/<map>/meta.json file
     if mapId == 'unitTest/layoutBasicExp':
         meta = {
-            "firstAttribute": "Apoptosis",
+            "firstAttribute": "1/0",
             "layouts": {
                 "layout": {
                     "fullFeatureMatrix":

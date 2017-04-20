@@ -1,11 +1,11 @@
-import hub
+import www
 import unittest
 
-class hubTestCase(unittest.TestCase):
+class wwwTestCase(unittest.TestCase):
 
     def setUp(self):
-        hub.app.config['UNIT_TEST'] = True
-        self.app = hub.app.test_client()
+        www.app.config['UNIT_TEST'] = True
+        self.app = www.app.test_client()
 
     def tearDown(self):
         pass
