@@ -77,7 +77,7 @@ def availableMapLayouts(operation):
         # Not a supported operation
         return None
     
-def getMetaData(mapId, ctx, app):
+def getMetaData(mapId, ctx):
     
     # Retrieve the meta data for this map
     

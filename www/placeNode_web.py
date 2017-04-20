@@ -53,7 +53,7 @@ def validateParameters(data):
         raise ErrorResp('Layout does not have background data: ' +
             data['layout'])
 
-def createBookmark(state, viewServer, ctx, app):
+def createBookmark(state, viewServer, ctx):
 
     # Create a bookmark
 
@@ -77,7 +77,7 @@ def createBookmark(state, viewServer, ctx, app):
     else:
         raise ErrorResp(bData)
 
-def calcComplete(result, ctx, app):
+def calcComplete(result, ctx):
 
     # The calculation has completed, so create bookmarks and send email
     
@@ -154,7 +154,7 @@ def calcComplete(result, ctx, app):
 
         # If individual Urls were requested, create a bookmark for this node
         if 'individualUrls' in dataIn and dataIn['individualUrls']:
-            bData = createBookmark(state, dataIn['viewServer'], ctx, app)
+            bData = createBookmark(state, dataIn['viewServer'], ctx)
             result['nodes'][node]['url'] = bData['bookmark']
 
             # Clear the node data to get ready for the next node
@@ -164,7 +164,7 @@ def calcComplete(result, ctx, app):
     # If individual urls were not requested, create one bookmark containing all
     # nodes and return that url for each node
     if not 'individualUrls' in dataIn or not dataIn['individualUrls']:
-        bData = createBookmark(state, dataIn['viewServer'], ctx, app)
+        bData = createBookmark(state, dataIn['viewServer'], ctx)
         for node in result['nodes']:
             result['nodes'][node]['url'] = bData['bookmark']
 
@@ -297,14 +297,14 @@ if __debug__:
         else:
             return { 'error': 'unknown test' }
 
-def calc(dataIn, ctx, app):
+def calc(dataIn, ctx):
 
     # The entry point from the hub URL routing
 
     validateParameters(dataIn)
 
     # Find the Nof1 data files for this map and layout
-    meta = getMetaData(dataIn['map'], ctx, app)
+    meta = getMetaData(dataIn['map'], ctx)
     
     files = meta['layouts'][dataIn['layout']]
     
@@ -348,4 +348,4 @@ def calc(dataIn, ctx, app):
 
     ctx['dataIn'] = dataIn
     ctx['meta'] = meta
-    return calcComplete(result, ctx, app)
+    return calcComplete(result, ctx)

@@ -82,7 +82,7 @@ def queryRoute(operation):
     dataIn = validatePost()
 
     if operation == 'overlayNodes':
-        result = placeNode_web.calc(dataIn, ctx, current_app)
+        result = placeNode_web.calc(dataIn, ctx)
         
     else:
         raise ErrorResp('URL not found', 404)
