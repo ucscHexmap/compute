@@ -955,7 +955,7 @@ def writeMetaData(options):
             if name not in meta['layouts']:
                 meta['layouts'][name] = {}
             meta['layouts'][name]['clusterData'] = os.path.join('featureSpace',
-              'mapGroup', 'mapBase', os.path.basename(options.feature_space[i]))
+              mapGroup, mapBase, os.path.basename(options.feature_space[i]))
             
         # Write the json file
         with open(metaPath, 'w') as f:
