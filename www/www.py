@@ -26,15 +26,21 @@ ctx = {
 
 # Set up logging
 logFormat = '%(asctime)s %(levelname)s: %(message)s'
+logLevel = None
 if app.config['UNIT_TEST']:
 
     # Use critical level to disable all messages so unit tests only output
     # unit test errors.
     logging.basicConfig(level=logging.CRITICAL, format=logFormat)
+    logLevel = 'CRITICAL'
 elif app.config['DEBUG']:
     logging.basicConfig(level=logging.DEBUG, format=logFormat)
+    logLevel = 'DEBUG'
 else:
-    logging.basicConfig(level=logging.WARNING, format=logFormat)
+    logging.basicConfig(level=logging.INFO, format=logFormat)
+    logLevel = 'INFO'
+
+logging.critical('INFO: WWW server started with log level: ' + logLevel)
 
 # Validate a post
 def validatePost():
