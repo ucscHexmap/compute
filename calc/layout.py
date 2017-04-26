@@ -744,7 +744,11 @@ def drl_similarity_functions(matrix, index, options):
     sys.stdout.flush()
 
     for parts in coord_reader:
-        nodes[parts[0]] = (float(parts[1]), float(parts[2]))
+        try:
+            nodes[parts[0]] = (float(parts[1]), float(parts[2]))
+        except IndexError:
+            print "DRL has provided bad output, parts: ", parts
+            raise
 
     coord_reader.close()
 
