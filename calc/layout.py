@@ -757,6 +757,33 @@ def drl_similarity_functions(matrix, index, options):
     # Return nodes dict back to main method for further processes
     return nodes
 
+def sideLength(maxX,maxY,minX,minY,n):
+    """
+    determines side lenght of a hexagon.
+    rational here is that we'd like our hexagons to take up 5% of the space
+    on the clustering plane.
+    @param maxX: max of x in 2d clustering xy data
+    @param maxY: max of y in 2d clustering xy data
+    @param minX: min of x in 2d clustering xy data
+    @param minY: min of Y in 2d clustering xy data
+    @param n:    number of samples in 2d clustering xy data
+    @return: float for side length of the hexagon
+    """
+    #this is the total area of the plane coming from the node assignments
+    totalSpace = (maxX - minX) * (maxY - minY)
+
+    #percent of space we'd like to take up
+    PERCENTOFSPACE = .05
+    RECIPRICALHEXCONST = (2/ (3*np.sqrt(3)))
+    # area of a regular hex is sqrt(3)*3/2 * side^2
+    # so the side length we'd like for our hexs to take up 5% of the space
+    # is:
+    side = np.sqrt(totalSpace * PERCENTOFSPACE * RECIPRICALHEXCONST* (
+        1/float(n)))
+
+    return side
+
+
 def compute_hexagram_assignments(nodes, index, options, ctx):
     """
     Now that we are taking multiple similarity matrices as inputs, we must
@@ -774,14 +801,21 @@ def compute_hexagram_assignments(nodes, index, options, ctx):
 
     # Write out the xy coordinates before squiggling. First find the x and y
     # offsets needed to make all hexagon positions positive
-    min_x = min_y = None
+    min_x = min_y = max_x = max_y = None
+    count=0
     for name, coords in nodes.iteritems():
+        count+=1
         if min_x is None:
             min_x = coords[0]
             min_y = coords[1]
+            max_x = coords[0]
+            max_y = coords[1]
         else:
             min_x = min(min_x, coords[0])
             min_y = min(min_y, coords[1])
+            max_x = max(max_x, coords[0])
+            max_y = max(max_y, coords[1])
+
 
     node_writer = tsv.TsvWriter(open(os.path.join(options.directory, "xyPreSquiggle_"+ str(index) + ".tab"), "w"))
 
@@ -800,9 +834,15 @@ def compute_hexagram_assignments(nodes, index, options, ctx):
     # None if it's free.
     hexagons = collections.defaultdict(lambda: None)
 
-    # This holds the side length that we use
-    side_length = 1.0
-    
+    # get side length that we want to:
+    # if we are using DRL assume that 1 is a good side length (it has worked so
+    # far without complaint :)
+    if options.layoutInputFormat != "xyPositions":
+        side_length = 1.0
+    else: # if some other method is providing xy data
+        # we'd like hexagons to be 5% of the taken up space
+        side_length = sideLength(max_x,max_y,min_x,min_y,count)
+
     # This holds what will be a layer of how badly placed each hexagon is
     # A dict from node name to layer value
     placement_badnesses = {}
