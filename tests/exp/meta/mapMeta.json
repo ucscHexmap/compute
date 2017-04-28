@@ -1,10 +1,10 @@
 {
     "layouts": {
         "layout_2": {
-            "clusterData": "featureSpace/mapGroup/mapBase/full_matrix_2.tab"
+            "clusterData": "featureSpace/mapMetaCalc/mapMetaCalc/full_matrix_2.tab"
         }, 
         "layout": {
-            "clusterData": "featureSpace/mapGroup/mapBase/full_matrix.tab"
+            "clusterData": "featureSpace/mapMetaCalc/mapMetaCalc/full_matrix.tab"
         }
     }
 }
