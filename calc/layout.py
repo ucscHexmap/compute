@@ -841,16 +841,26 @@ def compute_hexagram_assignments(nodes, index, options, ctx):
     # get side length that we want to:
     # if we are using DRL assume that 1 is a good side length (it has worked so
     # far without complaint :)
-    if options.layoutInputFormat != "xyPositions":
-        side_length = 1.0
-    else: # if some other method is providing xy data
+
+    #figure out whether we have an xy entry
+    xyEntry = False
+    try:
+        xyEntry = len(options.coordinates) > 0
+    except TypeError:
+        xyEntry = options.layoutInputFormat == "xyPositions"
+
+    if xyEntry: #some other method is providing xy data
         # we'd like hexagons to be 5% of the taken up space
         side_length = sideLength(max_x,max_y,min_x,min_y,count)
+        print "x-y input: hexagon side length chosen as " + str(side_length)
 
+    else: # we are using OpenOrd and this side length works well with the
+          # scaling
+        side_length = 1.0
     # This holds what will be a layer of how badly placed each hexagon is
     # A dict from node name to layer value
     placement_badnesses = {}
-    
+
     for node, (node_x, node_y) in nodes.iteritems():
         # Assign each node to a hexagon
         # This holds the resulting placement badness for that hexagon (i.e. 
