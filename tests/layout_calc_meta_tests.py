@@ -12,8 +12,9 @@ clusterDataFile = os.path.join(inDir, 'full_matrix.tab')
 
 class Layout_calc_meta_tests(unittest.TestCase):
 
-    def test_map_meta_json(s):
-        outDir = os.path.join(outDirBase, 'mapMetaCalc')
+    def test_map_meta_json_standard_group(s):
+        inDir = os.path.join(testDir, 'in/dataRoot/featureSpace/groupName/mapName')
+        outDir = os.path.join(outDirBase, 'mapMetaCalcStandardGroup')
         opts = [
             "--layoutInputFile", os.path.join(inDir, 'full_matrix.tab'),
             "--layoutInputFile", os.path.join(inDir, 'full_matrix_2.tab'),
@@ -25,7 +26,44 @@ class Layout_calc_meta_tests(unittest.TestCase):
             "--noLayoutAwareStats"]
         util.removeOldOutFiles(outDir)
         layout.main(opts)
-        util.compareActualVsExpectedFile(s, 'mapMeta.json', expMetaDir, outDir)
+        util.compareActualVsExpectedFile2(s,
+            os.path.join(expMetaDir, 'mapMetaGroup.json'),
+            os.path.join(outDir, 'mapMeta.json'))
+
+    def test_map_meta_json_standard_simple(s):
+        inDir = os.path.join(testDir, 'in/dataRoot/featureSpace/simpleMapName')
+        outDir = os.path.join(outDirBase, 'mapMetaCalcStandardSimple')
+        opts = [
+            "--layoutInputFile", os.path.join(inDir, 'full_matrix.tab'),
+            "--layoutInputFile", os.path.join(inDir, 'full_matrix_2.tab'),
+            "--layoutInputFormat", 'clusterData',
+            "--layoutName", "layout",
+            "--layoutName", "layout_2",
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedFile2(s,
+            os.path.join(expMetaDir, 'mapMetaSimple.json'),
+            os.path.join(outDir, 'mapMeta.json'))
+
+    def test_map_meta_json_non_standard(s):
+        outDir = os.path.join(outDirBase, 'mapMetaCalcNonStandard')
+        opts = [
+            "--layoutInputFile", os.path.join(inDir, 'full_matrix.tab'),
+            "--layoutInputFile", os.path.join(inDir, 'full_matrix_2.tab'),
+            "--layoutInputFormat", 'clusterData',
+            "--layoutName", "layout",
+            "--layoutName", "layout_2",
+            "--outputDirectory", outDir,
+            "--noLayoutIndependentStats",
+            "--noLayoutAwareStats"]
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedFile2(s,
+            os.path.join(expMetaDir, 'mapMetaEmpty.json'),
+            os.path.join(outDir, 'mapMeta.json'))
 
     def test_group_meta_json_no_view_dir(s):
         outDir = os.path.join(outDirBase, 'groupMetaCalcNoView')
@@ -69,39 +107,6 @@ class Layout_calc_meta_tests(unittest.TestCase):
         util.removeOldOutFiles(outDir)
         layout.main(opts)
         util.compareActualVsExpectedFile(s, 'meta.json', expMetaDir, outMetaDir)
-
-    def test_group_meta_exists_json_view_group_dir(s):
-        outMetaDir = os.path.join(outDirBase, 'groupMetaCalcExistsGroup/view/group')
-        outDir = os.path.join(outMetaDir, 'baseMap')
-
-        opts = [
-            "--layoutInputFile", os.path.join(inDir, 'similarity.tab'),
-            "--layoutInputFormat", 'sparseSimilarity',
-            "--layoutName", "layout",
-            "--role", "myRole",
-            "--outputDirectory", outDir,
-            "--noLayoutIndependentStats",
-            "--noLayoutAwareStats"]
-        util.removeOldOutFiles(outDir)
-        
-        # Make a beginning meta.json to change
-        try:
-            os.makedirs(outMetaDir)
-        except:
-            pass
-        meta = None
-        with open(os.path.join(expMetaDir, 'meta.json'), 'r') as f:
-            meta = json.load(f)
-        meta['role'] = 'oldRole'
-        outMetaFile = os.path.join(outMetaDir, 'meta.json')
-        with open(outMetaFile, 'w') as f:
-            json.dump(meta, f, indent=4)
-
-        layout.main(opts)
-        
-        with open(outMetaFile, 'r') as f:
-            meta = json.load(f)
-        s.assertTrue(meta['role'] == 'oldRole')
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,0 +1,10 @@
+{
+    "layouts": {
+        "layout_2": {
+            "clusterData": "featureSpace/groupName/mapName/full_matrix_2.tab"
+        }, 
+        "layout": {
+            "clusterData": "featureSpace/groupName/mapName/full_matrix.tab"
+        }
+    }
+}

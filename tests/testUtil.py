@@ -110,23 +110,27 @@ def compareActualVsExpectedDir(s, expDir, outDir, excludeFiles=['log', 'meta.jso
 
                  ) # errors
 
+def compareActualVsExpectedFile2(s, expPath, outPath):
+    
+    # Compare an expected file with an output file given full pathnames.
+
+    # Verify the file exists
+    s.assertTrue(path.isfile(outPath), msg='is not a file: ' + outPath)
+
+    # Compare the file contents
+    s.assertTrue(filecmp.cmp(outPath, expPath),
+                 msg='files do not match: ' + expPath + ' and ' + outPath)
+    
 def compareActualVsExpectedFile(s, fname, expDir, outDir):
+
+    # Compare two files of the same base name in different directories.
     
     # Verify the directory exists
     s.assertTrue(path.exists(outDir))
-
-    # Verify the file exists
-    s.assertTrue(path.isfile(path.join(outDir,fname)),
-                 msg='is not a file: ' + path.join(outDir,fname) +
-                     ' between ' + expDir + ' and ' + outDir
-                )
-
-    # Compare the file contents
-    s.assertTrue(filecmp.cmp(path.join(outDir,fname),path.join(expDir,fname)),
-                 msg='file did not match: ' + fname +
-                     ' between ' + expDir + ' and ' + outDir
-                )
     
+    compareActualVsExpectedFile2(
+        s, path.join(expDir, fname), path.join(outDir, fname))
+
 def dataFrameToStrBuf(df):
     '''
     makes a dataframe into a type that can be read as a file object
