@@ -990,27 +990,23 @@ def writeMetaData(options):
     # operations like placing new nodes or sub-maps.
     if options.feature_space:
 
-        # Open any existing mapMeta.json file and load its meta data.
-        metaPath = os.path.join(options.directory, 'mapMeta.json')
-        meta = {}
-        try:
-            with open(metaPath, 'r') as f:
-                meta = json.load(f)
-        except:
-            # No mapMeta.json file yet
-           pass
-
         # Build the meta data for each layout. Paths written are relative to the
         # data root so may not be reliable when called via CWL/CLI where we
         # don't know the data root.
-        if 'layouts' not in meta:
-            meta['layouts'] = {}
+        meta = { 'layouts': {} }
+        metaPath = os.path.join(options.directory, 'mapMeta.json')
         for i, name in enumerate(options.names):
-            if name not in meta['layouts']:
-                meta['layouts'][name] = {}
-            meta['layouts'][name]['clusterData'] = os.path.join('featureSpace',
-              mapGroup, mapBase, os.path.basename(options.feature_space[i]))
+        
+            # We only save this data if our standard data directory structure
+            # created with the web API is being used. We do the best we can by
+            # looking for 'featureSpace' in the layoutInput file name.
+            j = options.feature_space[i].find('featureSpace')
+            if j < 0:
+                continue
             
+            # Save the file name relative to the data root
+            meta['layouts'][name] = {'clusterData': options.feature_space[i][j:]}
+    
         # Write the json file
         with open(metaPath, 'w') as f:
             json.dump(meta, f, indent=4)
