@@ -102,12 +102,15 @@ def _isXYPositions(df):
     """Uses the number of columns, datatype, and the prerequisite that there
     are no missing values to determine whether the input is xy positions"""
 
+    # Two columns are expected.
     exp_ncols = df.shape[1] == 2
-    exp_type  = df[df.columns[0]].dtype == "float" \
-                or df[df.columns[0]].dtype == "int" \
-                and df[df.columns[1]].dtype == "float" \
-                 or df[df.columns[1]].dtype == "int"
+
+    # The x and y columns should only contain numbers.
+    xColNumbers = df[df.columns[0]].dtype == "float" \
+                  or df[df.columns[0]].dtype == "int"
+    yColNumbers = df[df.columns[1]].dtype == "float" \
+                  or df[df.columns[1]].dtype == "int"
+    exp_type = xColNumbers and yColNumbers
 
     zero_nas = not bool(df.isnull().sum().sum())
     return exp_type and exp_ncols and zero_nas
-
