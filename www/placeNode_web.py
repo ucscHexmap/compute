@@ -109,7 +109,7 @@ def calcComplete(result, ctx):
         state['shortlist'].append(attr)
         state['dynamic_attrs'][attr] = {
             'dynamic': True,
-            'datatype': 'binary',
+            'dataType': 'binary',
             'data': {},
         }
         
@@ -118,7 +118,7 @@ def calcComplete(result, ctx):
         state['shortlist'].append(attrV)
         state['dynamic_attrs'][attrV] = {
             'dynamic': True,
-            'datatype': 'continuous',
+            'dataType': 'continuous',
             'data': {},
         }
         
@@ -128,6 +128,12 @@ def calcComplete(result, ctx):
             state['dynamic_attrs'][attrV]['data'][neighbor] = \
                 nData['neighbors'][neighbor];
 
+        # Set the number of values in the state for each attribute
+        state['dynamic_attrs'][attr]['n'] = \
+            len(state['dynamic_attrs'][attr]['data']);
+        state['dynamic_attrs'][attrV]['n'] = \
+            len(state['dynamic_attrs'][attrV]['data']);
+
         # If individual Urls were requested, create a bookmark for this node
         if 'individualUrls' in dataIn and dataIn['individualUrls']:
             bData = createBookmark(state, dataIn['viewServer'], ctx)
@@ -136,6 +142,7 @@ def calcComplete(result, ctx):
             # Clear the node data to get ready for the next node
             state['overlayNodes'] = {}
             state['dynamic_attrs'] = {}
+            state['shortlist'] = [];
         
     # If individual urls were not requested, create one bookmark containing all
     # nodes and return that url for each node
