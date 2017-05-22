@@ -52,25 +52,6 @@ def parse_args(args):
 
     return parser.parse_args(args)
 
-def std_iszero(dt,log=sys.stdout):
-    '''
-    a check/warning the given matrix has rows or columns with standard deviation of 0
-    @param dt:
-    @return:
-    '''
-    rowstd = numpy.apply_along_axis(numpy.std,1,dt)
-    colstd = numpy.apply_along_axis(numpy.std,0,dt)
-
-    rowstdIs0 = numpy.argwhere(rowstd == 0).flatten()
-    colstdIs0 = numpy.argwhere(colstd == 0).flatten()
-
-    if log!=None and len(rowstdIs0):
-        print >> log, "WARNING: rows " + str(rowstdIs0) + ' have standard deviation of 0'
-    if log!=None and len(colstdIs0):
-        print >> log, "WARNING: columns " + str(colstdIs0) + ' have standard deviation of 0'
-
-    return bool(len(rowstdIs0) or len(colstdIs0))
-
 def read_tabular(in_file,numeric_flag=True,log=sys.stdout):
     '''
     Reads a tabular matrix file and returns numpy matrix, col names, row names
@@ -85,9 +66,15 @@ def read_tabular(in_file,numeric_flag=True,log=sys.stdout):
     #drop rows and columns that are full of na's
     df.dropna(axis=1,how='all',inplace=True)
     df.dropna(axis=0,how='all',inplace=True)
+
     #count the number of Nas so we can warn the user
     nas = df.isnull().sum().sum()
     df = df.fillna(0)
+
+    #drop any columns with standard deviation of 0
+    cols_std_0 = df.columns[df.std() == 0]
+    df.drop(labels=cols_std_0, axis=0, inplace=True)
+
     #check and make sure the conversions all went smoothly
     colsHadStrings= numpy.argwhere(df.dtypes == object).flatten()
 
@@ -468,8 +455,6 @@ def main(args):
 
     curr_time = time.time()
     dt,sample_labels,feature_labels = read_tabular(in_file,True)
-
-    std_iszero(dt,log)
 
     if rowwise:
         sample_labels, feature_labels = feature_labels, sample_labels
