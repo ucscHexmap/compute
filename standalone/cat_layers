@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# Used to stitch layers files together. Outputs to stdout.
+# This script row-wise concatonates the first file arg with the 
+# first four rows of the second file. 
+# Example usage: $> cat_layers path1/layers.tab path2/layers.tab
+# Each file should be in "layers.tab" format, and be derived
+# from the same collection of attributes.
+
+FILE1=$1
+FILE2=$2
+
+# Assume the file arguments have the same row names.
+# If so we can align rows in each file with sorting.
+sort $FILE1 > tmp.file1
+sort $FILE2 > tmp.file2
+
+# The first 4 columns of the second file are ommitted, assumes tab delimited.
+cut -f 5- tmp.file2 > tmp.file3
+
+# Concat the two files together, assumes tab delimited.
+paste tmp.file1 tmp.file3
+
+# Clean up.
+rm tmp.file1
+rm tmp.file2
+rm tmp.file3
+
+
