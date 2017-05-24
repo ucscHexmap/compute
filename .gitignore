@@ -5,3 +5,4 @@ maketar
 venv
 xtar
 *.log
+tests/out
