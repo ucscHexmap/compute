@@ -87,6 +87,10 @@ def parse_args(args):
     parser.add_argument("--authGroup", type=str, dest="role",
         default=None,
         help="authorization group that may view this map")
+    parser.add_argument("--zeroReplace", action='store_true',
+        default=False,
+        help="Replaces NA values with 0")
+
 
     # WebAPI / CWL / CLI: Lesser used parameters:
     parser.add_argument("--reflectionMapType", type=str, default=None,
@@ -634,13 +638,15 @@ def drl_similarity_functions(matrix, index, options):
     tsv format whereby the DrL can take the values. Then all of the DrL
     functions are performed on the similarity matrix.
 
-    Options is passed to access options.singletons and other required apsects
+    Options is passed to access options.singletons and other required aspects
     of the parsed args.
+
     @param matrix: most information for this layout
     @param index: index for this layout
     """
 
-    print timestamp(), '============== Starting drl computations for layout:', index, '... =============='
+    print timestamp(), '============== Starting drl computations for layout:', \
+          index, '... =============='
     
     # Work in a temporary directory
     # If not available, create the directory.
@@ -667,6 +673,7 @@ def drl_similarity_functions(matrix, index, options):
     signatures = set()
 
     print "Reach for parts in sim_reader:" + str(sim_reader)
+
     for parts in sim_reader:
         # Keep the signature names used
         signatures.add(parts[0])
@@ -696,7 +703,6 @@ def drl_similarity_functions(matrix, index, options):
     sim_writer.close()
     
     # Now our input for DrL is prepared!
-    
     # Do DrL truncate.
     print timestamp(), "DrL: Truncating..."
     sys.stdout.flush()
@@ -706,7 +712,9 @@ def drl_similarity_functions(matrix, index, options):
             stdout=sys.stdout, stderr=subprocess.STDOUT)
     else:
         subprocess.check_call(["truncate", "-t", str(options.truncation_edges),
-            drl_basename], stdout=sys.stdout, stderr=subprocess.STDOUT)
+            drl_basename], stdout=sys.stdout,
+                              stderr=subprocess.STDOUT)
+
 
     # Run the DrL layout engine.
     print "DrL: Doing layout..."
@@ -730,11 +738,12 @@ def drl_similarity_functions(matrix, index, options):
         
     # Now DrL has saved its coordinates as <signature name>\t<x>\t<y> rows in 
     # <basename>.coord
-    
+
+
     # We want to read that.
     # This holds a reader for the DrL output
     coord_reader = tsv.TsvReader(open(drl_basename + ".coord", "r"))
-    
+
     # This holds a dict from signature name string to (x, y) float tuple. It is
     # also our official collection of node names that made it through DrL, and
     # therefore need their score data sent to the client.
@@ -755,7 +764,8 @@ def drl_similarity_functions(matrix, index, options):
     # Delete our temporary directory.
     #shutil.rmtree(drl_directory)
 
-    print timestamp(), '============== drl computations completed for layout:', index, '=============='
+    print timestamp(), '============== drl computations completed for layout:',\
+          index, '=============='
 
 
     # Return nodes dict back to main method for further processes
@@ -786,7 +796,6 @@ def sideLength(maxX,maxY,minX,minY,n):
         1/float(n)))
 
     return side
-
 
 def compute_hexagram_assignments(nodes, index, options, ctx):
     """
@@ -1259,7 +1268,13 @@ def makeMapUIfiles(options, cmd_line_list=None):
         if options.layout_method.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
             for i, genomic_filename in enumerate(options.feature_space):
                 print 'Opening feature space matrix', i, genomic_filename
-                dt,sample_labels,feature_labels = read_tabular(genomic_filename, True)
+
+                dt,sample_labels,feature_labels = \
+                    read_tabular(genomic_filename,
+                                 True,
+                                 replaceNA=options.zeroReplace
+                                 )
+
                 print str(len(dt))+" x "+str(len(dt[0]))
                 #preprocess the data:
                 if not(options.preprocess_method == None or len(options.preprocess_method) == 0):
@@ -1331,7 +1346,13 @@ def makeMapUIfiles(options, cmd_line_list=None):
                 print "Feature matrices"
                 for i, genomic_filename in enumerate(options.feature_space):
                     print 'Opening Matrix', i, genomic_filename
-                    dt,sample_labels,feature_labels = read_tabular(genomic_filename, True)
+
+                    dt, sample_labels, feature_labels = \
+                        read_tabular(genomic_filename,
+                                     True,
+                                     replaceNA=options.zeroReplace
+                                     )
+
                     print str(len(dt))+" x "+str(len(dt[0]))
                     dt_t = np.transpose(dt)
                     result = sparsePandasToString(compute_similarities(dt=dt_t, sample_labels=sample_labels, metric_type=options.distanceMetric, num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
@@ -1344,7 +1365,13 @@ def makeMapUIfiles(options, cmd_line_list=None):
                 print "Similarity matrices"
                 for i, similarity_filename in enumerate(options.similarity_full):
                     print 'Opening Matrix', i, similarity_filename
-                    dt,sample_labels,feature_labels = read_tabular(similarity_filename, True)
+
+                    dt,sample_labels,feature_labels = \
+                        read_tabular(similarity_filename,
+                                     True,
+                                     replaceNA=options.zeroReplace
+                                     )
+
                     print str(len(dt))+" x "+str(len(dt[0]))
                     result = sparsePandasToString(extract_similarities(dt=dt, sample_labels=sample_labels, top=options.truncation_edges, log=None))
                     result_stream = StringIO.StringIO(result)
