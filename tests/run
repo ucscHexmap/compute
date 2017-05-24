@@ -71,6 +71,8 @@ DOCKER_SAFE=( \
     test_sim6Layout \
     test_similarity \
     test_stats \
+    test_layoutZeroReplace \
+    test_formatCheck \
 )
 
 # Combine the lists above to get ALL of the tests
