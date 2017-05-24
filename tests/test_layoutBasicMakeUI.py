@@ -30,10 +30,9 @@ attsStringsFile = os.path.join(inDir ,'attributes.tab')
 attsCodedFile = os.path.join(inDir, 'attributes.tab')
 
 import layout
-import compute_sparse_matrix
 from argparse import Namespace
 
-class Test_layoutBasic(unittest.TestCase):
+class Test_layoutBasicMakeUI(unittest.TestCase):
 
     def test_full_no_atts_fromMakeUIfiles(s):
         outDir = outDirBase + '_full_no_atts/'
@@ -52,7 +51,7 @@ class Test_layoutBasic(unittest.TestCase):
         #util.removeOldOutFiles(outDir)
         layout.makeMapUIfiles(opts)
 
-        #util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+        util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
 
 
     def test_full_no_colorfromMakeUIfiles(s):
