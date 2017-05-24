@@ -49,27 +49,34 @@ def parse_args(args):
         help="output file name")
     parser.add_argument("--rows", action="store_true",
         help="will take row wise similarity instead of columns")
+    parser.add_argument("--zeroReplace", action='store_true',
+        default=False,
+        help="if requested replaces NA values with 0")
 
     return parser.parse_args(args)
 
-def read_tabular(in_file,numeric_flag=True,log=sys.stdout):
+def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
     '''
     Reads a tabular matrix file and returns numpy matrix, col names, row names
     drops columns and rows that are full of nan
-    @param in_file: name of tab seperated input file
+    and fills na's with zero's if the 'replaceNA' flag is up
+    @param in_file: name of tab separated input file
     @param numeric_flag: if strings are found throws a value error
     @param log: where info chatter goes to
+    @param replaceNA: flag to replace NA's with zero
     @return: numpy matrix, list of column names, list of rownames
     '''
 
-    df = pd.read_csv(in_file,sep='\t',index_col=0)
+    df = pd.read_csv(in_file, sep='\t', index_col=0)
     #drop rows and columns that are full of na's
-    df.dropna(axis=1,how='all',inplace=True)
-    df.dropna(axis=0,how='all',inplace=True)
+    df.dropna(axis=1, how='all', inplace=True)
+    df.dropna(axis=0, how='all', inplace=True)
+
+    if replaceNA:
+        df = df.fillna(0)
 
     #count the number of Nas so we can warn the user
     nas = df.isnull().sum().sum()
-    df = df.fillna(0)
 
     #drop any columns with standard deviation of 0
     cols_std_0 = df.columns[df.std() == 0]
@@ -79,66 +86,18 @@ def read_tabular(in_file,numeric_flag=True,log=sys.stdout):
     colsHadStrings= numpy.argwhere(df.dtypes == object).flatten()
 
     if log != None and nas:
-        print >> log, "WARNING: " + str(nas) + " Na's found in data matrix " + in_file + ". Set all to 0"
+        print >> log, "WARNING: " + str(nas) + " Na's found in data matrix " \
+                 + in_file + "."
 
     if len(colsHadStrings) and numeric_flag:
-            raise ValueError('Strings were found in input matrix, columns:' + str(colsHadStrings))
+            raise ValueError('Strings were found in input matrix, columns:'
+                             + str(colsHadStrings))
 
     col_header = df.columns.values.tolist()
     row_header = df.index.tolist()
     df = df.as_matrix()
 
     return df, col_header, row_header
-
-def read_tabular_dep(input_file, numeric_flag):
-    '''data = open(input_file, 'r')
-    line = data.readline()
-    line = line.strip().split("\t")
-    col_headers = line[1:]
-    data.close()
-
-    matrix = numpy.loadtxt(input_file, skiprows=1, delimiter='\t', usecols=range(1,len(line)))
-    #row_headers = numpy.loadtxt(input_file, skiprows=1, delimiter='\t', usecols=(0))
-    row_headers = []
-    return (matrix, col_headers, row_headers)'''
-
-    data = open(input_file, 'r')
-    init_matrix = []
-    col_headers = []
-    row_headers = []
-    line_num = 1
-    for line in data:
-        line_elems = line.strip().split("\t")
-        if line_num == 1:
-            col_headers = line_elems[1:]
-        else:
-            row_headers.append(line_elems[0])
-            features = line_elems[1:]
-            features = [x if x != "NA" else "0" for x in features]
-            features = [x if len(x) != 0 else "0" for x in features]
-            features = [x if x != "0.0000" else "0" for x in features]
-            init_matrix.append(features)
-
-        line_num += 1
-    data.close()
-
-    if numeric_flag:
-        #matrix = [map(float,x) for x in init_matrix]
-        matrix = [[float(y) for y in x] for x in init_matrix]
-    else:
-        matrix = init_matrix
-    return (matrix, col_headers, row_headers)
-
-def read_tabular2(input_file, numeric_flag):	#YN 20160629, a faster (still TBD) version of the above function but doesn't do invalid value conversion
-    with open(input_file,'r') as f:
-        lines = [l.rstrip('\n').split('\t') for l in f]
-    col_headers = lines[0][1:]
-    row_headers = [l[0] for l in lines[1:]]
-    if numeric_flag:
-        dt = [map(float,l[1:]) for l in lines[1:]]
-    else:
-        dt = [l[1:] for l in lines[1:]]
-    return (dt, col_headers, row_headers)
 
 def numpyToPandas(mat,col_list,row_list):
     return pd.DataFrame(mat,index=row_list,columns=col_list)
@@ -156,7 +115,7 @@ def pandasToNumpy(df):
 
     return mat, col_list, row_list
 
-def common_rows(p1, p2,fractionReq=.5):
+def common_rows(p1, p2, fractionReq=.5):
     '''
     takes two pandas data frames and reduces them to have the same rows in the same order
     @param p1: a pandas dataframe
@@ -271,20 +230,27 @@ def extract_similarities(dt, sample_labels, top, log=None,sample_labels2=[],perc
 
     return output
 
-def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, top, log,dt2=numpy.array([]),sample_labels2=[]):
+def compute_similarities(dt, sample_labels, metric_type, num_jobs,
+                         output_type, top, log, dt2=numpy.array([]),
+                         sample_labels2=[]):
     '''
     :param dt: a numpy's two dimensional array holding the read in matrix data
     :param sample_labels: the names of the columns in order parallel to 'dt'
-    :param metric_type: the metric used to calculate similarities (see global VALID_METRICS)
-    :param num_jobs:  an int number of jobs to parallelize the similairty calculations
-    :param output_type: either 'FULL' or 'SPARSE', specifying a all-by-all output or a top n
-                        nearest neighbor output
-    :param top: when using 'SPARSE' output, the number of nearest neighbors to output in the edge file
-    :param log: the file descriptor pointed to where you want the chatter to go to, may be omitted
-    :param dt2: a second, optional two dimensional numpy.array, if used similarities between dt and dt2 returned.
+    :param metric_type: the metric used to calculate similarities
+    (see global VALID_METRICS)
+    :param num_jobs:  an int number of jobs to parallelize the similairty
+    calculations
+    :param output_type: either 'FULL' or 'SPARSE', specifying a all-by-all
+    output or a top n nearest neighbor output
+    :param top: when using 'SPARSE' output, the number of nearest neighbors to
+    output in the edge file
+    :param log: the file descriptor pointed to where you want the chatter to go
+    to, may be omitted
+    :param dt2: a second, optional two dimensional numpy.array, if used
+    similarities between dt and dt2 returned.
     :return: returns a pandas dataframe
     '''
-    # the unit tests get confused when running parallel jobs via sklearn
+    # The unit tests get confused when running parallel jobs via sklearn
     try:
         if os.environ['UNIT_TEST']:
             num_jobs = 1
@@ -300,6 +266,13 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
     #work around to provide spearman correlation to sklearn pairwise implementation
     # spearman is a rank transformed pearson ('correlation') metric
     if metric_type == 'spearman':
+        # The ranking function wgets rid of NAN's by placing them at the top of
+        # the rank. That functionality is both unexpected and undesirable.
+        # If NaNs are present in the data then raise an exception.
+        if numpy.isnan(dt).sum() or numpy.isnan(dt2).sum():
+            raise ValueError("Na's where found one of the data"
+                             "matrices. Similarity cannot be "
+                             "calculated when NAN's are present")
         if not(log == None):
             print >> log, 'rank transform for spearman being computed'
         #column wise rank transform
@@ -312,8 +285,7 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
         if not(log == None):
             print >> log, 'rank transform complete'
 
-    #calculate pairwise similarities,
-
+    #calculate pairwise similarities
     if len(dt2):   #if you have a second matrix then slightly different input
         x_corr = 1 - sklp.pairwise_distances(X=dt, Y=dt2, metric=metric_type, n_jobs=num_jobs)
     else:
@@ -365,45 +337,6 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
 
     return output
 
-'''
-unused
-def compute_similarities_old(dt, sample_labels, metric_type, num_jobs, output_type, top, log):
-
-    #This function was erroring with an index error (on output to string) of unknown cause for some inputs.
-
-    if not(log == None):
-        print >> log, "Computing similarities..."
-    curr_time = time.time()
-    x_corr = sklp.pairwise_distances(X=dt, Y=None, metric=metric_type, n_jobs=num_jobs)
-    x_corr = 1 - x_corr		#because computes the distance, need to convert to similarity
-    print "Resulting similarity matrix: "+str(len(x_corr))+" x "+str(len(x_corr[0]))
-    if not(log == None):
-        print >> log, str(time.time() - curr_time) + " seconds"
-    if not(log == None):
-        print >> log, "Outputting "+output_type.lower()+" matrix..."
-    curr_time = time.time()
-    output = ""
-    print output_type
-    if output_type == "SPARSE":
-        for i in range(len(x_corr)):
-            sample_dict = dict(zip(sample_labels, x_corr[i]))
-            del sample_dict[sample_labels[i]]	#remove self comparison
-            for n_i in range(top):
-                v=list(sample_dict.values())
-                k=list(sample_dict.keys())
-                m=v.index(max(v))
-                output = output + "\n" + sample_labels[i]+"\t"+k[m]+"\t"+str(v[m])
-                del sample_dict[k[m]]
-    elif output_type == "FULL":
-        output = "sample\t"+"\t".join(sample_labels)
-        for i in range(len(x_corr)):
-            value_str = [str(x) for x in x_corr[i]]
-            output = output + sample_labels[i]+"\t"+"\t".join(value_str) + "\n"
-    if not(log == None):
-        print >> log, str(time.time() - curr_time) + " seconds"
-    return(output)
-'''
-
 def main(args):
 
     start_time = time.time()
@@ -421,6 +354,7 @@ def main(args):
     out_file = opts.out_file
     log_file = opts.log
     rowwise = opts.rows
+    replaceNA = opts.zeroReplace
 
     #sets the log file appropriatly for chatter
     if len(log_file) > 0:
@@ -454,7 +388,8 @@ def main(args):
         print >> log, "Reading in input..."
 
     curr_time = time.time()
-    dt,sample_labels,feature_labels = read_tabular(in_file,True)
+    dt, sample_labels, feature_labels = read_tabular(in_file, True,
+                                                     replaceNA=replaceNA)
 
     if rowwise:
         sample_labels, feature_labels = feature_labels, sample_labels
@@ -464,9 +399,10 @@ def main(args):
 
     #if we are doing a second input (n-of-1 like)
     if len(in_file2):
-        dt2,sample_labels2,feature_labels2 = read_tabular(in_file2,True)
+        dt2,sample_labels2,feature_labels2 = read_tabular(in_file2, True,
+                                                          replaceNA=replaceNA)
         #switch types so that reducing rows is easier
-        dt = numpyToPandas(dt.transpose(),sample_labels,feature_labels)
+        dt = numpyToPandas(dt.transpose(),sample_labels, feature_labels)
         dt2 = numpyToPandas(dt2,sample_labels2,feature_labels2)
         #reduce to common rows
         dt,dt2 = common_rows(dt,dt2)
