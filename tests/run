@@ -35,6 +35,8 @@ elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
     # Development servers on duncan's local
     export WWW_SOCKET=localhost
     export VIEWER_URL=http://localhost:3333
+    export DATA_ROOT=/home/duncan/hex/compute/tests/in/layout
+
 else
     echo WARNING: You do not have a config entry for the test script
 fi
