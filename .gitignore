@@ -1,8 +1,5 @@
 *pyc
 t.tar
 *save
-maketar
-venv
-xtar
 *.log
 tests/out
