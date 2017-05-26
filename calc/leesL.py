@@ -260,14 +260,17 @@ def singleLeesL(spW,ztrans_attr,ztrans_attrDF):
 def densityOpt(allAtts,datatypes,xys,debug=False):
     '''
     An optimized version of Density calculation.
-     An attribute's density is only based on the values it has data for, so A new spatial weight matrix is calculated
-     for every attribute based on the nodes that it has missing values for.
-     Because attributes often come in groups, and the profile of missing values is dependent on those groups, instead
-     of calculating a spatial weight matrix for each attribute we can calculate one for each missing data profile.
-     This is done by creating an all by all distance matrix of the missing value profiles, and using it to determine
-     what attributes have the same profile, i.e. a distance of 0.
+     An attribute's density is only based on the values it has data for, so A
+     new spatial weight matrix is calculated for every attribute based on the
+     nodes that it has missing values for. Because attributes often come in 
+     groups, and the profile of missing values is dependent on those groups,
+     instead of calculating a spatial weight matrix for each attribute we can
+     calculate one for each missing data profile. This is done by creating an
+     all by all distance matrix of the missing value profiles, and using it to
+     determine what attributes have the same profile, i.e. a distance of 0.
 
-    :param allAtts: the entire attribute matrix (pandas dataframe) , density calculated for each column
+    :param allAtts: the entire attribute matrix (pandas dataframe) , density
+    calculated for each column
     :param datatypes: a datatype dict, {'bin': [],'cont':[],'cat': []}
     :param xys: a x-y (column) by nodeId position matrix (pandas dataframe)
     :param debug: if true this function spits a bunch of chatter
@@ -278,63 +281,83 @@ def densityOpt(allAtts,datatypes,xys,debug=False):
     attrNames = []
     densities = []
 
-    #subset the attributes to the xy positions for this map.
+    # Subset the attributes to the xy positions for this map.
     allAtts = allAtts.loc[xys.index]
 
-    # constants used to determine whether there is enough data to calculate density
+    # Constants for determining whether there is enough data to calculate 
+    # density
     minNeeded = 5
-    perNeeded = .025 #percent needed
-    minNodes = math.ceil(len(xys.index) * perNeeded) + minNeeded
-    #
-    #deal with each datatype individually
+    percentNeeded = .025
+    minNodes = math.ceil(len(xys.index) * percentNeeded) + minNeeded
+    
+    
+    # Datatypes are cased out.
     for type_ in datatypes.keys():
-        #types continuos and binary get dealt with the same
+        # Continuous and binary types have the same calculation
         if type_ != 'cat' and len(datatypes[type_]) > 1:
-            #subset of the attributes to their type
-            subAtts = allAtts[datatypes[type_]]
+            # Subset the attributes to the specific type 
+            attrDtypeSubset = allAtts[datatypes[type_]]
 
-            #group by NaN profile. An attribute X attribute matrix
-            distMat = sklp.pairwise_distances(subAtts.isnull().transpose(),metric='hamming',n_jobs=n_jobs)
-            #we will be going through the distance matrix and find groups
-            # of attributes with the same NaN profile (distance == 0 )
+            # Make a distance matrix of the NaN profiles for each attribute.
+            distMat = sklp.pairwise_distances(
+                         attrDtypeSubset.isnull().transpose(),
+                         metric='hamming',
+                         n_jobs=n_jobs
+                      )
+            # The distance matrix allows finding
+            # of attributes with the same NaN profile.
+            # We can calculate the density of those groups together,
+            # speeding up performance.
 
-            #this keeps track of the attributes that haven't been processed
+            # Keeps track of the attributes that density hasn't been
+            # calculated for.
             indecies_to_check = range(len(datatypes[type_]))
-            #While there are still attributes left to calculate density for...
+
+            # Loop until there are no more.
             while(len(indecies_to_check)):
-                #grab that index
+
                 index_ = indecies_to_check[0]
-                #grab the NA distances from that index to all other indecies
+
+                # Store the distances from that attribute.
                 sims = distMat[index_,]
-                #find where the distance to them is 0
+
+                # Find attributes that have the same NaN profile.
                 mask = (sims == 0)
 
-                #put the attribute names that are exactly similar into the returning structure
-                attrNames.extend(subAtts.columns[mask])
-                #get rid of the Na's in those attributes
-                datMat = subAtts[subAtts.columns[mask]].dropna()
+                # Put the attribute names that are exactly similar into the
+                # returning structure
+                attrNames.extend(attrDtypeSubset.columns[mask])
+                # Drop the Na's in those attributes
+                datMat = attrDtypeSubset[attrDtypeSubset.columns[mask]].dropna()
+                # Z-score transformation to prepare for density calculation
                 datMat = ztransDF(datMat)
-                #fill in the return structure with the lee SSS's
 
-                #case out whether the map has enough data
-                if datMat.shape[0] < minNodes: #the doesn't have enough nodes with data
-                    densities.extend(np.repeat(np.NAN,mask.sum()))
-                    print 'attributes ' + str(subAtts.columns[mask]) + ' had no values for this xy position set'
+
+                # Pass if the map doesn't have has enough data.
+                if datMat.shape[0] < minNodes: #
+                    densities.extend(np.repeat(np.NAN, mask.sum()))
+                    print 'attributes ' + str(attrDtypeSubset.columns[mask])\
+                          + ' had no values for this xy position set'
                 else:
-                    densities.extend(leesL(spatialWieghtMatrix(xys.loc[datMat.index]),datMat).diagonal())
+                    # The diagonal of the leesL calculation is the SSS
+                    densities.extend(
+                        leesL(
+                            spatialWieghtMatrix(xys.loc[datMat.index]),
+                            datMat
+                        ).diagonal()
+                    )
 
-                #don't check the indecies that were determined to be the same,
-                # do this by removing them from the indecies that we are looking at
-                for colnum in np.where(sims ==0)[0]:
+                # Remove attributes that we have calculated density for.
+                for colnum in np.where(sims == 0)[0]:
                     indecies_to_check.remove(colnum)
 
         #deal with categoricals
         if type_ == 'cat' and len(datatypes[type_]) > 0:
-            subAtts = allAtts[datatypes[type_]]
+            attrDtypeSubset = allAtts[datatypes[type_]]
 
-            for attr in subAtts.columns:
+            for attr in attrDtypeSubset.columns:
                 #expand our categorical vector to dummy variables
-                datMat = pd.get_dummies(subAtts[attr].dropna()).apply(pd.to_numeric)
+                datMat = pd.get_dummies(attrDtypeSubset[attr].dropna()).apply(pd.to_numeric)
 
                 nNodes = datMat.sum().sum()
                 #in case we lost any categories for the map we are looking at
