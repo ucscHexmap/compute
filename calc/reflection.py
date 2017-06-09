@@ -78,12 +78,13 @@ def cnv_reflection(parm):
     # if not done NA's will pop up in the top LOW category
     #res.fillna(value=0, inplace=True)
 
-    #grab highest and lowest values and turn into: 3 highest , 2 middle, 1 lowest. 3 and 1 are of particular interest
-    res = topXbinTrans(res,TOP).to_dict()
+    if parm["rankCategories"]:
+        #grab highest and lowest values and turn into: 3 highest , 2 middle, 1 lowest. 3 and 1 are of particular interest
+        res = topXbinTrans(res,TOP).to_dict()
 
     #open('refTime1','a').write(str(time.time() - clockstart) + ' seconds\n')
 
-    return res
+    return res.to_dict()
 
 
 def exp_reflection(parm):
@@ -148,14 +149,20 @@ def exp_reflection(parm):
     # if not done NA's will pop up in the top LOW category
     res.fillna(value=0,inplace=True)
 
-    #grab highest and lowest values and turn into: 3 highest , 2 middle, 1 lowest. 3 and 1 are of particular interest
-    res = topXbinTrans(res,TOP).to_dict()
+    if parm["rankCategories"]:
+        #grab highest and lowest values and turn into: 3 highest , 2 middle,
+        #1 lowest. 3 and 1 are of particular interest
+        res = topXbinTrans(res,TOP)
 
     #open('refTime1','a').write(str(time.time() - clockstart) + ' seconds\n')
 
-    return res
+    return res.to_dict()
 
-functionDictionary = {'mRNA': exp_reflection , 'CNV' : cnv_reflection, 'miRNA':exp_reflection,'RPPA':exp_reflection, 'Methylation': exp_reflection}
+functionDictionary = {'mRNA': exp_reflection,
+                      'CNV' : cnv_reflection,
+                      'miRNA':exp_reflection,
+                      'RPPA':exp_reflection,
+                      'Methylation': exp_reflection}
 
 def fromNodejs(parm):
     return(functionDictionary[parm['datatype']](parm))
