@@ -1,0 +1,4 @@
+#!/bin/bash
+
+kill -INT `cat www.pid`
+rm www.pid

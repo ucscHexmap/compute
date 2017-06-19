@@ -4,7 +4,18 @@ from argparse import Namespace
 
 class SuccessResp(Exception):
 
-    # Define a success response class
+    # Define a success response class which converts to json.
+
+    def __init__(self, data):
+        Exception.__init__(self)
+        self.data = data
+
+    def to_dict(self):
+        return self.data
+
+class SuccessRespNoJson(Exception):
+
+    # Define a success response class which does not convert to json.
 
     def __init__(self, data):
         Exception.__init__(self)

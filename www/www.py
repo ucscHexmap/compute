@@ -2,11 +2,11 @@
 # www
 #
 import os, json, traceback, logging
-from flask import Flask, request, jsonify, current_app
+from flask import Flask, request, jsonify, current_app, send_file
 from flask_cors import CORS, cross_origin
 
 import webUtil
-from webUtil import SuccessResp, ErrorResp
+from webUtil import SuccessResp, SuccessRespNoJson, ErrorResp
 import placeNode_web
 
 # Set up the flask application
@@ -52,12 +52,20 @@ def validatePost():
         raise ErrorResp('Post content is invalid JSON')
     return dataIn
 
-# Register the success handler
+# Register the success handler to convert to json
 @app.errorhandler(SuccessResp)
 def successResponse(success):
     response = jsonify(success.to_dict())
     response.status_code = 200
-    #logging.info('response: ' + str(response))
+    #logging.info('success json response: ' + str(response))
+    return response
+
+# Register the success handler that doesn't convert to json
+@app.errorhandler(SuccessRespNoJson)
+def successResponseNoJson(success):
+    response = success.to_dict()
+    response.status_code = 200
+    #logging.info('success no json response: ' + str(response))
     return response
 
 # Register the error handler
@@ -74,11 +82,17 @@ def errorResponse(error):
         str(response) + " " + msg)
     return response
 
-"""
-# Handle file request routes by view file name
-@app.route('/file/<string:filename>/<path:map>', methods=['POST', 'GET'])
-def queryFile(filename, map):
-"""
+# Handle data/<id> routes which request data.
+@app.route('/data/<path:id>', methods=['GET'])
+def dataRoute(id):
+    logging.info('Received data request for ' + id)
+    
+    try:
+        result = send_file(os.path.join(ctx['dataRoot'], id))
+    except:
+        raise ErrorResp('File not found', 404)
+
+    raise SuccessRespNoJson(result)
 
 # Handle query/<operation> routes
 @app.route('/query/<string:operation>', methods=['POST'])
@@ -100,6 +114,6 @@ def queryRoute(operation):
 @app.route('/test', methods=['POST', 'GET'])
 def testRoute():
 
-    app.logger.debug('testRoute current_app: ' + str(current_app))
+    logging.debug('testRoute current_app: ' + str(current_app))
 
     raise SuccessResp('just testing')
