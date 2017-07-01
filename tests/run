@@ -13,29 +13,37 @@ fi
 
 # Set env vars specific to the installation
 export PYTHONPATH=$(pwd)/../www:$(pwd)/../calc
+export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu
+
+# PRODUCTION
 if [ $HEXMAP == '/data' ]; then
     # Production servers on tumormap
     export VIEWER_URL=https://tumormap.ucsc.edu
     export WWW_SOCKET=hexmap.sdsc.edu:8332
     export DATA_ROOT=/hive/groups/hexmap/prod/compute/tests/in/layout
 
+# dev
 elif [ $HEXMAP == '/cluster/home/swat/dev' ]; then
     # Development servers on hexdev
     export VIEWER_URL=https://hexdev.sdsc.edu:8222
     export WWW_SOCKET=hexdev.sdsc.edu:8332
     export DATA_ROOT=/hive/groups/hexmap/dev/compute/tests/in/layout
 
+# swat's
 elif [ $HEXMAP == '/Users/swat/dev/hexagram' ]; then
     # Development servers on swat's local
     export VIEWER_URL=http://localhost:3333
     export WWW_SOCKET=localhost
     export DATA_ROOT=/Users/swat/dev/compute/tests/in/layout
+    export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu,http://localhost:3333
 
+# duncan's
 elif [ $HEXMAP == '/home/duncan/Desktop/TumorMap/TMdev/hexagram' ]; then
     # Development servers on duncan's local
     export WWW_SOCKET=localhost
     export VIEWER_URL=http://localhost:3333
     export DATA_ROOT=/home/duncan/hex/compute/tests/in/layout
+    export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu,http://localhost:3333
 
 else
     echo WARNING: You do not have a config entry for the test script

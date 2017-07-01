@@ -12,6 +12,7 @@ export PYTHONPATH=$WWW_PATH:$WWW_PATH/../calc
 export SSL_CERT=/data/certs/tumormap.crt
 export SSL_KEY=/data/certs/tumormap.key
 export VIEWER_URL=https://tumormap.ucsc.edu
+export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu:8222
 
 S=/data/certs
 

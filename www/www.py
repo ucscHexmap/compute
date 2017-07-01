@@ -4,20 +4,23 @@
 import os, json, traceback, logging
 from flask import Flask, request, jsonify, current_app, send_file
 from flask_cors import CORS, cross_origin
+from werkzeug.utils import secure_filename
 
 import webUtil
 from webUtil import SuccessResp, SuccessRespNoJson, ErrorResp
 import placeNode_web
 
-# Set up the flask application
+# Set up the flask application where app.config is only accessed in this file.
 app = Flask(__name__)
 app.config['UNIT_TEST'] = int(os.environ.get('UNIT_TEST', 0))
 app.config['DEBUG'] = int(os.environ.get('DEBUG'), 0)
+# The origin is checked for some functions that we only want the viewer to do.
+app.config['ALLOWABLE_VIEWERS'] = os.environ.get('ALLOWABLE_VIEWERS').split(',')
 
 # Make cross-origin AJAX possible
 CORS(app)
 
-# Set up the context, mostly from environment variables
+# Set up the context that will be passed to down-stream calls.
 ctx = {
     # default the view server URL to that of development
     'viewerUrl': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
@@ -40,7 +43,7 @@ else:
     logging.basicConfig(level=logging.INFO, format=logFormat)
     logLevel = 'INFO'
 
-logging.critical('INFO: WWW server started with log level: ' + logLevel)
+logging.info('WWW server started with log level: ' + logLevel)
 
 # Validate a post
 def validatePost():
@@ -82,14 +85,52 @@ def errorResponse(error):
         str(response) + " " + msg)
     return response
 
-# Handle data/<id> routes which request data.
-@app.route('/data/<path:id>', methods=['GET'])
-def dataRoute(id):
-    logging.info('Received data request for ' + id)
+# Handle route to upload files
+@app.route('/upload/<path:dataId>', methods=['POST'])
+def upload(dataId):
+        
+    # If the caller does not include a file property in the post
+    # there is nothing to upload. So bail.
+    if 'file' not in request.files:
+        raise ErrorResp('No file property provided for upload', 400)
     
+    file = request.files['file']
+
+    # If a browser user does not include a file, the browser submits an
+    # empty file property. So bail.
+    if file.filename == '':
+        raise ErrorResp('No file provided for upload', 400)
+        
+    filename = secure_filename(file.filename)
+    path = os.path.join(ctx['dataRoot'], dataId)
+    
+    # Make the directories if they are not there.
     try:
-        result = send_file(os.path.join(ctx['dataRoot'], id))
-    except:
+        os.makedirs(path[:path.rfind('/')], 0770)
+    except Exception:
+        pass
+    
+    # Save the file
+    try:
+        file.save(path)
+    except Exception:
+        raise ErrorResp('Unable to save file.', 500)
+    
+    raise SuccessResp('upload of ' + filename + ' complete')
+
+# Handle data/<dataId> routes which are data requests by data ID.
+@app.route('/data/<path:dataId>', methods=['GET'])
+def dataRoute(dataId):
+    logging.debug('Received data request for ' + dataId)
+    
+    # Only allow authorized view servers to pull data for now.
+    if request.environ['HTTP_ORIGIN'] is None or \
+        request.environ['HTTP_ORIGIN'] not in app.config['ALLOWABLE_VIEWERS']:
+        raise ErrorResp('File not found', 404)
+        
+    try:
+        result = send_file(os.path.join(ctx['dataRoot'], dataId))
+    except IOError:
         raise ErrorResp('File not found', 404)
 
     raise SuccessRespNoJson(result)
