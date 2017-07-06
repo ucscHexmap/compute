@@ -25,6 +25,7 @@ ctx = {
     # default the view server URL to that of development
     'viewerUrl': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
     'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
+    'adminEmail': os.environ.get('ADMIN_EMAIL'),
 }
 
 # Set up logging
@@ -76,13 +77,8 @@ def successResponseNoJson(success):
 def errorResponse(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
-    data = json.loads(response.data)
-    if 'error' in data:
-        msg = data['error']
-    else:
-        msg = 'unknown error'
     logging.error('Request failed with: ' + str(response.status_code) + ': ' + \
-        str(response) + " " + msg)
+        str(response) + " " + error.message)
     return response
 
 # Handle route to upload files
@@ -141,12 +137,16 @@ def queryRoute(operation):
 
     logging.info('Received query operation: ' + operation)
     dataIn = validatePost()
-
-    if operation == 'overlayNodes':
-        result = placeNode_web.calc(dataIn, ctx)
-        
-    else:
-        raise ErrorResp('URL not found', 404)
+    try:
+        if operation == 'overlayNodes':
+            result = placeNode_web.calc(dataIn, ctx)
+        else:
+            raise ErrorResp('URL not found', 404)
+    except ErrorResp:
+         # Re-raise this error to send the response.
+        raise
+    except Exception:
+        raise ErrorResp(str(Exception), 500)
 
     logging.info('Success with query operation: ' + operation)
     raise SuccessResp(result)

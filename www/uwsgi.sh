@@ -14,26 +14,25 @@
 INSTALL=$1
 WWW_PATH=$2
 
+# Kill any currently running server
+source $WWW_PATH/../killWww
+
+# Pull in the configuration for this install
 source $WWW_PATH/config/$INSTALL.sh
 
-if [ ${HTTP} ]; then
-    echo Starting HTTP server on $INSTALL
-    uwsgi \
-        --master \
-        --http-socket $WWW_SOCKET \
-        --wsgi-file $WWW_PATH/www.py \
-        --callable app \
-        --processes 1 \
-        --threads 1
+BASE='--master --callable app --processes 1 --threads 1 --wsgi-file '$WWW_PATH/www.py' --pidfile '$WWW_PATH/../www.pid
+FOREGROUND=0
+
+if [ $INSTALL == 'hexmap' ] || [ $INSTALL == 'hexdev' ]; then
+    # use https
+    SOCKET='--https-socket '$WWW_SOCKET,$CERT,$KEY,HIGH,$CA
 else
-    echo Starting HTTPS server on $INSTALL
-    (nohup uwsgi \
-        --master \
-        --https-socket $WWW_SOCKET,$CERT,$KEY,HIGH,$CA \
-        --wsgi-file $WWW_PATH/www.py \
-        --callable app \
-        --pidfile $PID_PATH \
-        --processes 1 \
-        --threads 1 \
-        &> $WWW_PATH/../www.log &)
+    # No https
+    SOCKET='--http-socket '$WWW_SOCKET
+    FOREGROUND=1
+fi
+if [ $FOREGROUND == 1 ]; then
+    uwsgi $BASE $SOCKET
+else
+    (nohup uwsgi $BASE $SOCKET &> $WWW_PATH/../www.log &)
 fi

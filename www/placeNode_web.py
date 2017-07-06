@@ -19,9 +19,11 @@ import StringIO
 import numpy as np
 
 def validateParameters(data):
-
-    # Validate an overlayNodes query
-
+    '''
+    Validate an overlayNodes query.
+    @param data: data received in the http post request
+    @return: nothing
+    '''
     # Basic checks on required parameters
     validateMap(data, True)
     validateLayout(data, True)
@@ -44,9 +46,13 @@ def validateParameters(data):
         raise ErrorResp('neighborCount parameter should be a positive integer')
 
 def createBookmark(state, viewServer, ctx):
-
-    # Create a bookmark
-
+    '''
+    Create a bookmark.
+    @param state: map state to be stored in the bookmark
+    @param viewServer: view server on which the bookmark will be stored
+    @param ctx: global context
+    @return: a bookmark
+    '''
     # Ask the view server to create a bookmark of this client state
     # TODO fix the request to the view server to include cert
     try:
@@ -68,9 +74,12 @@ def createBookmark(state, viewServer, ctx):
         raise ErrorResp(bData)
 
 def calcComplete(result, ctx):
-
-    # The calculation has completed, so create bookmarks and send email
-    
+    '''
+    Create bookmarks and send email from a calculation result.
+    @param result: results from the calculation
+    @param ctx: global context
+    @return: nothing
+    '''
     dataIn = ctx['dataIn']
 
     #logging.debug('calcComplete: result: ' + str(result))
@@ -98,6 +107,8 @@ def calcComplete(result, ctx):
     if firstAttribute:
         state['shortlist'].append(firstAttribute)
         state['first_layer'] = firstAttribute
+
+    mailMsg = ''
 
     # Populate state for each node
     for node in result['nodes']:
@@ -138,6 +149,7 @@ def calcComplete(result, ctx):
         if 'individualUrls' in dataIn and dataIn['individualUrls']:
             bData = createBookmark(state, dataIn['viewServer'], ctx)
             result['nodes'][node]['url'] = bData['bookmark']
+            mailMsg += ' \n' + node + ': ' + bData['bookmark']
 
             # Clear the node data to get ready for the next node
             state['overlayNodes'] = {}
@@ -150,27 +162,14 @@ def calcComplete(result, ctx):
         bData = createBookmark(state, dataIn['viewServer'], ctx)
         for node in result['nodes']:
             result['nodes'][node]['url'] = bData['bookmark']
-
-    # TODO: Send completion Email
-    """
-    # a javascript routine:
-    // Send email to interested parties
-    var subject = 'tumor map results: ',
-        msg = 'Tumor Map results are ready to view at:\n\n';
-    
-    _.each(emailUrls, function (node, nodeName) {
-        msg += nodeName + ' : ' + node + '\n';
-        subject += node + '  ';
-    });
+            mailMsg += ', ' + node
         
-    if ('email' in dataIn) {
-        sendMail(dataIn.email, subject, msg);
-        msg += '\nAlso sent to: ' + dataIn.email;
-    } else {
-        msg += '\nNo emails included in request';
-    }
-    sendMail(ADMIN_EMAIL, subject, msg);
-    """
+        mailMsg += '\n' + bData['bookmark']
+
+    # Notify any email addresses provided.
+    if 'email' in dataIn:
+        webUtil.sendResultsEmail(dataIn['email'],
+        'New nodes have been placed.\n\n' + mailMsg[2:], ctx)
 
     return result
 
@@ -246,42 +245,35 @@ def calcTestStub(newNodes, ctx):
     
     if 'testError' in newNodes:
         raise ErrorResp('Some error message or stack trace')
-    elif len(newNodes) == 1:
-        return {'nodes': {
-            'newNode1': {
-                'x': 73,
-                'y': 91,
-                'neighbors': {
-                    'TCGA-BP-4790': 0.352,
-                    'TCGA-AK-3458': 0.742,
-                }
-            },
-        }}
-    elif len(newNodes) > 1:
-        return {'nodes': {
-            'newNode1': {
-                'x': 73,
-                'y': 91,
-                'neighbors': {
-                    'TCGA-BP-4790': 0.352,
-                    'TCGA-AK-3458': 0.742,
-                }
-            },
-            'newNode2': {
-                'x': 53,
-                'y': 47,
-                'neighbors': {
-                    'neighbor1': 0.567,
-                    'neighbor2': 0.853,
-                }
-            },
-        }}
-    else:
-        raise ErrorResp('unknown test')
+    
+    nodes = {}
+    if len(newNodes) > 0:
+        nodes['newNode1'] = {
+            'x': 73,
+            'y': 91,
+            'neighbors': {
+                'TCGA-BP-4790': 0.352,
+                'TCGA-AK-3458': 0.742,
+            }
+        }
+    if len(newNodes) > 1:
+        nodes['newNode2'] = {
+            'x': 53,
+            'y': 47,
+            'neighbors': {
+                'neighbor1': 0.567,
+                'neighbor2': 0.853,
+            }
+        }
+    return {'nodes': nodes}
 
 def getBackgroundData(data, ctx):
-
-    # Find the clustering data file for this map and layout
+    '''
+    Find the clustering data file for this map and layout.
+    @param data: background data of the existing map
+    @param ctx: global context
+    @return: cluster data file path and the pre-bin xy coordinates
+    '''
     try:
         layouts = getMapMetaData(data['map'], ctx)['layouts']
         clusterData = layouts[data['layout']]['clusterData']
@@ -301,16 +293,17 @@ def getBackgroundData(data, ctx):
     return clusterDataFile, xyPositionFile
 
 def calc(dataIn, ctx):
-
-    # The entry point from the www URL routing
+    '''
+    The entry point from the www URL routing.
+    @param dataIn: data from the HTTP post request
+    @param ctx: global context
+    @return: result of calcComplete()
+    '''
     validateParameters(dataIn)
     ctx['viewDir'] = os.path.join(ctx['dataRoot'], 'view', dataIn['map'])
 
     if 'testStub' in dataIn:
         result = calcTestStub(dataIn['nodes'], ctx)
-
-        #print "### ctx['layoutIndex'] 2", ctx['layoutIndex']
-
     else:
 
         # Find the helper data needed to place nodes
@@ -320,7 +313,7 @@ def calc(dataIn, ctx):
         if 'neighborCount' in dataIn:
             top = dataIn['neighborCount']
         else:
-            top = 6
+            top = 6 # TODO: this default should be set in the calc module.
 
         #make expected python data structs
         try:

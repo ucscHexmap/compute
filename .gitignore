@@ -3,3 +3,7 @@ t.tar
 *save
 *.log
 tests/out
+www.log*
+www.pid
+nohup.out
+

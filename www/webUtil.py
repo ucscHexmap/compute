@@ -108,3 +108,25 @@ def validateViewServer(data):
     if 'viewServer' not in data:
         return
     validateString('viewServer', data)
+
+def sendMail (fromaddr, toaddr, subject, body):
+    import smtplib
+    from email.MIMEMultipart import MIMEMultipart
+    from email.MIMEText import MIMEText
+    
+    msg = MIMEMultipart()
+    msg['From'] = fromaddr
+    msg['To'] = toaddr
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+    strMsg = msg.as_string()
+    try:
+        server = smtplib.SMTP('localhost')
+        server.sendmail(fromaddr, toaddr, strMsg)
+        server.quit()
+    except:
+        logging.warning('sendMail not implemented. Message: ' + strMsg);
+
+def sendResultsEmail(emails, msg, ctx):
+    sendMail(ctx['adminEmail'], emails, 'Tumor Map results', msg)
+

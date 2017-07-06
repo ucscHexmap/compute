@@ -13,6 +13,7 @@ export SSL_CERT=/data/certs/tumormap.crt
 export SSL_KEY=/data/certs/tumormap.key
 export VIEWER_URL=https://tumormap.ucsc.edu
 export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu:8222
+export ADMIN_EMAIL=hexmap@ucsc.edu
 
 S=/data/certs
 
