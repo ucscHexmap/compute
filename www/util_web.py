@@ -1,5 +1,5 @@
 
-import os, json, types, csv
+import os, json, types, csv, traceback, requests
 from argparse import Namespace
 
 class SuccessResp(Exception):
@@ -42,14 +42,14 @@ class ErrorResp(Exception):
         rv['error'] = self.message
         return rv
 
-def getLayerDataTypes(mapId, ctx):
+def _getLayerDataTypes(mapId, ctx):
     filename = os.path.join(
         ctx['dataRoot'], 'view', mapId, 'Layer_Data_Types.tab')
     fd = open(filename, 'rU')
     return csv.reader(fd, delimiter='\t'), fd
 
 def getFirstAttribute(mapId, ctx):
-    csv, fd = getLayerDataTypes(mapId, ctx)
+    csv, fd = _getLayerDataTypes(mapId, ctx)
     first = None
     for row in csv:
         if row[0] == 'FirstAttribute':
@@ -86,28 +86,34 @@ def getMapMetaData(mapId, ctx):
     dataFd.close()
     return data
 
-def validateString(name, data, required=False):
-    if required and name not in data:
-        raise ErrorResp(name + ' parameter missing or malformed')
-    if not isinstance(data[name], types.StringTypes):
-        raise ErrorResp(name + ' parameter should be a string')
+def createBookmark(state, viewServer, ctx):
+    '''
+    Create a bookmark.
+    @param state: map state to be stored in the bookmark
+    @param viewServer: view server on which the bookmark will be stored
+    @param ctx: global context
+    @return: a bookmark
+    '''
+    # Ask the view server to create a bookmark of this client state
+    # TODO fix the request to the view server to include cert
+    try:
+        bResult = requests.post(
+            viewServer + '/query/createBookmark',
+            #cert=(ctx['sslCert'], ctx['sslKey']),
+            verify=False,
+            headers = { 'Content-type': 'application/json' },
+            data = json.dumps(state)
+        )
+    except:
+        traceback.print_exc()
+        raise ErrorResp('Unknown error connecting to view server: ' +
+            viewServer, 500)
 
-def validateMap(data, required):
-    validateString('map', data, required)
-
-def validateLayout(data, required):
-    validateString('layout', data, required)
-
-def validateEmail(data):
-    if 'email' in data and not (isinstance(data['email'], types.StringTypes)
-        or (isinstance(data['email'], list))):
-        raise ErrorResp(
-            'email parameter should be a string or list/array of strings')
-
-def validateViewServer(data):
-    if 'viewServer' not in data:
-        return
-    validateString('viewServer', data)
+    bData = json.loads(bResult.text)
+    if bResult.status_code == 200:
+        return bData
+    else:
+        raise ErrorResp(bData)
 
 def sendMail (fromaddr, toaddr, subject, body):
     import smtplib
@@ -127,6 +133,6 @@ def sendMail (fromaddr, toaddr, subject, body):
     except:
         logging.warning('sendMail not implemented. Message: ' + strMsg);
 
-def sendResultsEmail(emails, msg, ctx):
+def sendResultsEmail (emails, msg, ctx):
     sendMail(ctx['adminEmail'], emails, 'Tumor Map results', msg)
 

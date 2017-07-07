@@ -6,8 +6,8 @@ from flask import Flask, request, jsonify, current_app, send_file
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
-import webUtil
-from webUtil import SuccessResp, SuccessRespNoJson, ErrorResp
+import util_web
+from util_web import SuccessResp, SuccessRespNoJson, ErrorResp
 import placeNode_web
 
 # Set up the flask application where app.config is only accessed in this file.
@@ -145,8 +145,9 @@ def queryRoute(operation):
     except ErrorResp:
          # Re-raise this error to send the response.
         raise
-    except Exception:
-        raise ErrorResp(str(Exception), 500)
+    except Exception as e:
+        #traceback.print_exc()
+        raise ErrorResp(repr(e), 500)
 
     logging.info('Success with query operation: ' + operation)
     raise SuccessResp(result)

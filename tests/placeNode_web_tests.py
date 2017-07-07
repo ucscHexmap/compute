@@ -7,6 +7,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
 
     # This view server must be running for these tests.
     viewServer = os.environ['VIEWER_URL']
+    unprintable = '09'.decode('hex')  # tab character
 
     def setUp(self):
         www.app.config['UNIT_TEST'] = True
@@ -78,6 +79,109 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         s.assertTrue(data['error'] ==
             'map parameter should be a string')
     
+    def test_map_length_of_zero(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='',
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'map parameter must have a string length greater than one')
+    
+    def test_map_not_printable_chars(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='s' + s.unprintable + 'ssx'
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print "rv.status_code", rv.status_code
+        #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'map parameter should only contain printable characters')
+    
+    def test_map_multiple_slashes(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='s/s/s'
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print "rv.status_code", rv.status_code
+        #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'map IDs may not contain more than one slash')
+
+    def test_map_not_file_safe_single(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='s:s'
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print "rv.status_code", rv.status_code
+        #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'map parameter may only contain the characters: ' + \
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+
+    def test_map_not_file_safe_major(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='s:s/gg'
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print "rv.status_code", rv.status_code
+        #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'map parameter may only contain the characters: ' + \
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+
+    def test_map_not_file_safe_minor(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='gg/s:s'
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print "rv.status_code", rv.status_code
+        #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'map parameter may only contain the characters: ' + \
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+
     def test_no_layout(s):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
@@ -158,7 +262,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         s.assertTrue(data['error'] ==
             'there are no nodes in the nodes dictionary')
 
-    def test_email_not_python_list(s):
+    def test_email_not_python_string_or_list(s):
         rv = s.app.post('/query/overlayNodes',
             content_type='application/json',
             data=json.dumps(dict(
@@ -175,10 +279,54 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         except:
             s.assertTrue('', 'no json data in response')
         #print 'rv.status_code:', rv.status_code
-        #print 'data:', data
+        #print 'data[error]:', data['error']
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
-            'email parameter should be a string or list/array of strings')
+            'email parameter should be a string or an array of strings')
+
+    def test_email_bad_chars_in_string(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='someMap',
+                layout='someLayout',
+                nodes = dict(
+                    someNode='someValue',
+                ),
+                email='z' + s.unprintable + 'a',
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print 'rv.status_code:', rv.status_code
+        #print 'data[error]:', data['error']
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'email parameter should only contain printable characters')
+
+    def test_email_bad_chars_in_array(s):
+        rv = s.app.post('/query/overlayNodes',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='someMap',
+                layout='someLayout',
+                nodes = dict(
+                    someNode='someValue',
+                ),
+                email=['z' + s.unprintable + 'a'],
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print 'rv.status_code:', rv.status_code
+        #print 'data[error]:', data['error']
+        s.assertTrue(rv.status_code == 400)
+        s.assertTrue(data['error'] ==
+            'email parameter should only contain printable characters')
 
     def test_viewServer_not_string(s):
         rv = s.app.post('/query/overlayNodes',
@@ -261,8 +409,9 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 500)
+        #print "rv.status_code", rv.status_code
         #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 500)
         s.assertTrue(data['error'] ==
             'Clustering data not found for layout: someLayout')
             
@@ -471,8 +620,9 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
+        #print "data['error']", data['error']
+        #print "rv.status_code", rv.status_code
         s.assertTrue(rv.status_code == 200)
-        # print "data", data
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('newNode2' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])

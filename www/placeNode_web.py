@@ -8,9 +8,9 @@
 import os, json, types, requests, traceback, csv, logging
 from argparse import Namespace
 from flask import Response
-import webUtil
-from webUtil import SuccessResp, ErrorResp, getMapMetaData, \
-    validateMap, validateLayout, validateEmail, validateViewServer
+import validate_web as validate
+import util_web
+from util_web import SuccessResp, ErrorResp, getMapMetaData, createBookmark
 import placeNode
 import compute_sparse_matrix
 import utils
@@ -20,13 +20,13 @@ import numpy as np
 
 def validateParameters(data):
     '''
-    Validate an overlayNodes query.
+    Validate the query.
     @param data: data received in the http post request
     @return: nothing
     '''
     # Basic checks on required parameters
-    validateMap(data, True)
-    validateLayout(data, True)
+    validate.map(data, True)
+    validate.layout(data, True)
     if 'nodes' not in data:
         raise ErrorResp('nodes parameter missing or malformed')
     if not isinstance(data['nodes'], dict):
@@ -34,44 +34,13 @@ def validateParameters(data):
     if len(data['nodes'].keys()) < 1:
         raise ErrorResp('there are no nodes in the nodes dictionary')
     
-    # Check for non-printable chars in names
-    # TODO
-    
     # Basic checks on optional parameters
-    validateEmail(data)
-    validateViewServer(data)
+    validate.email(data)
+    validate.viewServer(data)
     if 'neighborCount' in data and \
         (not isinstance(data['neighborCount'], int) or \
         data['neighborCount'] < 1):
         raise ErrorResp('neighborCount parameter should be a positive integer')
-
-def createBookmark(state, viewServer, ctx):
-    '''
-    Create a bookmark.
-    @param state: map state to be stored in the bookmark
-    @param viewServer: view server on which the bookmark will be stored
-    @param ctx: global context
-    @return: a bookmark
-    '''
-    # Ask the view server to create a bookmark of this client state
-    # TODO fix the request to the view server to include cert
-    try:
-        bResult = requests.post(
-            viewServer + '/query/createBookmark',
-            #cert=(ctx['sslCert'], ctx['sslKey']),
-            verify=False,
-            headers = { 'Content-type': 'application/json' },
-            data = json.dumps(state)
-        )
-    except:
-        raise ErrorResp('Unknown error connecting to view server: ' +
-            viewServer)
-
-    bData = json.loads(bResult.text)
-    if bResult.status_code == 200:
-        return bData
-    else:
-        raise ErrorResp(bData)
 
 def calcComplete(result, ctx):
     '''
@@ -92,7 +61,7 @@ def calcComplete(result, ctx):
         dataIn['viewServer'] = ctx['viewerUrl']
 
     # Find the first attribute if any
-    firstAttribute = webUtil.getFirstAttribute(dataIn['map'], ctx)
+    firstAttribute = util_web.getFirstAttribute(dataIn['map'], ctx)
     logging.error('### firstAttribute ' + str(firstAttribute))
 
     # Format the result as client state in preparation to create a bookmark
@@ -168,7 +137,7 @@ def calcComplete(result, ctx):
 
     # Notify any email addresses provided.
     if 'email' in dataIn:
-        webUtil.sendResultsEmail(dataIn['email'],
+        util_web.sendResultsEmail(dataIn['email'],
         'New nodes have been placed.\n\n' + mailMsg[2:], ctx)
 
     return result
@@ -284,7 +253,7 @@ def getBackgroundData(data, ctx):
 
     # Find the index of the layout
     ctx['layoutIndex'] = \
-        webUtil.getLayoutIndex(data['layout'], data['map'], ctx)
+        util_web.getLayoutIndex(data['layout'], data['map'], ctx)
 
     # Find the xyPosition file
     xyPositionFile = os.path.join(
