@@ -84,7 +84,6 @@ class Test_layoutBasic(unittest.TestCase):
         opts = [
             "--feature_space", rawDataFile,
             "--feature_space", rawDataFile_2,
-            "--layoutInputFormat", 'clusterData',
             "--layoutName", "layout",
             "--layoutName", "layout_2",
             "--distanceMetric", 'spearman',
