@@ -18,6 +18,57 @@ def readXYs(fpath):
 
     return pd.read_csv(fpath,sep='\t',index_col=0,comment='#',header=None)
 
+
+def readPandas(datafile):
+    """
+    This reads data into a pandas dataframe following these specifications.
+    >the file is tab separated
+    >ignore lines with '#'
+    >if the first line not hidden with '#' is all strings, then it is a header
+    >the first column holds the row names
+    @param datafile:
+    @return: pandas DataFrame
+    """
+
+    header_line = _headerLine(datafile)
+    comment_char = '#'
+
+    df = pd.read_table(datafile,
+                       index_col=0,
+                       comment=comment_char,
+                       header=header_line
+                       )
+    # Put the filename as the index name
+    df.index.name = datafile
+    return df
+
+def _headerLine(datafile):
+    read_header = _firstLineHasAllStrs(datafile)
+    if read_header:
+        read_header = 0
+    else:
+        read_header = None
+    return read_header
+
+def _firstLineHasAllStrs(datafile):
+    return _hasAllStrs(_firstLineArray(datafile))
+
+def _firstLineArray(datafile):
+    with open(datafile) as fin:
+        for line in fin:
+            line = line.strip()
+            if line[0] != "#":
+                return line.split("\t")
+
+def _hasAllStrs(line_array):
+    all_strs = len(line_array)
+    n_strs = np.sum([_isStr(thing) for thing in line_array])
+    return n_strs == all_strs
+
+def _isStr(thing):
+    t = type(thing)
+    return t == str or t == unicode
+
 def getAttributes(fileNameList,dir='',debug=False):
     '''
     creates a single attribute/metadata dataframe (pandas) from a list of filenames
