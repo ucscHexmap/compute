@@ -83,6 +83,7 @@ DOCKER_SAFE=( \
     test_stats \
     test_layoutZeroReplace \
     test_formatCheck \
+    test_layoutBasicMakeUIInferFormat \
 )
 
 # Combine the lists above to get ALL of the tests
