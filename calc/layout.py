@@ -48,6 +48,7 @@ import sklearn.metrics.pairwise as sklp
 import numpy as np
 from process_categoricals import create_colormaps_file
 import utils
+import formatCheck
 
 validLayoutInputFormats = \
     ['clusterData', 'fullSimilarity', 'sparseSimilarity', 'xyPositions']
@@ -62,7 +63,6 @@ def parse_args(args):
     parser.add_argument("--layoutInputFile", action='append',
         help="file containing the layout data as TSV")
     parser.add_argument("--layoutInputFormat", type=str,
-        default='clusterData',
         help="format of the layout data, one of: " +
         str(validLayoutInputFormats))
     parser.add_argument("--distanceMetric", type=str, default="spearman",
@@ -930,8 +930,13 @@ def write_similarity_names(options):
         for i, name in enumerate(options.names):
             f.writerow([name])
 
+def inferringFormat(options):
+    return options.layoutInputFile is not None \
+        and options.layoutInputFormat is None
+
 def writeMetaData(options):
 
+    inferring_format = inferringFormat(options)
     # Store some metadata in the meta.json file for map group info like role and
     # into mapMeta.json for map-specific info like clustering data file path.
     #
@@ -1009,7 +1014,13 @@ def writeMetaData(options):
             # We only save this data if our standard data directory structure
             # created with the web API is being used. We do the best we can by
             # looking for 'featureSpace' in the layoutInput file name.
-            j = options.feature_space[i].find('featureSpace')
+            if inferring_format:
+                # In this case that position is a dataframe
+                # The name of the file is in the index name.
+                j = options.feature_space[i].index.name.find('featureSpace')
+            else:
+                j = options.feature_space[i].find('featureSpace')
+
             if j < 0:
                 continue
             
@@ -1148,7 +1159,7 @@ def fillOpts(options):
 
     # If using the current layout input parameters rather than deprecated,
     # map them to the operating variables.
-    if options.layoutInputFile != None:
+    if options.layoutInputFormat is not None:
         try:
             i = validLayoutInputFormats.index(options.layoutInputFormat)
         except:
@@ -1156,8 +1167,8 @@ def fillOpts(options):
                 "must be specified: " + str(validLayoutInputFormats))
         setattr(options, operatingVars[i], options.layoutInputFile)
 
-    else:
-    
+    elif options.layoutInputFile is None:
+
         # Using the deprecated parameters so they are already mapped to the
         # operating variables. Only allow one format and ignore the rest.
         formats = filter(lambda x: getattr(options, x), operatingVars)
@@ -1187,7 +1198,43 @@ def makeMapUIfiles(options, cmd_line_list=None):
     #make sure the common defaults are in the options Namespace
     givenOptions = options
     options = fillOpts(options)
-    
+
+    # Check if we are computationally verifying the
+    # "layoutInputFormat".
+    inferring_format = inferringFormat(options)
+    if inferring_format:
+        more_than_one = False
+        for fin in options.layoutInputFile:
+            df = utils.readPandas(fin)
+            inferred_format= formatCheck._layoutInputFormat(df)
+            if more_than_one:
+                assert inferred_format == last_inferred_format
+            #two cases where we really don't want to read in data twice
+            if inferred_format == "clusterData":
+                if not more_than_one:
+                    options.feature_space = []
+                options.feature_space.append(df)
+
+            elif inferred_format == "fullSimilarity":
+                if not more_than_one:
+                    options.similarity_full = []
+
+                options.similarity_full.append(df)
+
+            elif inferred_format == "sparseSimilarity":
+                if not more_than_one:
+                    options.similarity= []
+                options.similarity.append(fin)
+
+            elif inferred_format == "xyPositions":
+                if not more_than_one:
+                    options.coordinates= []
+                options.coordinates.append(fin)
+
+            more_than_one = True
+            last_inferred_format = inferred_format
+    #####
+
     #make the destination directory for output if its not there
     if not os.path.exists(options.directory):
         os.makedirs(options.directory)
@@ -1347,11 +1394,16 @@ def makeMapUIfiles(options, cmd_line_list=None):
                 for i, genomic_filename in enumerate(options.feature_space):
                     print 'Opening Matrix', i, genomic_filename
 
-                    dt, sample_labels, feature_labels = \
-                        read_tabular(genomic_filename,
-                                     True,
-                                     replaceNA=options.zeroReplace
-                                     )
+                    if inferring_format:
+                        # "Genomic filename is actually a pandas dataFrame
+                        dt, sample_labels, feature_labels = \
+                            compute_sparse_matrix.pandasToNumpy(genomic_filename)
+                    else:
+                        dt, sample_labels, feature_labels = \
+                            read_tabular(genomic_filename,
+                                         True,
+                                         replaceNA=options.zeroReplace
+                                         )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
                     dt_t = np.transpose(dt)
@@ -1366,11 +1418,16 @@ def makeMapUIfiles(options, cmd_line_list=None):
                 for i, similarity_filename in enumerate(options.similarity_full):
                     print 'Opening Matrix', i, similarity_filename
 
-                    dt,sample_labels,feature_labels = \
-                        read_tabular(similarity_filename,
-                                     True,
-                                     replaceNA=options.zeroReplace
-                                     )
+                    if inferring_format:
+                        # "similarity filename is actually a pandas dataFrame
+                        dt, sample_labels, feature_labels = \
+                            compute_sparse_matrix.pandasToNumpy(similarity_filename)
+                    else:
+                        dt,sample_labels,feature_labels = \
+                            read_tabular(similarity_filename,
+                                         True,
+                                         replaceNA=options.zeroReplace
+                                         )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
                     result = sparsePandasToString(extract_similarities(dt=dt, sample_labels=sample_labels, top=options.truncation_edges, log=None))
