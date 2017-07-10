@@ -9,15 +9,10 @@ import string
 import unittest
 from scipy import stats
 import StringIO
-from rootDir import getRootDir
 import pandas as pd
 import string, random
 
-rootDir = getRootDir()
-testDir = rootDir + 'tests/pyUnittest/'
-
-PYTHONPATH = rootDir + 'www/server'
-os.environ["PYTHONPATH"] = PYTHONPATH
+testDir = os.getcwd()
 
 def findCurlStatusCode(verbose):
     i = verbose.find('< HTTP/1.1')

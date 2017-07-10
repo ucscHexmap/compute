@@ -8,7 +8,6 @@ from os import path
 import string
 import unittest
 import testUtil as util
-from rootDir import getRootDir
 
 testDir = os.getcwd()
 inDir = os.path.join(testDir,'in/layout/')   # The input data

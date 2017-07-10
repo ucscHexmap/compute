@@ -55,8 +55,8 @@ export DEBUG=1
 
 # Test only the *_web_tests.py files
 WEB=( \
-    www_web_tests \
-    placeNode_web_tests \
+    test_basic_www \
+    test_placeNode_web \
 )
 
 # Deprecated with hexagram server code moving to the compute server
@@ -72,18 +72,19 @@ DEPRECATED_PARALLEL=( \
 
 # The rest of the tests, order-dependent due to issues with parallel code
 DOCKER_SAFE=( \
-    layout_calc_meta_tests \
-    placeNode_calc_tests \
     test_dynLayoutAware \
+    test_formatCheck \
     test_layoutBasic \
     test_layoutBasicMakeUI \
+    test_layoutBasicMakeUIInferFormat \
+    test_layoutMetaData \
+    test_layoutZeroReplace \
+    test_placeNode2_web \
     test_process_categoricals \
     test_sim6Layout \
     test_similarity \
     test_stats \
-    test_layoutZeroReplace \
-    test_formatCheck \
-    test_layoutBasicMakeUIInferFormat \
+    # NOTE: alphabetical order to make it easier to find tests
 )
 
 # Combine the lists above to get ALL of the tests
@@ -91,13 +92,12 @@ ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${DOCKER_SAFE[
 
 # local mac tests are those that normally pass on a mac
 MAC=( \
-    www_web_tests \
-    layout_calc_meta_tests \
-    placeNode_calc_tests \
-    placeNode_web_tests \
+    test_basic_www \
     test_dynLayoutAware \
     test_http \
-    test_dynLayoutAware \
+    test_layoutMetaData \
+    test_placeNode_web \
+    test_placeNode2_web \
     test_remoteCalc \
     test_similarity \
 )
