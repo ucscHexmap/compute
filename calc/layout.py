@@ -931,8 +931,7 @@ def write_similarity_names(options):
             f.writerow([name])
 
 def inferringFormat(options):
-    return options.layoutInputFile is not None \
-        and options.layoutInputFormat is None
+    return options.layoutInputFile is not None
 
 def writeMetaData(options):
 
@@ -1023,9 +1022,12 @@ def writeMetaData(options):
 
             if j < 0:
                 continue
-            
+
             # Save the file name relative to the data root
-            meta['layouts'][name] = {'clusterData': options.feature_space[i][j:]}
+            if inferring_format:
+                meta['layouts'][name] = {'clusterData': options.feature_space[i].index.name[j:]}
+            else:
+                meta['layouts'][name] = {'clusterData': options.feature_space[i][j:]}
     
         # Write the json file
         with open(metaPath, 'w') as f:
@@ -1157,17 +1159,7 @@ def fillOpts(options):
     operatingVars = \
         ['feature_space', 'similarity_full', 'similarity', 'coordinates']
 
-    # If using the current layout input parameters rather than deprecated,
-    # map them to the operating variables.
-    if options.layoutInputFormat is not None:
-        try:
-            i = validLayoutInputFormats.index(options.layoutInputFormat)
-        except:
-            raise ValueError("One of these layoutInputFormats " +
-                "must be specified: " + str(validLayoutInputFormats))
-        setattr(options, operatingVars[i], options.layoutInputFile)
-
-    elif options.layoutInputFile is None:
+    if options.layoutInputFile is None:
 
         # Using the deprecated parameters so they are already mapped to the
         # operating variables. Only allow one format and ignore the rest.
@@ -1213,6 +1205,8 @@ def makeMapUIfiles(options, cmd_line_list=None):
             if inferred_format == "clusterData":
                 if not more_than_one:
                     options.feature_space = []
+                if options.zeroReplace:
+                    df= df.fillna(0)
                 options.feature_space.append(df)
 
             elif inferred_format == "fullSimilarity":
