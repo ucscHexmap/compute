@@ -50,8 +50,6 @@ from process_categoricals import create_colormaps_file
 import utils
 import formatCheck
 
-validLayoutInputFormats = \
-    ['clusterData', 'fullSimilarity', 'sparseSimilarity', 'xyPositions']
 validReflectionMapTypes = \
     ['geneMatrix']
 
@@ -62,9 +60,6 @@ def parse_args(args):
     # WebAPI / CWL / CLI: Primary parameters:
     parser.add_argument("--layoutInputFile", action='append',
         help="file containing the layout data as TSV")
-    parser.add_argument("--layoutInputFormat", type=str,
-        help="format of the layout data, one of: " +
-        str(validLayoutInputFormats))
     parser.add_argument("--distanceMetric", type=str, default="spearman",
         help="metric corresponding to the layout input data of the same " +
         "index, one of: " + compute_sparse_matrix.valid_metrics())
@@ -123,7 +118,7 @@ def parse_args(args):
 
     # Deprecated parameters:
     parser.add_argument("--coordinates", type=str, action='append',
-        help="deprecated, use layoutInputFile and layoutInputFormat instead")
+        help="deprecated, use layoutInputFile instead & format will be auto-detected")
     parser.add_argument("--directed_graph", dest="directedGraph",
         action="store_true", default=True,
         help="deprecated with constant value of true")
@@ -134,12 +129,14 @@ def parse_args(args):
     parser.add_argument("--drlpath", type=str, dest="drlpath",
         help="deprecated, use 'drlPath' instead")
     parser.add_argument("--feature_space", type=str, action='append',
-        help="deprecated, use layoutInputFile and layoutInputFormat instead")
+        help="deprecated, use layoutInputFile & format will be auto-detected")
     parser.add_argument("--first_attribute", type=str, default="",
         help="deprecated, use 'firstAttribute' instead")
     parser.add_argument("--include-singletons", dest="singletons",
         action="store_true", default=False,
         help="deprecated with a constant value of true")
+    parser.add_argument("--layoutInputFormat", type=str,
+        help="deprecated, format is auto-detected")
     parser.add_argument("--names", type=str, action="append", default=[],
         help="deprecated, use 'layoutName' instead")
     parser.add_argument("--no_layout_independent_stats", dest="associations",
@@ -164,9 +161,9 @@ def parse_args(args):
         help="deprecated with a constant value of true")
         # old help="add self-edges to input of DRL algorithm")
     parser.add_argument("--similarity", type=str, action='append',
-        help="deprecated, use layoutInputFile and layoutInputFormat instead")
+        help="deprecated, use layoutInputFile & format will be auto-detected")
     parser.add_argument("--similarity_full", type=str, action='append',
-        help="deprecated, use layoutInputFile and layoutInputFormat instead")
+        help="deprecated, use layoutInputFile & format will be auto-detected")
     parser.add_argument("--truncation_edges", type=int, default=6,
         help="deprecated, use 'neighborCount' instead")
     parser.add_argument("--window_size", type=int, default=20,
