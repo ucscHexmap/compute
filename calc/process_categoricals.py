@@ -380,6 +380,36 @@ def metaVsCmaps(cmapCats,metaCats,attributeName,debug=False):
 
     return disagreeance,inCmapNotMeta,inMetaNotCmap
 
+def _indsort(list_):
+    return [i[0] for i in sorted(enumerate(list_), key=lambda x:x[1],
+                                 reverse=True)]
+def _reorder(list_, myorder):
+    return [ list_[i] for i in myorder]
+
+def order_catids_alphabetically(colormaps):
+
+    for ind, cmap_entry in enumerate(colormaps):
+
+        attrid = cmap_entry[0]
+        colors = get_colors_from_cmaps_entry(cmap_entry)
+        catids = get_cats_from_cmaps_entry(cmap_entry)
+
+        indecies_sort = _indsort(catids)
+        catids = sorted(catids,reverse=True)
+        colors = _reorder(colors, indecies_sort)
+        # Make a new entry with a different order.
+        colormaps[ind] = _make_cmap_entry(catids, colors, attrid)
+
+    return colormaps
+
+def _make_cmap_entry(catids, colors, attrid):
+    """Make a cmap entry array for one attribute id."""
+    cmap_entry = []
+    cmap_entry.append(attrid)
+    for ind, catid in enumerate(catids):
+        cmap_entry.extend([ind, catid, colors[ind]])
+    return cmap_entry
+
 # Unused. We want to keep all previous categories for now
 def remove_cats_from_cmap_entry(cmap_entry,catsToRemove,debug=False):
     '''
@@ -448,12 +478,14 @@ def transformToColormapInts(attrDF,colormaps,debug=False):
     attrDF = attrDF.apply(pd.to_numeric)
 
     return attrDF
+
 '''
 create_colormaps_file(['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/attributes.tab'],
                       out_file='/home/duncan/trash/trash.cmaps.tab',
                       colormaps='/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/colormaps.tab',
                       attrsfile='/home/duncan/trash/trash_attr.tab')
 '''
+
 def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrsfile='',debug=False):
     '''
     This function is the top of the hieracy of functions used for creating a
@@ -637,10 +669,12 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     ###################################################
     if debug:
         print 'writing colormaps file to:' + out_file
-    
+
+    cmaps = order_catids_alphabetically(cmaps)
     write_colormaps(out_file,cmaps)
 
     return 0
+
 
 def main(args):
     
