@@ -1,7 +1,7 @@
-3_categories	0	Subtype 1	#f00	1	Subtype 2	#0f0	2	Subtype 3	#ff0
+3_categories	0	Subtype 3	#ff0	1	Subtype 2	#0f0	2	Subtype 1	#f00
 mutated/not	0	No mutation	#0000FF	1	Has mutation	#FF0000
 On/off	0	off	#0000FF	1	On	#FF0000
 yes/No	0	yes	#0000FF	1	No	#FF0000
 true/False	0	true	#0000FF	1	False	#FF0000
-true/No	0	No	#0000FF	1	true	#FF0000
-bad_indices	1	Low	#f00	2	Medium	#0f0	3	High	#ff0
+true/No	0	true	#FF0000	1	No	#0000FF
+bad_indices	0	Medium	#0f0	1	Low	#f00	2	High	#ff0
