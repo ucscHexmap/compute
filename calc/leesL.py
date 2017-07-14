@@ -56,6 +56,8 @@ def writeDummyLayersTab(layer_files,layers,
     @param nlayouts:
     @return:
     """
+    layer_files = trimLayerFiles(layer_files)
+
     layersTab = pd.DataFrame(index=layer_files.keys())
 
     #second column is the name of the layer files
