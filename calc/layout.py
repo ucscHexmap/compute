@@ -1628,19 +1628,25 @@ def makeMapUIfiles(options, cmd_line_list=None):
     clumpiness_scores = []
 
     datatypeDict = {'bin':[],'cat':[],'cont':[]}
+    nlayouts = len(nodes_multiple)
     # Determine Data Type
     if len(layer_names) > 0:
         attrDF = getAttributes(options.scores)
         datatypeDict = getDataTypes(attrDF,options.directory + '/colormaps.tab')
-
+        leesL.writeDummyLayersTab(layer_files,layers,
+                                  attrDF, datatypeDict,
+                                  nlayouts, options.directory
+                                  )
     #puts the datatypes in the global object and writes them to the UI file
     writeAndPutLayerDatatypes(datatypeDict, options, ctx)
+
+
 
     if len(layer_names) > 1 and options.clumpinessStats:
         ###############################DCM121916###################################3
         #calculates density using the Lees'L method
 
-        for index in range(len(nodes_multiple)):
+        for index in range(nlayouts):
             print 'calculating density for layer ' + str(index)
             xys = utils.readXYs(options.directory + '/xyPreSquiggle_' + str(
                 index)+'.tab')

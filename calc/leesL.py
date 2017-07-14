@@ -43,6 +43,38 @@ def trimLayerFiles(layer_files):
         layer_files[attr] = layer_files[attr].split('/')[-1]
     return layer_files
 
+def writeDummyLayersTab(layer_files,layers,
+                        attributeDF, datatypes,
+                        nlayouts, directory):
+    """
+    Writes out an empty layers.tab to the directory so the UI
+     will work while density is being calculated
+    @param layer_files:
+    @param layers:
+    @param attributeDF:
+    @param datatypes:
+    @param nlayouts:
+    @return:
+    """
+    layersTab = pd.DataFrame(index=layer_files.keys())
+
+    #second column is the name of the layer files
+    layersTab[0] = pd.Series(layer_files)
+
+    #third column is count of non-Na's
+    layersTab[1] = attributeDF[layer_files.keys()].count()
+
+    #forth column is the count of 1's if the layer is binary, Na if not
+    layersTab[2] = np.repeat(np.NAN,len(layers.keys()))
+
+    layersTab.loc[datatypes['bin'],2] = attributeDF[datatypes['bin']].sum(axis=0)
+
+    for ind in range(nlayouts):
+        layersTab[3+ind] = np.repeat(np.nan, layersTab.shape[0])
+
+    layersTab.to_csv(directory + '/layers.tab',sep='\t',header=None)
+
+
 def writeLayersTab(attributeDF,layers,layer_files,densityArray,
                    datatypes,options):
     '''
