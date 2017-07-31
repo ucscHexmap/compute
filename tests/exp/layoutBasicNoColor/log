@@ -1,0 +1,127 @@
+all given options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_top6_no_color/',
+ 'distanceMetric': 'spearman',
+ 'drlpath': None,
+ 'feature_space': None,
+ 'first_attribute': '',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': ['/home/duncan/hex/compute/tests/in/layout/attributes.tab'],
+ 'similarity': ['/home/duncan/hex/compute/tests/in/layout/similarity.tab'],
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+all adjusted options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_top6_no_color/',
+ 'distanceMetric': 'spearman',
+ 'drlpath': None,
+ 'feature_space': None,
+ 'first_attribute': '',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': ['/home/duncan/hex/compute/tests/in/layout/attributes.tab'],
+ 'similarity': ['/home/duncan/hex/compute/tests/in/layout/similarity.tab'],
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+Writing matrix names...
+Created nodes_multiple list...
+About to open matrices...
+DRL method
+['/home/duncan/hex/compute/tests/in/layout/similarity.tab']
+None
+None
+Sparse similarity matrices
+Opening Matrix 0 /home/duncan/hex/compute/tests/in/layout/similarity.tab
+['/home/duncan/hex/compute/tests/in/layout/similarity.tab']
+enumerating ctx.matrices 0
+07-31 13:38:17 ============== Starting drl computations for layout: 0 ... ==============
+Reach for parts in sim_reader:<tsv.TsvReader object at 0x7f084c1edd90>
+07-31 13:38:17 DrL: Truncating...
+Using /tmp/tmphVp78W/layout0.sim for .sim file, 
+Will output /tmp/tmphVp78W/layout0.ind for .ind file,
+            /tmp/tmphVp78W/layout0.int for .int file, and
+            /tmp/tmphVp78W/layout0.full for .full file.
+Using memory = 1
+      topn = 6
+      normalize = 0
+Reading .sim file ... 
+Read 60 nodes and 420 lines.
+Creating .ind file ...
+Writing to .full file ...
+Creating .int file ...
+Scan 1 of .full file ...
+Program finished successfully.
+DrL: Doing layout...
+Using /tmp/tmphVp78W/layout0.int for .int file, and /tmp/tmphVp78W/layout0.icoord for .icoord file.
+Using random seed = 0
+      edge_cutting = 0.8
+      intermediate output = 0
+      output .iedges file = 0
+Proc. 0 scanning .int file ...
+Processor 0 reading .int file ...
+Entering liquid stage ...........................................................................................................................................................................................................
+Liquid stage completed in 0 seconds, total energy = 171399.
+Entering expansion stage ...........................................................................................................................................................................................................
+Finished expansion stage in 0 seconds, total energy = 81547.7.
+Entering cool-down stage ...........................................................................................................................................................................................................
+Completed cool-down stage in 0 seconds, total energy = 20671.7.
+Entering crunch stage .....................................................
+Finished crunch stage in 0 seconds, total energy = 33007.7.
+Entering simmer stage .......................................................................................................
+Finished simmer stage in 0 seconds, total energy = 5.68076.
+Layout calculation completed in 0 seconds (not including I/O).
+Writing out solution to /tmp/tmphVp78W/layout0.icoord ...
+Total Energy: 5.66145.
+Program terminated successfully.
+07-31 13:38:17 DrL: Restoring names...
+Using /tmp/tmphVp78W/layout0.icoord for .icoord file, and 
+       /tmp/tmphVp78W/layout0.ind for .ind file.
+Will output /tmp/tmphVp78W/layout0.coord for .coord file.
+Reading .ind file ...
+Reading .icoord file ...
+Creating .coord file ...
+Program finished successfully.
+07-31 13:38:17 Reading DrL output...
+07-31 13:38:17 ============== drl computations completed for layout: 0 ==============
+Opened matrices...
+07-31 13:38:17 Attribute counts:  Binary: 6 + Categorical: 2 + Continuous: 3
+calculating density for layer 0
+categorical attribute being processed: 3_categories
+shape of dummy matrix after exclusion: (59, 3)
+categorical attribute being processed: bad_indices
+shape of dummy matrix after exclusion: (59, 3)
+Skipping sort stats without layout (sample-based)
+31 13:38:17 Found top neighbors
+31 13:38:17 Found top neighbors
+07-31 13:38:17 Visualization generation complete!

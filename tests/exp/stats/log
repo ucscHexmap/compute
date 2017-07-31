@@ -1,0 +1,152 @@
+07-31 13:33:48 Started
+command-line options:
+--similarity
+/home/duncan/hex/compute/tests/in/stats/artificial_sparse.tab
+--names
+mRNA
+--scores
+/home/duncan/hex/compute/tests/in/stats/attributes.tabstringed
+--colormaps
+/home/duncan/hex/compute/tests/in/stats/colormaps.tab
+--first_attribute
+Subtype
+--directory
+/home/duncan/hex/compute/tests/out/stats/
+all given options:
+{'associations': True,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '/home/duncan/hex/compute/tests/in/stats/colormaps.tab',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/stats/',
+ 'distanceMetric': 'spearman',
+ 'drlpath': None,
+ 'feature_space': None,
+ 'first_attribute': 'Subtype',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': True,
+ 'names': ['mRNA'],
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': ['/home/duncan/hex/compute/tests/in/stats/attributes.tabstringed'],
+ 'similarity': ['/home/duncan/hex/compute/tests/in/stats/artificial_sparse.tab'],
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+all adjusted options:
+{'associations': True,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '/home/duncan/hex/compute/tests/in/stats/colormaps.tab',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/stats/',
+ 'distanceMetric': 'spearman',
+ 'drlpath': None,
+ 'feature_space': None,
+ 'first_attribute': 'Subtype',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': True,
+ 'names': ['mRNA'],
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': ['/home/duncan/hex/compute/tests/in/stats/attributes.tabstringed'],
+ 'similarity': ['/home/duncan/hex/compute/tests/in/stats/artificial_sparse.tab'],
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+process_categoricals.py: : previously generated colormaps file given
+process_categoricals.py: : 1 attributes from colormap match metadata
+process_categoricals.py: WARNING: attribute: Subtype: 1 categories are in the provided colormap file but not in the meta data
+set(['Subtype 1'])
+Writing matrix names...
+Created nodes_multiple list...
+About to open matrices...
+DRL method
+['/home/duncan/hex/compute/tests/in/stats/artificial_sparse.tab']
+None
+None
+Sparse similarity matrices
+Opening Matrix 0 /home/duncan/hex/compute/tests/in/stats/artificial_sparse.tab
+['/home/duncan/hex/compute/tests/in/stats/artificial_sparse.tab']
+enumerating ctx.matrices 0
+07-31 13:33:48 ============== Starting drl computations for layout: 0 ... ==============
+Reach for parts in sim_reader:<tsv.TsvReader object at 0x7fa71cbca110>
+07-31 13:33:48 DrL: Truncating...
+Using /tmp/tmpl9XUb3/layout0.sim for .sim file, 
+Will output /tmp/tmpl9XUb3/layout0.ind for .ind file,
+            /tmp/tmpl9XUb3/layout0.int for .int file, and
+            /tmp/tmpl9XUb3/layout0.full for .full file.
+Using memory = 1
+      topn = 6
+      normalize = 0
+Reading .sim file ... 
+Read 60 nodes and 3600 lines.
+Creating .ind file ...
+Writing to .full file ...
+Creating .int file ...
+Scan 1 of .full file ...
+Program finished successfully.
+DrL: Doing layout...
+Using /tmp/tmpl9XUb3/layout0.int for .int file, and /tmp/tmpl9XUb3/layout0.icoord for .icoord file.
+Using random seed = 0
+      edge_cutting = 0.8
+      intermediate output = 0
+      output .iedges file = 0
+Proc. 0 scanning .int file ...
+Processor 0 reading .int file ...
+Entering liquid stage ...........................................................................................................................................................................................................
+Liquid stage completed in 0 seconds, total energy = 173986.
+Entering expansion stage ...........................................................................................................................................................................................................
+Finished expansion stage in 0 seconds, total energy = 76252.7.
+Entering cool-down stage ...........................................................................................................................................................................................................
+Completed cool-down stage in 0 seconds, total energy = 15234.5.
+Entering crunch stage .....................................................
+Finished crunch stage in 0 seconds, total energy = 16389.5.
+Entering simmer stage .......................................................................................................
+Finished simmer stage in 1 seconds, total energy = 6.55784.
+Layout calculation completed in 1 seconds (not including I/O).
+Writing out solution to /tmp/tmpl9XUb3/layout0.icoord ...
+Total Energy: 6.51813.
+Program terminated successfully.
+07-31 13:33:49 DrL: Restoring names...
+Using /tmp/tmpl9XUb3/layout0.icoord for .icoord file, and 
+       /tmp/tmpl9XUb3/layout0.ind for .ind file.
+Will output /tmp/tmpl9XUb3/layout0.coord for .coord file.
+Reading .ind file ...
+Reading .icoord file ...
+Creating .coord file ...
+Program finished successfully.
+07-31 13:33:49 Reading DrL output...
+07-31 13:33:49 ============== drl computations completed for layout: 0 ==============
+Opened matrices...
+07-31 13:33:49 Attribute counts:  Binary: 5 + Categorical: 1 + Continuous: 4
+calculating density for layer 0
+attributes Index([u'TP53_expression altered'], dtype='object') had no values for this xy position set
+categorical attribute being processed: Subtype
+shape of dummy matrix after exclusion: (60, 3)
+layout independent stats starting
+31 13:33:49 Running sample-based statistics...
+31 13:33:49 Processing 10 layers
+Starting to build 100 layer pairs...
+Using host: Mr with 4 processors for parallel jobs.
+10 subprocesses to run, one per layer.
+31 13:33:49 Sample-based statistics complete
+layout independent stats finished in 0.00192855199178 minutes
+LeesL layout aware stats being calculated
+31 13:33:49 Found top neighbors
+31 13:33:49 Found top neighbors
+07-31 13:33:49 Visualization generation complete!

@@ -214,7 +214,6 @@ class Test_layoutBasic(unittest.TestCase):
         #theese files are not expected to be the same as other runs,
         # but to make sure they are correct we have but previous runs in a different
         # expected directory.
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
     
@@ -243,7 +242,6 @@ class Test_layoutBasic(unittest.TestCase):
         #theese files are not expected to be the same as other runs,
         # but to make sure they are correct we have but previous runs in a different
         # expected directory.
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
     
@@ -535,7 +533,6 @@ class Test_layoutBasic(unittest.TestCase):
                                                         'hexNames.tab',
                                                         'xyPreSquiggle_0.tab']
                                         )
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
 
@@ -557,15 +554,14 @@ class Test_layoutBasic(unittest.TestCase):
         #check that it is mostly the same as the other files
         util.compareActualVsExpectedDir(s, expNoColorDir, outDir,
                                         excludeFiles = ['log',
-                                                        'neighbors_0.tab',
                                                         'assignments0.tab',
+                                                        'neighbors_0.tab',
                                                         'hexNames.tab',
                                                         'xyPreSquiggle_0.tab']
                                         )
         #theese files are not expected to be the same as other runs,
         # but to make sure they are correct we have but previous runs in a different
         # expected directory.
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
 
@@ -590,12 +586,11 @@ class Test_layoutBasic(unittest.TestCase):
         util.compareActualVsExpectedDir(s,expDir, outDir,
                                         excludeFiles = ['log',
                                                         'mapMeta.json',
-                                                        'neighbors_0.tab',
                                                         'assignments0.tab',
+                                                        'neighbors_0.tab',
                                                         'hexNames.tab',
                                                         'xyPreSquiggle_0.tab']
                                         )
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
 

@@ -1,11 +1,11 @@
 3_categories	layer_0.tab	59		0.4602991
-mutated/not	layer_1.tab	59	38.0	0.2958717
+mutated/not	layer_1.tab	59	21.0	0.2958717
 1/0	layer_9.tab	59	39.0	0.08092255
 continuous_float	layer_6.tab	59		0.0146482
-yes/No	layer_2.tab	59	20.0	0.3401601
+yes/No	layer_2.tab	59	39.0	0.3401601
 bad_indices	layer_10.tab	59		0.03652363
 true/False	layer_3.tab	59	20.0	0.08092255
-On/off	layer_4.tab	59	20.0	0.08092255
+On/off	layer_4.tab	59	39.0	0.08092255
 continuous_integer_w_dot	layer_5.tab	59		0.4952869
 continuous_integer	layer_8.tab	59		0.06974529
 true/No	layer_7.tab	59	20.0	0.08092255

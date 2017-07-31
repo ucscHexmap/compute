@@ -120,7 +120,6 @@ class Test_layoutBasicMakeUIInferFormat(unittest.TestCase):
                                                         'hexNames.tab',
                                                         'xyPreSquiggle_0.tab']
                                         )
-        util.compareActualVsExpectedFile(s,'neighbors_0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
 
