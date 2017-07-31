@@ -653,6 +653,7 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     # now we have a completed colormap mapping in cmap.
     # Here we convert to integer codes and write out the data
     # as a pickle file
+    cmaps = order_catids_alphabetically(cmaps)
     attributes = transformToColormapInts(attributes,cmaps)
     attributes.index.rename('nodes',inplace=True)
     if debug:
@@ -670,7 +671,6 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     if debug:
         print 'writing colormaps file to:' + out_file
 
-    cmaps = order_catids_alphabetically(cmaps)
     write_colormaps(out_file,cmaps)
 
     return 0
