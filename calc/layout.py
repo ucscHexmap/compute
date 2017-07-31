@@ -1277,7 +1277,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
     x, y = hexagon_center(0, 0)
     if hexagon_pick(x, y) != (0, 0):
         raise Exception("Picking is broken!")
-    
+
     print "Writing matrix names..."
     #write the option,names out,
     # options.names is a human readable description of the data used to create
@@ -1297,10 +1297,13 @@ def makeMapUIfiles(options, cmd_line_list=None):
         for i, coords_filename in enumerate(options.coordinates):
             nodes = read_nodes(coords_filename)
             nodes_multiple.append(nodes)
-            dt = utils.readXYs(coords_filename)
-            eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(dt, metric='euclidean', p=2, w=None, V=None, VI=None))
+            #dt = utils.readXYs(coords_filename)
+            #eucl = scipy.spatial.distance.squareform(
+            # scipy.spatial.distance.pdist(dt, metric='euclidean', p=2, w=None, V=None, VI=None))
             #append the sparse matrix representation so the neighbors_x file can be created.
-            ctx.sparse.append(sparsePandasToString(extract_similarities(dt=eucl, sample_labels=dt.index, top=options.truncation_edges, log=None)))
+            ctx.sparse=[]
+            #ctx.sparse.append(sparsePandasToString(extract_similarities(
+            # dt=eucl, sample_labels=dt.index, top=options.truncation_edges, log=None)))
 
     else:
         if options.layout_method.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
@@ -1472,7 +1475,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
     for index, i in enumerate(nodes_multiple):
         # Go get the placement badness
         placement_badness = compute_hexagram_assignments(i, index, options, ctx)
-            
+
         # Record the placement badness under this layout.
         placement_badnesses_multiple.append(placement_badness)
 
