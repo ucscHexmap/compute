@@ -2,7 +2,7 @@
 # www
 #
 import os, json, traceback, logging
-from flask import Flask, request, jsonify, current_app, send_file
+from flask import Flask, request, jsonify, current_app, Response
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
@@ -124,10 +124,19 @@ def dataRoute(dataId):
         request.environ['HTTP_ORIGIN'] not in app.config['ALLOWABLE_VIEWERS']:
         raise ErrorResp('File not found', 404)
         
+    # Not using flask's send_file() as it mangles files larger than 32k.
     try:
-        result = send_file(os.path.join(ctx['dataRoot'], dataId))
+        with open(os.path.join(ctx['dataRoot'], dataId)) as f:
+            data = f.read()
+            result = Response(
+                data,
+                mimetype='text/csv',
+                headers={'Content-disposition': 'attachment'})
     except IOError:
         raise ErrorResp('File not found', 404)
+    except Exception as e:
+        #traceback.print_exc()
+        raise ErrorResp(repr(e), 500)
 
     raise SuccessRespNoJson(result)
 

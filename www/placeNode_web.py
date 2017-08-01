@@ -7,7 +7,6 @@
 
 import os, json, types, requests, traceback, csv, logging
 from argparse import Namespace
-from flask import Response
 import validate_web as validate
 import util_web
 from util_web import SuccessResp, ErrorResp, getMapMetaData, createBookmark
