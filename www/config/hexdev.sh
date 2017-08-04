@@ -10,7 +10,7 @@ export LD_LIBRARY_PATH=$WWW_PATH/../libPatch:$LD_LIBRARY_PATH
 export PATH=$DRLPATH:$PATH
 export PYTHONPATH=$WWW_PATH:$WWW_PATH/../calc
 export VIEWER_URL=https://hexdev.sdsc.edu:8222
-export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu:8222
+export ALLOWABLE_VIEWERS=https://hexdev.sdsc.edu:8221,https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8223,http://hexdev.sdsc.edu:8221,http://hexdev.sdsc.edu:8222,http://hexdev.sdsc.edu:8223
 export ADMIN_EMAIL=hexmap@ucsc.edu
 
 S=/data/certs

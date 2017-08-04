@@ -45,6 +45,7 @@ else:
     logLevel = 'INFO'
 
 logging.info('WWW server started with log level: ' + logLevel)
+logging.info('Allowable viewers: ' + str(app.config['ALLOWABLE_VIEWERS']))
 
 # Validate a post
 def validatePost():
@@ -122,8 +123,9 @@ def dataRoute(dataId):
     # Only allow authorized view servers to pull data for now.
     if request.environ['HTTP_ORIGIN'] is None or \
         request.environ['HTTP_ORIGIN'] not in app.config['ALLOWABLE_VIEWERS']:
-        raise ErrorResp('File not found', 404)
-        
+        raise ErrorResp('Unauthorized Viewer: ' +
+            str(request.environ['HTTP_ORIGIN']), 400)
+            
     # Not using flask's send_file() as it mangles files larger than 32k.
     try:
         with open(os.path.join(ctx['dataRoot'], dataId)) as f:
@@ -133,7 +135,7 @@ def dataRoute(dataId):
                 mimetype='text/csv',
                 headers={'Content-disposition': 'attachment'})
     except IOError:
-        raise ErrorResp('File not found', 404)
+        raise ErrorResp('File not found or other IOError', 404)
     except Exception as e:
         #traceback.print_exc()
         raise ErrorResp(repr(e), 500)

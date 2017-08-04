@@ -14,9 +14,6 @@
 INSTALL=$1
 WWW_PATH=$2
 
-# Kill any currently running server
-source $WWW_PATH/../killWww
-
 # Pull in the configuration for this install
 source $WWW_PATH/config/$INSTALL.sh
 
