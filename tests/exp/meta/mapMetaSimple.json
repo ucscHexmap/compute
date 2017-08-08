@@ -6,5 +6,6 @@
         "layout": {
             "clusterData": "featureSpace/simpleMapName/full_matrix.tab"
         }
-    }
+    }, 
+    "nodeIdSearchUrl": "https://www.google.com/search?q="
 }

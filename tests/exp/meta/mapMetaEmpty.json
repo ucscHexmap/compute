@@ -1,3 +1,4 @@
 {
-    "layouts": {}
+    "layouts": {}, 
+    "nodeIdSearchUrl": "https://www.google.com/search?q="
 }
