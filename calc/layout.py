@@ -85,7 +85,9 @@ def parse_args(args):
     parser.add_argument("--zeroReplace", action='store_true',
         default=False,
         help="Replaces NA values with 0")
-
+    parser.add_argument("--nodeIdSearchUrl", type=str,
+                        default="https://www.google.com/search?q=",
+        help="The search string URL to be prepended to the nodeId")
 
     # WebAPI / CWL / CLI: Lesser used parameters:
     parser.add_argument("--reflectionMapType", type=str, default=None,
@@ -1025,7 +1027,8 @@ def writeMetaData(options):
                 meta['layouts'][name] = {'clusterData': options.feature_space[i].index.name[j:]}
             else:
                 meta['layouts'][name] = {'clusterData': options.feature_space[i][j:]}
-    
+
+        meta["nodeIdSearchUrl"] = options.nodeIdSearchUrl
         # Write the json file
         with open(metaPath, 'w') as f:
             json.dump(meta, f, indent=4)
