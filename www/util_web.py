@@ -1,5 +1,5 @@
 
-import os, json, types, csv, traceback, requests
+import os, json, types, csv, traceback, requests, logging
 from argparse import Namespace
 
 class SuccessResp(Exception):
