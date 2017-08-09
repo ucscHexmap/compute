@@ -23,7 +23,8 @@ def _validateFileName (dirty, name):
 
 def _validateStringChars(val, name):
     '''
-    Look for any non-printable characters in a string value.
+    Look for any non-printable characters in a string value, non-printables are
+    ascii decimal codes 0-31 and 127-255.
     @param  val: the string value
     @param name: the name of the parameter
     @return: nothing or raise an ErrorResp

@@ -115,11 +115,8 @@ def upload(dataId):
     
     raise SuccessResp('upload of ' + filename + ' complete')
 
-# Handle data/<dataId> routes which are data requests by data ID.
-@app.route('/data/<path:dataId>', methods=['GET'])
-def dataRoute(dataId):
-    logging.debug('Received data request for ' + dataId)
-    
+def dataRouteInner(dataId, ok404=False):
+
     # Only allow authorized view servers to pull data for now.
     if request.environ['HTTP_ORIGIN'] is None or \
         request.environ['HTTP_ORIGIN'] not in app.config['ALLOWABLE_VIEWERS']:
@@ -135,12 +132,33 @@ def dataRoute(dataId):
                 mimetype='text/csv',
                 headers={'Content-disposition': 'attachment'})
     except IOError:
-        raise ErrorResp('File not found or other IOError', 404)
+        if ok404:
+            result = Response(
+                '404',
+                mimetype='text/csv',
+                headers={'Content-disposition': 'attachment'})
+            raise SuccessRespNoJson(result)
+        else:
+            raise ErrorResp('File not found or other IOError', 404)
     except Exception as e:
         #traceback.print_exc()
         raise ErrorResp(repr(e), 500)
 
     raise SuccessRespNoJson(result)
+
+# Handle data/<dataId> routes which are data requests by data ID.
+@app.route('/data/<path:dataId>', methods=['GET'])
+def dataRoute(dataId):
+    logging.debug('Received data request for ' + dataId)
+    dataRouteInner(dataId)
+
+# Handle data404ok/<dataId> routes which are data requests by data ID.
+# A 404 is ok to return here, so we do it as 'success' so that errors
+# will not be thrown on the client console.
+@app.route('/dataOk404/<path:dataId>', methods=['GET'])
+def dataRouteOk404(dataId):
+    logging.debug('Received data OK 404 request for ' + dataId)
+    dataRouteInner(dataId, True)
 
 # Handle query/<operation> routes
 @app.route('/query/<string:operation>', methods=['POST'])
