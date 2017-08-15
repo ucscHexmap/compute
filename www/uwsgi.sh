@@ -17,7 +17,7 @@ WWW_PATH=$2
 # Pull in the configuration for this install
 source $WWW_PATH/config/$INSTALL.sh
 
-BASE='--master --callable app --processes 1 --threads 1 --wsgi-file '$WWW_PATH/www.py' --pidfile '$WWW_PATH/../www.pid
+BASE='--master --callable app --processes 2 --threads 100 --wsgi-file '$WWW_PATH/www.py' --pidfile '$WWW_PATH/../www.pid
 FOREGROUND=0
 
 if [ $INSTALL == 'hexmap' ] || [ $INSTALL == 'hexdev' ]; then
