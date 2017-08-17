@@ -5,20 +5,13 @@ import os
 import json
 import traceback
 import sys
-import time
-
-#def get_functions():
-#    return {mean:mean,}
 
 
 def topXbinTrans(df,top):
     '''
-
-
     :param df: a dataframe with a single column
     :return:outputs a dataframe with single column and same indecies as df, 3 is 'high, 2 is 'middle', and 1 is 'low'
     '''
-
 
     nrows = df.shape[0]
     df = df.sort_values(ascending=False)
@@ -30,12 +23,7 @@ def topXbinTrans(df,top):
     return pd.Series(df)
 
 
-
-
 def cnv_reflection(parm):
-    #clockstart = time.time()
-
-    #TODO: implement 'read in chunks' for large dataframes. or find a good way to do it
 
     try:
         TOP = int(parm['n'])
@@ -43,6 +31,8 @@ def cnv_reflection(parm):
         TOP = 150 #TODO: this should be an input later, need to talk to Yulia and Josh before getting fancy
 
     fpath = str(parm['datapath'])
+    fpath = fpath[:-4] + ".hdf"
+
     node_ids = parm['node_ids']
 
     if not os.path.isfile(fpath):
@@ -51,9 +41,7 @@ def cnv_reflection(parm):
         print "Error:", fpath, "not found, so reflection could not be computed\n"
         return 0
 
-    # read in data to perform query on
-    #ref_dat = pd.read_pickle(fpath)
-    ref_dat = pd.read_csv(fpath,index_col=0,sep='\t')
+    ref_dat = pd.read_hdf(fpath)
 
     #if going from features to samples then need to transpose matrix
     if (parm['featOrSamp'] == 'feature'):
@@ -66,17 +54,12 @@ def cnv_reflection(parm):
         print "Error:", fpath, "none of the nodes selected were in the reflection matrix\n"
         return 0
 
-    #TODO: For efficency sake we could store the below calcs of mean and std
-    # and only read
-    # in the necessary columns, we'd need to store a transpose though
-    # or get fancy some other way
-
     #calculate raw scores, store in dataframe
     res = ref_dat[node_ids].mean(axis=1)
 
     #NA's are filled with 0, 0 should be the most nuetral value
     # if not done NA's will pop up in the top LOW category
-    #res.fillna(value=0, inplace=True)
+    res.fillna(value=0, inplace=True)
 
     if parm["rankCategories"]:
         #grab highest and lowest values and turn into: 3 highest , 2 middle, 1 lowest. 3 and 1 are of particular interest
@@ -97,7 +80,7 @@ def exp_reflection(parm):
                   }
     :return:
     '''
-    
+
     #clockstart = time.time()
 
     #TODO: implement 'read in chunks' for large dataframes. or find a good way to do it
@@ -109,18 +92,22 @@ def exp_reflection(parm):
 
 
     fpath = str(parm['datapath'])
+    # Change the file extention (".tab") to .hdf
+    fpath = fpath[:-4] + ".hdf"
     node_ids = parm['node_ids']
 
     if not os.path.isfile(fpath):
-        #TODO: Need better way for error, this error actually 
+        #TODO: Need better way for error, this error actually
         # gets dumped into mongo
         print "Error:", fpath, "not found, so reflection could not be computed\n"
         return 0
 
     # read in data to perform query on
     #ref_dat = pd.read_pickle(fpath)
-    ref_dat = pd.read_csv(fpath,index_col=0,sep='\t')
-        
+    #ref_dat = pd.read_csv(fpath,sep="\t",index_col=0)
+
+    ref_dat = pd.read_hdf(fpath)
+
     #if going from features to samples then need to transpose matrix
     if (parm['featOrSamp'] == 'feature'):
         ref_dat = ref_dat.transpose()
@@ -132,15 +119,21 @@ def exp_reflection(parm):
         print "Error:", fpath, "none of the nodes selected were in the reflection matrix\n"
         return 0
 
-    #TODO: For efficency sake we could store the below calcs of mean and std 
+    #TODO: For efficency sake we could store the below calcs of mean and std
     # and only read
     # in the necessary columns, we'd need to store a transpose though
     # or get fancy some other way
-
+    """
+    manUfuct = lambda x: stats.mannwhitneyu(x[node_ids],
+                                                  x[~x.index.isin(
+                                                      node_ids)]).pvalue
+    res = ref_dat.apply(manUfuct,axis=1)
+    """
     #grab row wise means and standard deviation for querry normalization
     rowmu = ref_dat.mean(axis=1)
     #take sd of each row
     rowstd = ref_dat.std(axis=1)
+
 
     #calculate raw scores, store in dataframe
     res = ( (ref_dat[node_ids].mean(axis=1) - rowmu) / rowstd)#
