@@ -1,0 +1,5 @@
+#!/bin/bash
+# Call the server start script for this install
+INSTALL=dmccoll
+WWW_PATH=/home/duncan/hex/compute/www
+$WWW_PATH/uwsgi.sh $INSTALL $WWW_PATH
