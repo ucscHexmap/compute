@@ -186,5 +186,40 @@ class Test_similarity(unittest.TestCase):
 
             s.assertTrue(passed,'top 0 did not have empty dimensions')
 
+    def test_error_on_dups(s):
+        filename = os.path.join(inDir,
+                                "full_matrix_duplicate_rows_and_cols.tab")
+
+        opts = [
+            "--top", "3",
+            "--in_file", filename,
+            "--out_file", os.devnull, # Write to nowhere.
+            "--metric", 'spearman',
+            ]
+
+        try:
+            compute_sparse_matrix.main(opts)
+            s.assertTrue(False)
+        except ValueError as e:
+            s.assertTrue(e, e)
+
+    def test_error_on_dups(s):
+        filename = os.path.join(inDir,
+                                "full_matrix_duplicate_rows_and_cols.tab")
+
+        opts = [
+            "--top", "3",
+            "--in_file", filename,
+            "--out_file", os.devnull, # Write to nowhere.
+            "--metric", 'spearman',
+            "--rows"
+            ]
+
+        try:
+            compute_sparse_matrix.main(opts)
+            s.assertTrue(False)
+        except ValueError as e:
+            s.assertTrue(e, e)
+
 if __name__ == '__main__':
     unittest.main()
