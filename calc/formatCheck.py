@@ -4,6 +4,7 @@ the layoutInputFile matches the users layoutInputFormat specification.
 """
 
 import numpy as np
+import utils
 
 def warnAboutFormat(df,expected_type):
     """
@@ -55,20 +56,32 @@ def warnAboutFormat(df,expected_type):
 def _layoutInputFormat(df):
     """Produce a string that is either a valid layout input format or unknown"""
 
-    if _isSparseSimilarity(df):
-        format_ = 'sparseSimilarity'
 
-    elif _isXYPositions(df):
-        format_ = 'xyPositions'
+    format_ = 'unknown'
+    # Three columns can mean xy or sparse.
+    if df.shape[1] == 2:
+        if _isSparseSimilarity(df):
+            format_ = 'sparseSimilarity'
 
-    elif _isFullSimilarity(df):
-        format_ = 'fullSimilarity'
-
-    elif _isClusterData(df):
-        format_ = 'clusterData'
-
+        elif _isXYPositions(df):
+            format_ = 'xyPositions'
+            # This catches the edge case where nodeIds are either floats or
+            # ints, in that case we can not determine whether this file
+            # is a sparse or an xy positions file.
+            if df.index.dtype == 'float64' or df.index.dtype == 'int64':
+                raise ValueError("Cannot not determine input format type: "
+                                 "distinguish by putting a proper header in the "
+                                 "input file, 'node node edge' for sparse "
+                                 "similarity or 'node x y' for an xy positions "
+                                 "file")
     else:
-        format_ = 'unknown'
+        if _isFullSimilarity(df):
+            format_ = 'fullSimilarity'
+
+        elif _isClusterData(df):
+            format_ = 'clusterData'
+
+
 
     return format_
 
@@ -86,8 +99,10 @@ def _isSparseSimilarity(df):
     the input is sparse similarity"""
 
     exp_ncols = df.shape[1] == 2
-    exp_type  = df[df.columns[0]].dtype == "object"\
-                or df[df.columns[0]].dtype == "str"
+    exp_type  = (df[df.columns[0]].dtype == "object"
+                or df[df.columns[0]].dtype == "str") \
+                and (df[df.columns[1]].dtype == "int64"
+                or df[df.columns[1]].dtype == "float64" )
 
     return exp_ncols and exp_type
 
@@ -114,3 +129,23 @@ def _isXYPositions(df):
 
     zero_nas = not bool(df.isnull().sum().sum())
     return exp_type and exp_ncols and zero_nas
+
+
+def _validHeaderOf3Col():
+
+    return {
+        "xyPositions" : ["node", "x", "y"],
+        "sparseSimilarity" : ["node", "node", "edge"]
+    }
+
+
+def type_of_3col(filename):
+    first_line = utils._firstLineArray(filename)
+    first_line = map(lambda x: x.lower(), first_line)
+    valid_header_dict = _validHeaderOf3Col()
+    for header in valid_header_dict.keys():
+        if first_line == valid_header_dict[header]:
+            return header
+
+    return "NOT_VALID"
+
