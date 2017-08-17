@@ -1,7 +1,9 @@
 import unittest
 import os
-import pandas as pd
 import formatCheck as fc
+import utils
+import pandas as pd
+
 testDir = os.getcwd()
 inDir = os.path.join(testDir,'in/layout/' )   # The input data
 xyDir = os.path.join(testDir,'exp/layoutBasicXy/' )   # The input data
@@ -10,18 +12,37 @@ class Test_formatCheck(unittest.TestCase):
     """Tests the internal functions of the 'formatCheck' module"""
 
     # load the pandas data frames into memory.
-    full_sim = pd.read_table(os.path.join(inDir, "similarity_full.tab"),
-                              index_col =0)
-    neighbors = pd.read_table(os.path.join(inDir, "similarity.tab"),
-                               index_col =0)
-    clusterData = pd.read_table(os.path.join(inDir, "full_matrix.tab"),
-                                index_col =0)
-    xy1 = pd.read_table(os.path.join(xyDir, "xyPreSquiggle_0.tab"),
-                        index_col =0)
-    xy2 = pd.read_table(os.path.join(xyDir, "assignments0.tab"),
-                        index_col =0)
-    unknown = pd.read_table(os.path.join(inDir, "attributes.tab"),
-                            index_col =0)
+    full_sim = utils.readPandas(os.path.join(inDir, "similarity_full.tab"))
+
+    neighbors = utils.readPandas(os.path.join(inDir, "similarity.tab"))
+
+    clusterData = utils.readPandas(os.path.join(inDir, "full_matrix.tab")
+                                )
+    xy1 = utils.readPandas(os.path.join(xyDir, "xyPreSquiggle_0.tab"))
+
+    xy2 = utils.readPandas(os.path.join(xyDir, "assignments0.tab"))
+
+    unknown = utils.readPandas(os.path.join(inDir, "attributes.tab"))
+
+    edge_case1 = pd.DataFrame([[1,1],[2,3]],index=[1,2])
+    edge_case2 = pd.DataFrame([["a",2],[2,3]],index=[1,2])
+    edge_case3 = pd.DataFrame([["a","b"],["a","a"]],index=["b","b"])
+
+    #test the header reading too
+    def test_edge1(s):
+        try:
+            fc._layoutInputFormat(s.edge_case1)
+            s.assertTrue(False)
+        except ValueError:
+            s.assertTrue(True)
+
+    def test_edge2(s):
+        format_ = fc._layoutInputFormat(s.edge_case2)
+        s.assertTrue(format_ == "sparseSimilarity")
+
+    def test_edge3(s):
+        format_ = fc._layoutInputFormat(s.edge_case3)
+        s.assertTrue(format_ == "unknown")
 
     def test_isXYpositions1(s):
         s.assertTrue(fc._isXYPositions(s.xy1))
@@ -101,6 +122,23 @@ class Test_formatCheck(unittest.TestCase):
     def test_inferred_fullSimilarity(s):
         s.assertTrue(fc._layoutInputFormat(s.full_sim) == "fullSimilarity")
 
+    def test_recognize_sim_header1(s):
+        header_line = fc.type_of_3col(os.path.join(inDir,"sim_with_header"))
+        s.assertTrue(header_line=="sparseSimilarity")
+
+    def test_dont_recognize_sim_header(s):
+        header_line = fc.type_of_3col(os.path.join(inDir,"similarity.tab"))
+        s.assertTrue(header_line=="NOT_VALID")
+
+    def test_recognize_xy_header1(s):
+
+        header_line = fc.type_of_3col(os.path.join(inDir,"xy_with_header"))
+        s.assertTrue(header_line=="xyPositions")
+
+
+    def test_recognize_xy_header2(s):
+        header_line = fc.type_of_3col(os.path.join(inDir,"coordinates.tab"))
+        s.assertTrue(header_line == "NOT_VALID")
 
 if __name__ == '__main__':
     unittest.main()
