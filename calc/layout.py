@@ -88,6 +88,10 @@ def parse_args(args):
     parser.add_argument("--nodeIdSearchUrl", type=str,
                         default="https://www.google.com/search?q=",
         help="The search string URL to be prepended to the nodeId")
+    parser.add_argument("--doing_rows", action='store_true',
+        default=False,
+        help="If a feature matrix is given, this flag transposes it in order"
+             " to perform row-wise similarity calculation")
 
     # WebAPI / CWL / CLI: Lesser used parameters:
     parser.add_argument("--reflectionMapType", type=str, default=None,
@@ -1403,8 +1407,14 @@ def makeMapUIfiles(options, cmd_line_list=None):
                                          )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
-                    dt_t = np.transpose(dt)
-                    result = sparsePandasToString(compute_similarities(dt=dt_t, sample_labels=sample_labels, metric_type=options.distanceMetric, num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
+                    if options.doing_rows:
+                        # Swap the sample and feature labels and continue
+                        sample_labels, feature_labels = \
+                            feature_labels, sample_labels
+                    else:
+                        dt = np.transpose(dt)
+
+                    result = sparsePandasToString(compute_similarities(dt=dt, sample_labels=sample_labels, metric_type=options.distanceMetric, num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
