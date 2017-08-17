@@ -168,7 +168,7 @@ def getdf(fin='',type_='tab',rownamecol=0,nrows=50,ncols=40):
         return pd.DataFrame(gen_dat(nrows,ncols),index=range(0,nrows),
                             columns=range(0,ncols))
     else:
-        return "SOME WENT WRONG"
+        raise ValueError("SOME WENT WRONG")
 
 def randStr(N):
     return ''.join(random.choice(string.ascii_uppercase + string.digits) for _
