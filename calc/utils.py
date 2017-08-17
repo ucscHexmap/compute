@@ -6,6 +6,7 @@ Misc. utilities for the server python code
 import os, math, traceback
 import numpy as np
 import pandas as pd
+import formatCheck
 
 #The following functions are for shared by modules and used to read in data
 def readXYs(fpath):
@@ -33,41 +34,83 @@ def readPandas(datafile):
     header_line = _headerLine(datafile)
     comment_char = '#'
 
-    df = pd.read_table(datafile,
+    df = pd.read_csv(datafile,
                        index_col=0,
                        comment=comment_char,
-                       header=header_line
+                       header=header_line,
+                       sep="\t",
+                       mangle_dupe_cols=False
                        )
+
     # Put the filename as the index name
     df.index.name = datafile
     return df
 
-def _headerLine(datafile):
-    read_header = _firstLineHasAllStrs(datafile)
-    if read_header:
-        read_header = 0
-    else:
-        read_header = None
-    return read_header
+def duplicates_check(list):
+    s = pd.Series(list)
+    dups = s[s.duplicated()]
+    n_dups = len(dups)
+    if n_dups:
+        if n_dups > 100:
+            message = "Over 100 duplicate ids found. " \
+                      "Identifiers need to be unique for proper processing"
+        else:
+            message = "Duplicate ids found. " \
+                      "Identifiers need to be unique for proper processing." \
+                      "They are: \n" + "\n".join(dups)
 
-def _firstLineHasAllStrs(datafile):
-    return _hasAllStrs(_firstLineArray(datafile))
+        raise ValueError(message)
 
-def _firstLineArray(datafile):
-    with open(datafile) as fin:
+def duplicate_columns_check(df):
+    """
+    Checks for duplicate row or columns names and throws a ValueError if
+    found.
+    @param df:
+    @return:
+    """
+    duplicates_check(df.columns)
+
+def nCols(filename):
+    """
+    Count number of columns in a tab separated file.
+    @param filename:
+    @return: int, number of columns in the file
+    """
+    n_cols = -1
+    with open(filename, "r") as fin:
         for line in fin:
-            line = line.strip()
-            if line[0] != "#":
-                return line.split("\t")
+            if line.strip()[0] != "#":
+                n_cols = len(line.split("\t"))
+                break
 
-def _hasAllStrs(line_array):
-    all_strs = len(line_array)
-    n_strs = np.sum([_isStr(thing) for thing in line_array])
-    return n_strs == all_strs
+    return n_cols
 
-def _isStr(thing):
-    t = type(thing)
-    return t == str or t == unicode
+
+def _headerLine(datafile):
+    """
+    Determines whether or not there is a header.
+    Logic is, if it is a 3 line file either the header is as specified in
+    formatCheck.py, or there is no header.
+    @param datafile:
+    @return:
+    """
+    # Usually or header line will be the first line
+    header_line = 0
+    # If the file has three columns there may or may not be a header.
+    n_cols = nCols(datafile)
+    if n_cols==3:
+        # If the header is the first line is not a valid header
+        # we assume there is no header.
+        if formatCheck.type_of_3col(datafile)== "NOT_VALID":
+            header_line = None
+
+    return header_line
+
+def _firstLineArray(filename):
+    with open(filename,'r') as fin:
+        # Only reads the first line.
+        for line in fin:
+            return line.strip().split("\t")
 
 def getAttributes(fileNameList,dir='',debug=False):
     '''
