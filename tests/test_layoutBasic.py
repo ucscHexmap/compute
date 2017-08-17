@@ -20,6 +20,7 @@ expNoAtts2Dir = expDirBase+ 'NoAtts2/'
 expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
 expParmDir = expDirBase + 'Parm/'
+expDoingRows = expDirBase + "_raw_no_atts_doing_rows/"
 expNoAttsLayoutParmsDir = expDirBase + 'noAttsParm/'
 
 rawDataFile = os.path.join(inDir, 'full_matrix.tab')
@@ -413,6 +414,7 @@ class Test_layoutBasic(unittest.TestCase):
         layout.main(opts)
         util.compareActualVsExpectedDir(s, expDir, outDir)
 
+
     def test_raw_no_atts(s):
         outDir = outDirBase + '_raw_no_atts/'
 
@@ -428,6 +430,23 @@ class Test_layoutBasic(unittest.TestCase):
         util.removeOldOutFiles(outDir)
         layout.main(opts)
         util.compareActualVsExpectedDir(s, expNoAttsDir, outDir)
+
+    def test_raw_no_atts(s):
+        outDir = outDirBase + '_raw_no_atts_doing_rows/'
+
+        opts = [
+            "--feature_space", rawDataFile,
+            "--names", "layout",
+            "--metric", 'spearman',
+            "--directory", outDir,
+            "--include-singletons",
+            "--no_layout_independent_stats",
+            "--no_layout_aware_stats",
+            "--doing_rows"]
+
+        util.removeOldOutFiles(outDir)
+        layout.main(opts)
+        util.compareActualVsExpectedDir(s, expDoingRows, outDir)
 
     def test_raw_no_color(s):
         outDir = outDirBase + '_raw_no_color/'
