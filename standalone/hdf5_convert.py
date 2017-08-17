@@ -26,7 +26,7 @@ def main():
 
     df = readPandas(in_file)
 
-    df.to_hdf5(out_file)
+    df.to_hdf(out_file, "matrix")
 
 if __name__ == "__main__":
     sys.exit(main())
