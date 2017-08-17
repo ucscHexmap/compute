@@ -18,6 +18,7 @@ import sklearn.metrics.pairwise as sklp
 import scipy.stats
 import pandas as pd
 from utils import truncateNP
+from utils import duplicates_check
 
 VALID_METRICS = ['canberra','cosine','euclidean','manhattan','chebyshev','correlation','hamming',
                  'jaccard','rogerstanimoto','spearman']
@@ -67,7 +68,8 @@ def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
     @return: numpy matrix, list of column names, list of rownames
     '''
 
-    df = pd.read_csv(in_file, sep='\t', index_col=0)
+    df = pd.read_csv(in_file, index_col=0,sep="\t",
+                     mangle_dupe_cols=False)
     #drop rows and columns that are full of na's
     df.dropna(axis=1, how='all', inplace=True)
     df.dropna(axis=0, how='all', inplace=True)
@@ -80,7 +82,7 @@ def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
 
     #drop any columns with standard deviation of 0
     cols_std_0 = df.columns[df.std() == 0]
-    df.drop(labels=cols_std_0, axis=0, inplace=True)
+    df.drop(labels=cols_std_0, axis=1, inplace=True)
 
     #check and make sure the conversions all went smoothly
     colsHadStrings= numpy.argwhere(df.dtypes == object).flatten()
@@ -95,11 +97,12 @@ def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
 
     col_header = df.columns.values.tolist()
     row_header = df.index.tolist()
+
     df = df.as_matrix()
 
     return df, col_header, row_header
 
-def numpyToPandas(mat,col_list,row_list):
+def numpyToPandas(mat, col_list, row_list):
     return pd.DataFrame(mat,index=row_list,columns=col_list)
 
 def pandasToNumpy(df):
@@ -136,7 +139,7 @@ def common_rows(p1, p2, fractionReq=.5):
     p2 = p2.loc[rowsInCommon]
     return p1,p2
 
-def percentile_sparsify(simdf,top):
+def percentile_sparsify(simdf, top):
     '''
     returns a sparsified version of simdf in edge format, keeping only the
     highest top * simdf.shape[0] edges in the matrix
@@ -156,6 +159,8 @@ def percentile_sparsify(simdf,top):
 
     cut = numpy.percentile(simdf.values, cutoff)
 
+    if simdf.columns.duplicated().sum():
+        raise ValueError("There are duplicated columns names")
     for row_name in simdf.index:
         row = simdf.loc[row_name][numpy.array(simdf.loc[row_name] > cut)]
 
@@ -250,6 +255,9 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs,
     similarities between dt and dt2 returned.
     :return: returns a pandas dataframe
     '''
+    duplicates_check(sample_labels)
+    if len(sample_labels2):
+        duplicates_check(sample_labels2)
     # The unit tests get confused when running parallel jobs via sklearn
     try:
         if os.environ['UNIT_TEST']:
@@ -393,6 +401,7 @@ def main(args):
 
     if rowwise:
         sample_labels, feature_labels = feature_labels, sample_labels
+
     else:
         dt = numpy.transpose(dt)
 
