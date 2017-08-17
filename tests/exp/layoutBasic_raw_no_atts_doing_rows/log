@@ -1,0 +1,190 @@
+08-15 11:46:46 Started
+command-line options:
+--feature_space
+/home/duncan/hex/compute/tests/in/layout/full_matrix.tab
+--names
+layout
+--metric
+spearman
+--directory
+/home/duncan/hex/compute/tests/out/layoutBasic_raw_no_atts_doing_rows/
+--include-singletons
+--no_layout_independent_stats
+--no_layout_aware_stats
+--doing_rows
+all given options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_raw_no_atts_doing_rows/',
+ 'distanceMetric': 'spearman',
+ 'doing_rows': True,
+ 'drlpath': None,
+ 'feature_space': ['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab'],
+ 'first_attribute': '',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'nodeIdSearchUrl': 'https://www.google.com/search?q=',
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': None,
+ 'similarity': None,
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+all adjusted options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_raw_no_atts_doing_rows/',
+ 'distanceMetric': 'spearman',
+ 'doing_rows': True,
+ 'drlpath': None,
+ 'feature_space': ['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab'],
+ 'first_attribute': '',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'nodeIdSearchUrl': 'https://www.google.com/search?q=',
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': None,
+ 'similarity': None,
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+Writing matrix names...
+Created nodes_multiple list...
+About to open matrices...
+DRL method
+None
+['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab']
+None
+Feature matrices
+Opening Matrix 0 /home/duncan/hex/compute/tests/in/layout/full_matrix.tab
+8 x 60
+enumerating ctx.matrices 0
+08-15 11:46:46 ============== Starting drl computations for layout: 0 ... ==============
+Reach for parts in sim_reader:<tsv.TsvReader object at 0x7f3e32df1a90>
+parts: ['TP53', 'TP63', '0.88557932759']
+parts: ['TP53', 'ACTN', '0.06774103917']
+parts: ['TP53', 'RB1', '0.06218393998']
+parts: ['TP53', 'CDKN2A', '0.04484579049']
+parts: ['TP53', 'BRCA2', '0.02706307307']
+parts: ['TP53', 'BRCA1', '0.01933870519']
+parts: ['ACTN', 'RB1', '0.17399277577']
+parts: ['ACTN', 'TP53', '0.06774103917']
+parts: ['ACTN', 'BRCA1', '0.05896082245']
+parts: ['ACTN', 'TP63', '0.00327868852']
+parts: ['ACTN', 'ATM', '-0.124090025']
+parts: ['ACTN', 'CDKN2A', '-0.16949152542']
+parts: ['TP63', 'TP53', '0.88557932759']
+parts: ['TP63', 'CDKN2A', '0.06229508196']
+parts: ['TP63', 'BRCA1', '0.02189497082']
+parts: ['TP63', 'ACTN', '0.00327868852']
+parts: ['TP63', 'BRCA2', '0.0013337038']
+parts: ['TP63', 'RB1', '-0.00889135871']
+parts: ['CDKN2A', 'ATM', '0.23350930814']
+parts: ['CDKN2A', 'TP63', '0.06229508196']
+parts: ['CDKN2A', 'TP53', '0.04484579049']
+parts: ['CDKN2A', 'BRCA2', '0.01461517088']
+parts: ['CDKN2A', 'BRCA1', '-0.09830508474']
+parts: ['CDKN2A', 'ACTN', '-0.16949152542']
+parts: ['RB1', 'ACTN', '0.17399277577']
+parts: ['RB1', 'ATM', '0.15209780494']
+parts: ['RB1', 'BRCA2', '0.12158933037']
+parts: ['RB1', 'TP53', '0.06218393998']
+parts: ['RB1', 'TP63', '-0.00889135871']
+parts: ['RB1', 'BRCA1', '-0.19105307029']
+parts: ['BRCA1', 'ACTN', '0.05896082245']
+parts: ['BRCA1', 'TP63', '0.02189497082']
+parts: ['BRCA1', 'TP53', '0.01933870519']
+parts: ['BRCA1', 'CDKN2A', '-0.09830508474']
+parts: ['BRCA1', 'BRCA2', '-0.17571547652']
+parts: ['BRCA1', 'RB1', '-0.19105307029']
+parts: ['BRCA2', 'RB1', '0.12158933037']
+parts: ['BRCA2', 'TP53', '0.02706307307']
+parts: ['BRCA2', 'CDKN2A', '0.01461517088']
+parts: ['BRCA2', 'TP63', '0.0013337038']
+parts: ['BRCA2', 'BRCA1', '-0.17571547652']
+parts: ['BRCA2', 'ATM', '-0.21111419838']
+parts: ['ATM', 'CDKN2A', '0.23350930814']
+parts: ['ATM', 'RB1', '0.15209780494']
+parts: ['ATM', 'TP63', '-0.06101694915']
+parts: ['ATM', 'ACTN', '-0.124090025']
+parts: ['ATM', 'TP53', '-0.16332314531']
+parts: ['ATM', 'BRCA2', '-0.21111419838']
+08-15 11:46:46 DrL: Truncating...
+Using /tmp/tmpa_ZbFE/layout0.sim for .sim file, 
+Will output /tmp/tmpa_ZbFE/layout0.ind for .ind file,
+            /tmp/tmpa_ZbFE/layout0.int for .int file, and
+            /tmp/tmpa_ZbFE/layout0.full for .full file.
+Using memory = 1
+      topn = 6
+      normalize = 0
+Reading .sim file ... 
+Read 8 nodes and 56 lines.
+Creating .ind file ...
+Writing to .full file ...
+Creating .int file ...
+Scan 1 of .full file ...
+Program finished successfully.
+DrL: Doing layout...
+Using /tmp/tmpa_ZbFE/layout0.int for .int file, and /tmp/tmpa_ZbFE/layout0.icoord for .icoord file.
+Using random seed = 0
+      edge_cutting = 0.8
+      intermediate output = 0
+      output .iedges file = 0
+Proc. 0 scanning .int file ...
+Processor 0 reading .int file ...
+Entering liquid stage ...........................................................................................................................................................................................................
+Liquid stage completed in 0 seconds, total energy = 314.381.
+Entering expansion stage ...........................................................................................................................................................................................................
+Finished expansion stage in 0 seconds, total energy = 181.968.
+Entering cool-down stage ...........................................................................................................................................................................................................
+Completed cool-down stage in 0 seconds, total energy = 8.13948.
+Entering crunch stage .....................................................
+Finished crunch stage in 0 seconds, total energy = 10.7841.
+Entering simmer stage .......................................................................................................
+Finished simmer stage in 0 seconds, total energy = 0.0331598.
+Layout calculation completed in 0 seconds (not including I/O).
+Writing out solution to /tmp/tmpa_ZbFE/layout0.icoord ...
+Total Energy: 0.0330627.
+Program terminated successfully.
+08-15 11:46:46 DrL: Restoring names...
+Using /tmp/tmpa_ZbFE/layout0.icoord for .icoord file, and 
+       /tmp/tmpa_ZbFE/layout0.ind for .ind file.
+Will output /tmp/tmpa_ZbFE/layout0.coord for .coord file.
+Reading .ind file ...
+Reading .icoord file ...
+Creating .coord file ...
+Program finished successfully.
+08-15 11:46:46 Reading DrL output...
+08-15 11:46:46 ============== drl computations completed for layout: 0 ==============
+Opened matrices...
+WARNING: No values in these layers: ['0.1']
+08-15 11:46:46 Attribute counts:  Binary: 0 + Categorical: 0 + Continuous: 0
+Skipping density statistics.
+Writing layer index...
+Skipping sort stats without layout (sample-based)
+15 11:46:46 Found top neighbors
+08-15 11:46:46 Visualization generation complete!
