@@ -228,8 +228,8 @@ def extract_similarities(dt, sample_labels, top, log=None,sample_labels2=[],perc
     except ValueError as e:
         #if the exception was thrown because of faulty use of max()
         if str(e) == "max() arg is an empty sequence":
-            raise ValueError, "top argument larger than amount of " \
-                              "comparisons"
+            raise ValueError, "Not enough samples for nearest neighbor " \
+                              "calculation, minimum required is : " + str(top)
         else: #pass the exception along as is...
             raise
 
