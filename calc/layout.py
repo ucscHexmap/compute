@@ -88,7 +88,7 @@ def parse_args(args):
     parser.add_argument("--nodeIdSearchUrl", type=str,
                         default="https://www.google.com/search?q=",
         help="The search string URL to be prepended to the nodeId")
-    parser.add_argument("--doing_rows", action='store_true',
+    parser.add_argument("--doingRows", action='store_true',
         default=False,
         help="If a feature matrix is given, this flag transposes it in order"
              " to perform row-wise similarity calculation")
@@ -1407,7 +1407,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                                          )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
-                    if options.doing_rows:
+                    if options.doingRows:
                         # Swap the sample and feature labels and continue
                         sample_labels, feature_labels = \
                             feature_labels, sample_labels

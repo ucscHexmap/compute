@@ -442,7 +442,7 @@ class Test_layoutBasic(unittest.TestCase):
             "--include-singletons",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats",
-            "--doing_rows"]
+            "--doingRows"]
 
         util.removeOldOutFiles(outDir)
         layout.main(opts)

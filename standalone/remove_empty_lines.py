@@ -2,7 +2,7 @@
 """
 remove_empty_lines.py
 
-Example: remove_empty_lines meta.tab meta_no_empty_lines.tab
+Example: remove_empty_lines.py meta.tab meta_no_empty_lines.tab
 
 Removes empty lines in any file, returning a file without empty lines
 """

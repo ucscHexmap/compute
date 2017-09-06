@@ -5,7 +5,7 @@ remove_single_value_attributes.py
 Example:  remove_single_value_attributes.py meta.tab metaWithVals.tab
 
 In an attributes file, remove any attribute columns where all the values
-are identical.
+are identical, which catches any with no values.
 """
 
 import sys, argparse, csv, traceback
@@ -32,8 +32,6 @@ def main(opt):
         
     fin = csv.reader(ffin, delimiter='\t')
     row = fin.next()  # the header
-    
-    #last = fin.next()  # this holds the last value of each attribute
 
     try:
         last = fin.next()  # this holds the last value of each attribute
@@ -56,8 +54,6 @@ def main(opt):
                 print 'row:', row
         
     ffin.close()
-
-    #print 'Writing', len(keep), 'out of', len(last), 'attributes which had more than one value.'
 
     # Write only the columns we want to keep
     with open(opt.inputFile, 'rU') as fin:
