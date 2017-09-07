@@ -1,0 +1,3 @@
+Continuous	continuous_integer_w_dot	continuous_float	continuous_integer
+Binary	1/0	mutated/not	On/off	yes/No	true/False	true/No
+Categorical	3_categories	bad_indices
