@@ -176,8 +176,8 @@ def parse_args(args):
         help="deprecated with no substitute")
         # old help="clustering window count is this value squared")
 
-    #parser.add_argument("--layout_method", type=str, default="DrL",
-    #    help="DrL, tSNE, MDS, PCA, ICA, isomap, spectralembedding")
+    parser.add_argument("--layout_method", type=str, default="DrL",
+        help="DrL, tete")
     #parser.add_argument("--preprocess_method", type=str, default="",
     #    help="Preprocessing methods for feature data when tSNE, MDS, PCA, ICA, isomap, or spectralembedding methods are used; valid options are: standardize, normalize")
     #parser.add_argument("--tsne_pca_dimensions", type=str, default="11",
@@ -1133,6 +1133,18 @@ def getDefaultOpts():
     """
     return defaults
 
+def tete_wrapper(dt, col_names, neighborCount):
+    """Import and call tete with output expected by rest of pipeline."""
+    nodes = {}
+    try:
+        from tete import tete
+        xys = tete.teter(dt, 2, neighborCount)
+        for i in range(xys.shape[0]):
+            nodes[col_names[i]] = (xys[i,0], xys[i,0])
+        return nodes
+    except ImportError:
+        raise ImportError("tete algorithm not available on this machine.")
+
 def fillOpts(options):
     '''
     fills in default options if not present
@@ -1156,7 +1168,6 @@ def fillOpts(options):
     # Override some options that have become constants.
     options.clumpinessStats = True
     options.directedGraph = True
-    options.layout_method = 'DrL'
     options.singletons = True
 
     # Handle input layout parameters
@@ -1304,87 +1315,27 @@ def makeMapUIfiles(options, cmd_line_list=None):
         for i, coords_filename in enumerate(options.coordinates):
             nodes = read_nodes(coords_filename)
             nodes_multiple.append(nodes)
-            #dt = utils.readXYs(coords_filename)
-            #eucl = scipy.spatial.distance.squareform(
-            # scipy.spatial.distance.pdist(dt, metric='euclidean', p=2, w=None, V=None, VI=None))
-            #append the sparse matrix representation so the neighbors_x file can be created.
             ctx.sparse=[]
-            #ctx.sparse.append(sparsePandasToString(extract_similarities(
-            # dt=eucl, sample_labels=dt.index, top=options.truncation_edges, log=None)))
 
     else:
-        if options.layout_method.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
+        if options.layout_method.upper() == "TETE":
             for i, genomic_filename in enumerate(options.feature_space):
-                print 'Opening feature space matrix', i, genomic_filename
-
-                dt,sample_labels,feature_labels = \
-                    read_tabular(genomic_filename,
-                                 True,
-                                 replaceNA=options.zeroReplace
-                                 )
-
-                print str(len(dt))+" x "+str(len(dt[0]))
-                #preprocess the data:
-                if not(options.preprocess_method == None or len(options.preprocess_method) == 0):
-                    if options.preprocess_method.upper() == "STANDARDIZE":
-                        dt_preprocessed = preprocessing.scale(dt)
-                        dt = dt_preprocessed
-                    elif options.preprocess_method.upper() == "NORMALIZE":
-                        dt_preprocessed = preprocessing.normalize(dt, norm='l2')
-                        dt = dt_preprocessed
+                    if inferring_format:
+                        # "Genomic filename is actually a pandas dataFrame
+                        dt, sample_labels, feature_labels = \
+                            compute_sparse_matrix.pandasToNumpy(genomic_filename)
                     else:
-                        raise InvalidAction("Invalid preprocessing method")
-                dt_t = np.transpose(dt)
-                if options.layout_method.upper() == "PCA":
-                    coord = computePCA(dt_t,sample_labels)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)                    
-                    
-                elif options.layout_method.upper() == "TSNE":
-                    coord = computetSNE(dt_t,sample_labels, int(options.tsne_pca_dimensions))
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "ISOMAP":
-                    coord = computeisomap(dt_t,sample_labels,options.truncation_edges)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "MDS":
-                    coord = computeMDS(dt_t,sample_labels)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "SPECTRALEMBEDDING":
-                    coord = computeSpectralEmbedding(dt_t,sample_labels, options.truncation_edges)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "ICA":
-                    coord = computeICA(dt_t,sample_labels)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                else:
-                    raise InvalidAction("Invalid layout method is provided")
+                        dt, sample_labels, feature_labels = \
+                            read_tabular(genomic_filename,
+                                         True,
+                                         replaceNA=options.zeroReplace
+                                         )
+                    nodes_multiple.append(tete_wrapper(dt.transpose(),
+                                                       sample_labels,
+                                                options.truncation_edges))
+
+            options.coordinates = True
+
         else:    #'DRL'
             print 'DRL method'
             print options.similarity
@@ -1393,7 +1344,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
             if not (options.feature_space == None):    #full feature space matrix given
                 print "Feature matrices"
                 for i, genomic_filename in enumerate(options.feature_space):
-                    print 'Opening Matrix', i, genomic_filename
 
                     if inferring_format:
                         # "Genomic filename is actually a pandas dataFrame
