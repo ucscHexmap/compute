@@ -18,7 +18,7 @@ expDir = expDirBase + '/'
 expNoAttsDir = expDirBase+ 'NoAtts/'
 expNoColorDir = expDirBase + 'NoColor/'
 expXyDir = expDirBase + 'Xy/'
-
+expDirTete = os.path.join(testDir,'exp/tete')
 rawDataFile = os.path.join(inDir, 'full_matrix.tab')
 fullSimDataFile = os.path.join(inDir, 'similarity_full.tab')
 top6SimDataFile = os.path.join(inDir, 'similarity.tab')
@@ -148,6 +148,26 @@ class Test_layoutBasicMakeUI(unittest.TestCase):
         layout.makeMapUIfiles(opts)
         util.compareActualVsExpectedDir(s, expDir, outDir)
 
+    def test_raw_tete_fromMakeUIfiles(s):
+        outDir = outDirBase + '_raw_tete/'
+
+        opts = Namespace(
+            feature_space= [rawDataFile],
+            layout_method= "tete",
+            names= ["layout"],
+            metric= 'spearman',
+            scores= [attsCodedFile],
+            colormaps= colorDataFile,
+            directory= outDir,
+            singletons=True,
+            clumpinessStats=False,
+            mutualinfo=False,
+            associations=False
+        )
+        util.removeOldOutFiles(outDir)
+        layout.makeMapUIfiles(opts)
+        util.compareActualVsExpectedDir(s, expDirTete, outDir)
+
     def test_top6_no_attsfromMakeUIfiles(s):
         outDir = outDirBase + '_top6_no_atts/'
 
@@ -226,6 +246,7 @@ class Test_layoutBasicMakeUI(unittest.TestCase):
                                         )
         util.compareActualVsExpectedFile(s,'assignments0.tab',expXyDir,outDir)
         util.compareActualVsExpectedFile(s,'xyPreSquiggle_0.tab',expXyDir,outDir)
+
 
     def test_xy_no_colorMakeMapUIfiles(s):
         outDir = outDirBase + '_xy_no_color/'
