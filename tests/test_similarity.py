@@ -167,9 +167,9 @@ class Test_similarity(unittest.TestCase):
 
             except ValueError as e:
                 #checks the exception says something about the 'top' argument
-                passed = 'top' in str(e)
+                passed = 'samples' in str(e)
                 s.assertTrue(passed,'Exception thrown did not complain about '
-                                    'top argument')
+                                    'samples argument')
 
     def test_Top0(s):
 
