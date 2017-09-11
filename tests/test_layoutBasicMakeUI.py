@@ -153,7 +153,7 @@ class Test_layoutBasicMakeUI(unittest.TestCase):
 
         opts = Namespace(
             feature_space= [rawDataFile],
-            layout_method= "tete",
+            layoutMethod = "tete",
             names= ["layout"],
             metric= 'spearman',
             scores= [attsCodedFile],

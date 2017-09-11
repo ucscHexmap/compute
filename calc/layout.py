@@ -176,7 +176,7 @@ def parse_args(args):
         help="deprecated with no substitute")
         # old help="clustering window count is this value squared")
 
-    parser.add_argument("--layout_method", type=str, default="DrL",
+    parser.add_argument("--layoutMethod", type=str, default="DrL",
         help="DrL, tete")
     #parser.add_argument("--preprocess_method", type=str, default="",
     #    help="Preprocessing methods for feature data when tSNE, MDS, PCA, ICA, isomap, or spectralembedding methods are used; valid options are: standardize, normalize")
@@ -1318,7 +1318,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
             ctx.sparse=[]
 
     else:
-        if options.layout_method.upper() == "TETE":
+        if options.layoutMethod.upper() == "TETE":
             for i, genomic_filename in enumerate(options.feature_space):
                     if inferring_format:
                         # "Genomic filename is actually a pandas dataFrame
@@ -1736,7 +1736,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
         for index, i in enumerate(ctx.sparse):
             topNeighbors_from_sparse(ctx.sparse[index], options.directory, options.truncation_edges, index)
     else:
-        if options.layout_method.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
+        if options.layoutMethod.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
                 if options.directedGraph:
                     #topNeighbors(options.feature_space, options.directory, options.truncation_edges)
                     for index, i in enumerate(ctx.sparse):
