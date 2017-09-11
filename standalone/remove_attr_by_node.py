@@ -1,10 +1,11 @@
 #!/usr/bin/env python2.7
 """
-remove_attr_data_not_in_node_list.py
+remove_attr_by_node.py
 
-Example: remove_attr_data_not_in_node_list.py attr.tab nodeList cleanAttr.tab
+Example: remove_attr_by_node.py attr.tab nodeList cleanAttr.tab
 
-Removes rows of attribute data that do not have nodes in the node list.
+Removes rows of attribute data that do not have nodes in the node list, unless
+the optional removePerList is specified.
 """
 
 import sys, argparse, csv, traceback
@@ -16,6 +17,9 @@ def parse_args(args):
     parser.add_argument("inputFile", type=str, help="input filename")
     parser.add_argument("nodeFile", type=str, help="node list filename")
     parser.add_argument("outputFile", type=str, help="output filename")
+    parser.add_argument("--removePerList", action='store_true',
+        default=False,
+        help="remove the nodes in the list, rather than the nodes not in list")
     a = parser.parse_args(args)
     return a
 
@@ -43,10 +47,17 @@ def main(opt):
     with open(opt.inputFile, 'rU') as fin:
         fin = csv.reader(fin, delimiter='\t')
         with open(opt.outputFile, 'w') as fout:
-            fout = csv.writer(fout, delimiter='\t')
+            fout = csv.writer(fout, delimiter='\t', lineterminator='\n')
+            
+            # Write out the attr names
+            fout.writerow(fin.next())
             for row in fin:
-                if row[0] in nodes:
-                    fout.writerow(row)
+                if opt.removePerList:
+                    if not row[0] in nodes:
+                        fout.writerow(row)
+                else:
+                    if row[0] in nodes:
+                        fout.writerow(row)
 
     return 0
 
