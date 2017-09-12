@@ -1330,7 +1330,14 @@ def makeMapUIfiles(options, cmd_line_list=None):
                                          True,
                                          replaceNA=options.zeroReplace
                                          )
-                    nodes_multiple.append(tete_wrapper(dt.transpose(),
+                    if options.doingRows:
+                        # Swap the sample and feature labels and continue
+                        sample_labels, feature_labels = \
+                            feature_labels, sample_labels
+                    else:
+                        dt.transpose()
+
+                    nodes_multiple.append(tete_wrapper(dt,
                                                        sample_labels,
                                                 options.truncation_edges))
 
