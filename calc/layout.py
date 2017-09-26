@@ -1335,7 +1335,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                         sample_labels, feature_labels = \
                             feature_labels, sample_labels
                     else:
-                        dt.transpose()
+                        dt = dt.transpose()
 
                     nodes_multiple.append(tete_wrapper(dt,
                                                        sample_labels,
