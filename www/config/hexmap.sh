@@ -1,14 +1,15 @@
 #!/bin/bash
 
-DRLPATH=/cluster/home/hexmap/adam_novak-drl-graph-layout-c41341de8058/bin
+# These don't propagate to where they're needed, so put it in login profile
+#DRLPATH=/cluster/home/hexmap/adam_novak-drl-graph-layout-c41341de8058/bin
+#export PATH=$DRLPATH:$PATH
+#export PYTHONPATH=$WWW_PATH:$WWW_PATH/../calc:/cluster/home/dmccoll/tete_copy/tete
 
 export DATA_ROOT=/hive/groups/hexmap/prod/data/
 export FLASK_DEBUG=1
 export DEBUG=1
 export UNIT_TEST=0
 export LD_LIBRARY_PATH=$WWW_PATH/../libPatch:$LD_LIBRARY_PATH
-export PATH=$DRLPATH:$PATH
-export PYTHONPATH=$WWW_PATH:$WWW_PATH/../calc
 export SSL_CERT=/data/certs/tumormap.crt
 export SSL_KEY=/data/certs/tumormap.key
 export VIEWER_URL=https://tumormap.ucsc.edu
