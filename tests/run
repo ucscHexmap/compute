@@ -12,7 +12,7 @@ if [ $# -eq 0 ]; then
 fi
 
 # Set env vars specific to the installation
-export PYTHONPATH=$(pwd)/../www:$(pwd)/../calc
+export PYTHONPATH=$(pwd)/../www:$(pwd)/../calc:/cluster/home/dmccoll/tete_copy
 export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu
 
 # PRODUCTION
@@ -70,7 +70,7 @@ DEPRECATED_PARALLEL=( \
     test_remoteCalc \
 )
 
-# The rest of the tests, order-dependent due to issues with parallel code
+# The rest of the tests.
 DOCKER_SAFE=( \
     test_dynLayoutAware \
     test_formatCheck \
