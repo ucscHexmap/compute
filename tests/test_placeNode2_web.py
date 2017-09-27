@@ -71,6 +71,60 @@ class Nof1CalcTestCase(unittest.TestCase):
 
         s.assertTrue(len(retDict['nodes'].keys()) == 60,
                      'json output has wrong number of nodes:')
+
+
+    def test_calc_duplicate_rows(s):
+        featMat = inDirCalc+ 'trimmedRPPAdata.tab'
+        preSquig = inDirCalc + 'xyPreSquiggle_2.tab'
+        nodesFile = inDirCalc + 'newNodesRPPA.tab'
+
+        newNodesDF = pd.read_csv(nodesFile,index_col=0,sep='\t')
+        refDF = pd.read_csv(featMat,index_col=0,sep='\t')
+        xyDF = pd.read_csv(preSquig,index_col=0,sep='\t')
+
+        newNodesDF = newNodesDF.append(newNodesDF.iloc[7])
+        newNodesDF = newNodesDF[[newNodesDF.columns[0]]]
+        passed = False
+        try:
+            retDictBoth = outputToDict(*placeNode.placeNew(newNodesDF,
+                                                   refDF,
+                                                   xyDF,
+                                                   6,
+                                                   'mapId'))
+
+        except ValueError as e:
+            passed = "first" in e.message
+
+
+        s.assertTrue(passed, "correct error not thrown by common rows, "
+                             "complaining about first arg having duplicates")
+
+    def test_calc_duplicate_rows2(s):
+        featMat = inDirCalc+ 'trimmedRPPAdata.tab'
+        preSquig = inDirCalc + 'xyPreSquiggle_2.tab'
+        nodesFile = inDirCalc + 'newNodesRPPA.tab'
+
+        newNodesDF = pd.read_csv(nodesFile,index_col=0,sep='\t')
+        refDF = pd.read_csv(featMat,index_col=0,sep='\t')
+        xyDF = pd.read_csv(preSquig,index_col=0,sep='\t')
+
+        refDF = refDF.append(refDF.iloc[7])
+
+        passed = False
+        try:
+            retDictBoth = outputToDict(*placeNode.placeNew(newNodesDF,
+                                                   refDF,
+                                                   xyDF,
+                                                   6,
+                                                   'mapId'))
+
+        except ValueError as e:
+            passed = "second" in e.message
+
+
+        s.assertTrue(passed, "correct error not thrown by common rows, "
+                             "complaining about second arg having duplicates")
+
     def test_calc_independence(s):
         '''
         Tests that doing 1 calc produces the same results as doing multiple

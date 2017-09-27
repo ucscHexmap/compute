@@ -17,6 +17,24 @@ import pandas as pd
 import StringIO
 import numpy as np
 
+def check_duplicate_row_error(error):
+    """
+    Checks to see if there is a duplicate row error and sends a more meaningful
+    error message.
+    @param e_message: The message from the caught exception
+    @return: None or Raises an ValueError with a pertinant message
+    """
+    e_message = error.message
+    # These messages are created in comupte_sparse_matrix.common_rows function.
+    if e_message == "Duplicate rows in first matrix.":
+        raise ValueError("Duplicate rows in new nodes input causing failure.")
+    if e_message == "Duplicate rows in second matrix.":
+        raise ValueError("Duplicate rows in feature matrix causing failure,"
+                         "this map will be unable to complete node placement."
+                         "Build a new map without duplicate row names.")
+
+    raise error
+
 def validateParameters(data):
     '''
     Validate the query.
@@ -174,7 +192,7 @@ def outputToDict(neighboorhood, xys, urls):
 
     return retDict
 
-def putDataIntoPythonStructs(featurePath,xyPath,nodesDict):
+def putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
     '''
     takes in the filenames and nodes dictionary needed for placement calc
     @param featurePath:
@@ -206,6 +224,7 @@ def nodesToPandas(pydict):
     return compute_sparse_matrix.numpyToPandas(
             *compute_sparse_matrix.read_tabular(s_buf)
                                                 )
+
 def calcTestStub(newNodes, ctx):
     #print 'opts.newNodes', opts.newNodes
     
@@ -284,20 +303,24 @@ def calc(dataIn, ctx):
             top = 6 # TODO: this default should be set in the calc module.
 
         #make expected python data structs
-        try:
-            referenceDF, xyDF, newNodesDF = \
-             putDataIntoPythonStructs(clusterDataFile,
-                                      xyPositionFile,
-                                      dataIn['nodes'])
-        except:
-            raise ErrorResp('error on loading data', 500)
+
+        referenceDF, xyDF, newNodesDF = \
+         putDataIntoPythonStructs(clusterDataFile,
+                                  xyPositionFile,
+                                  dataIn['nodes'])
 
         # Call the calc script.
-        neighboorhood, xys, urls = placeNode.placeNew(newNodesDF,referenceDF,
-                                                      xyDF,top,dataIn['map'],
+
+        try:
+            neighboorhood, xys, urls = placeNode.placeNew(newNodesDF,referenceDF,
+                                                      xyDF, top, dataIn['map'],
                                                       num_jobs=1)
+
+        except ValueError as error:
+            check_duplicate_row_error(error)
+
         #format into JSON-like struct
-        result = outputToDict(neighboorhood,xys,urls)
+        result = outputToDict(neighboorhood, xys, urls)
 
 
     ctx['dataIn'] = dataIn

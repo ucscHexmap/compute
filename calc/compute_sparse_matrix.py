@@ -137,6 +137,15 @@ def common_rows(p1, p2, fractionReq=.5):
 
     p1 = p1.loc[rowsInCommon]
     p2 = p2.loc[rowsInCommon]
+    # If changing the messages in the below error messages then they need to
+    # be changed in the playNode_web as well.
+    # TODO: We should have an error module with error message constants
+    # so parts of our app are not tied together like this.
+    if p1.shape[0] > p2.shape[0]:
+        raise ValueError("Duplicate rows in first matrix.")
+    if p1.shape[0] < p2.shape[0]:
+        raise ValueError("Duplicate rows in second matrix.")
+
     return p1,p2
 
 def percentile_sparsify(simdf, top):
