@@ -1137,8 +1137,8 @@ def tete_wrapper(dt, col_names, neighborCount):
     """Import and call tete with output expected by rest of pipeline."""
     nodes = {}
     try:
-        from tete import tete
-        xys = tete.teter(dt, 2, neighborCount)
+        from tete import teter
+        xys = teter(dt, 2, neighborCount)
         for i in range(xys.shape[0]):
             nodes[col_names[i]] = (xys[i,0], xys[i,0])
         return nodes
