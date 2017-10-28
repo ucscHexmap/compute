@@ -1,0 +1,85 @@
+#!/bin/bash
+# Run a test after setting the path
+
+source $1
+
+export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
+export DEBUG=1
+export DATA_ROOT=$TEST_DATA_ROOT
+
+# Test only the *_web_tests.py files
+WEB=( \
+    test_basic_www \
+    test_placeNode_web \
+)
+
+echo $DATA_ROOT
+# Deprecated with hexagram server code moving to the compute server
+DEPRECATED=( \
+    test_http \
+)
+
+# Deprecated with hexagram server code moving to the compute server
+DEPRECATED_PARALLEL=( \
+    test_http_parallel \
+    test_remoteCalc \
+)
+
+# The rest of the tests.
+DOCKER_SAFE=( \
+    test_dynLayoutAware \
+    test_formatCheck \
+    test_layoutBasic \
+    test_layoutBasicMakeUI \
+    test_layoutBasicMakeUIInferFormat \
+    test_layoutMetaData \
+    test_layoutZeroReplace \
+    test_placeNode2_web \
+    test_process_categoricals \
+    test_sim6Layout \
+    test_similarity \
+    test_stats \
+    # NOTE: alphabetical order to make it easier to find tests
+)
+
+# Combine the lists above to get ALL of the tests
+ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${DOCKER_SAFE[@]}" )
+
+# local mac tests are those that normally pass on a mac
+MAC=( \
+    test_basic_www \
+    test_dynLayoutAware \
+    test_http \
+    test_layoutMetaData \
+    test_placeNode_web \
+    test_placeNode2_web \
+    test_remoteCalc \
+    test_similarity \
+)
+
+# this really needs selenium rather than manually building maps from the UI
+    #test_createMapUi \
+
+TO_RUN=($2)
+if [ $2 == 'all' ]
+    then TO_RUN="${ALL[@]}"
+elif [ $2 == 'docker_safe' ]
+    then TO_RUN="${DOCKER_SAFE[@]}"
+elif [ $2 == 'web' ]
+    then TO_RUN="${WEB[@]}"
+elif [ $2 == 'mac' ]
+    then TO_RUN="${MAC[@]}"
+fi
+
+# Run our well-behaved tests in parallel
+python2.7 -m unittest $TO_RUN
+
+# Run our parallel-challenged tests independently
+if [ $2 == 'all' ]
+    then
+    echo Running parallel-challenged tests independently
+    for TEST in "${DEPRECATED_PARALLEL[@]}"
+    do
+        python2.7 $TEST.py
+    done
+fi
