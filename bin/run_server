@@ -1,0 +1,17 @@
+#!/bin/bash
+# First argument is the path/to/config.sh
+source $1
+
+BASEARGS='--master --callable app --processes 2 --threads 100 --wsgi-file '$WWW_PATH/www.py' --pidfile '$WWW_PATH/../www.pid 
+
+if [ $USE_HTTPS == 1 ]; then
+    SOCKETARGS='--https-socket '$WWW_SOCKET,$CERT,$KEY,HIGH,$CA
+else
+    SOCKETARGS='--http-socket '$WWW_SOCKET
+fi
+
+if [ $BACK_OR_FOREGROUND == "FORE" ]; then
+    uwsgi $BASEARGS $SOCKETARGS
+else
+    (nohup uwsgi $BASEARGS $SOCKETARGS &> $WWW_PATH/../www.log &)
+fi
