@@ -1,0 +1,12 @@
+colormath==2.1.1
+pandas==0.18.0
+networkx==1.11
+scipy==1.0.0
+statsmodels==0.6.1
+Flask==0.12
+Flask-Cors==3.0.3
+uwsgi==2.0.15
+peewee==2.10.1
+scikit-learn==0.19.1
+requests==2.12.4
+uwsgi==2.0.15
