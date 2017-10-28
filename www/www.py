@@ -6,7 +6,6 @@ from flask import Flask, request, jsonify, current_app, Response
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
-import util_web
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp
 import placeNode_web
 
@@ -116,13 +115,17 @@ def upload(dataId):
     raise SuccessResp('upload of ' + filename + ' complete')
 
 def dataRouteInner(dataId, ok404=False):
+    """
+    # For now, let anyone read.
+    # Only allow authorized view servers to pull data.
+    try:
+        origin = request.environ['HTTP_ORIGIN']
+    except Exception:
+        raise ErrorResp('http-origin not defined', 400)
+    if not origin in app.config['ALLOWABLE_VIEWERS']:
+        raise ErrorResp('Unauthorized http-origin: ' + origin, 400)
+    """
 
-    # Only allow authorized view servers to pull data for now.
-    if request.environ['HTTP_ORIGIN'] is None or \
-        request.environ['HTTP_ORIGIN'] not in app.config['ALLOWABLE_VIEWERS']:
-        raise ErrorResp('Unauthorized Viewer: ' +
-            str(request.environ['HTTP_ORIGIN']), 400)
-            
     # Not using flask's send_file() as it mangles files larger than 32k.
     try:
         with open(os.path.join(ctx['dataRoot'], dataId)) as f:

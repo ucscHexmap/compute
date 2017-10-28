@@ -11,7 +11,7 @@ export DEBUG=1
 export UNIT_TEST=0
 export LD_LIBRARY_PATH=$WWW_PATH/../libPatch:$LD_LIBRARY_PATH
 export VIEWER_URL=https://hexdev.sdsc.edu:8222
-export ALLOWABLE_VIEWERS=https://hexdev.sdsc.edu:8221,https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8223,http://hexdev.sdsc.edu:8221,http://hexdev.sdsc.edu:8222,http://hexdev.sdsc.edu:8223
+export ALLOWABLE_VIEWERS=https://hexdev.sdsc.edu:8221,https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8223,https://hexdev.sdsc.edu:8229,http://hexdev.sdsc.edu:8221,http://hexdev.sdsc.edu:8222,http://hexdev.sdsc.edu:8223,http://hexdev.sdsc.edu:8229
 export ADMIN_EMAIL=hexmap@ucsc.edu
 
 S=/data/certs
