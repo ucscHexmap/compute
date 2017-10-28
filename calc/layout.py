@@ -1143,7 +1143,8 @@ def tete_wrapper(dt, col_names, neighborCount):
             nodes[col_names[i]] = (xys[i,0], xys[i,0])
         return nodes
     except ImportError:
-        raise ImportError("tete algorithm not available on this machine.")
+        raise ImportError("tete algorithm not available on this machine,"
+                          " python path is: \n" + str(sys.path))
 
 def fillOpts(options):
     '''
