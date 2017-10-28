@@ -1,0 +1,23 @@
+#!/bin/bash
+# Make your virtualenv as specified by $PYENV path
+# First argument is path to the config file.  
+source $1
+
+# Start off pointing to only one python to minimize path problems/confusion
+export PYTHONPATH=$BASE_PYTHONPATH
+
+echo $PYENV
+mkdir $PYENV
+virtualenv $PYENV 
+
+if [ $? != 0 ]; then
+   exit $?
+fi
+# Add calc, www, and db dirs to the python path in the virutal environment
+echo "export PYTHONPATH=$HUB_PATH/www:$HUB_PATH/calc:$HUB_PATH/db:\$PYTHONPATH" >> $PYENV/bin/activate
+
+cd $HUB_PATH
+
+# Activate the python environment and install the requirments.
+source $PYENV/bin/activate
+pip install -r $HUB_PATH/build/requirements.txt
