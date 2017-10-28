@@ -1,5 +1,4 @@
 #!/bin/bash
 # extract from a tarball of the compute server without docker
-
 rm -rf calc standalone www tests
 tar -xf /hive/groups/hexmap/dev/compute/t.tar
