@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Removes local install of python put there by bin/localpy
+
+rm -rf $HOME/localpy
+rm -r $HOME/.local/bin/easy_install  $HOME/.local/bin/easy_install-2.7  $HOME/.local/bin/pip  $HOME/.local/bin/pip2  $HOME/.local/bin/pip2.7  $HOME/.local/bin/wheel
+rm -r $HOME/.local/lib/python2.7
+
