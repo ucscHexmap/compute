@@ -1,8 +1,8 @@
 #!/bin/bash
 # First argument is the path/to/config.sh
 source $1
-export WWW_PATH=$HUB_PATH/www
 
+WWW_PATH=$HUB_PATH/www
 BASEARGS='--master --callable app --processes 2 --threads 100 --wsgi-file '$WWW_PATH/www.py' --pidfile '$HUB_PATH/www.pid
 
 if [ $USE_HTTPS == 1 ]; then

@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
 # Removes local install of python put there by bin/localpy
-# $1 is an optional full path to the python install directory, defaults to
-#    $HOME/localpy.
+# $1 is a full path to the python install directory
 
 LOCALPY=$1
-if [ -z ${LOCALPY} ]; then
-    LOCALPY=$HOME/localpy
-fi
 rm -rf $LOCALPY
 if [ $(uname -s) != "Darwin" ]; then  # macOS
-    rm -rf $LOCALPY/bin/easy_install  \
-        $LOCALPY/bin/easy_install-2.7  \
-        $LOCALPY/bin/pip  \
-        $LOCALPY/bin/pip2  \
-        $LOCALPY/bin/pip2.7  \
-        $LOCALPY/bin/wheel \
-        $LOCALPY/bin/virtualenv \
-        $LOCALPY/lib/python2.7
+    BINLIB=~/.local
+    rm -rf \
+        $BINLIB/bin/easy_install  \
+        $BINLIB/bin/easy_install-2.7  \
+        $BINLIB/bin/pip  \
+        $BINLIB/bin/pip2  \
+        $BINLIB/bin/pip2.7  \
+        $BINLIB/bin/wheel \
+        $BINLIB/bin/virtualenv \
+        $BINLIB/lib/python2.7
 fi

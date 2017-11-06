@@ -1,15 +1,14 @@
 #!/bin/bash
 # Make your virtualenv as specified by $PYENV path
 # $1: the full path to the config file.
-# $2: the path to the localpy bin dir, optional, defaults to
-#     $HOME/localpy/Python-2.7.11/bin
+# $2: the path to the localpy bin dir.
 source $1
 
 LOCALPY_BIN=$2
 if [ $(uname -s) == "Darwin" ]; then  # On macOS this is always here
     LOCALPY_BIN=/usr/bin
-elif [ -z ${LOCALPY_BIN} ]; then
-    LOCALPY_BIN=$HOME/localpy/Python-2.7.11/bin
+else
+    LOCALPY_BIN=LOCALPY_BIN:$HOME/.local/bin
 fi
 
 # Start off pointing to only the newly installed python to minimize path
@@ -34,7 +33,9 @@ cd $HUB_PATH
 source $PYENV/bin/activate
 pip install -r $HUB_PATH/build/requirements.txt
 
+echo
 echo 'python:'
 which python
 echo 'pip:'
 which pip
+

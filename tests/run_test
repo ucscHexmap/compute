@@ -1,19 +1,28 @@
 #!/bin/bash
 # Run a test after setting the path
-
+# $1: config file in compute/config
+# $2: name of test(s) to run, one of:
+#     / all / docker_save / web /
 source $1
+TO_RUN=$2
+if [ -z ${TO_RUN} ]; then
+    TO_RUN=all
+fi
+
+# If the python environment is present then open it up.
+if [ -e $PYENV/bin/activate ]; then
+    source $PYENV/bin/activate
+fi
 
 export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
 export DEBUG=1
-export DATA_ROOT=$TEST_DATA_ROOT
 
 # Test only the *_web_tests.py files
-WEB=( \
+web=( \
     test_basic_www \
     test_placeNode_web \
 )
 
-echo $DATA_ROOT
 # Deprecated with hexagram server code moving to the compute server
 DEPRECATED=( \
     test_http \
@@ -26,7 +35,7 @@ DEPRECATED_PARALLEL=( \
 )
 
 # The rest of the tests.
-DOCKER_SAFE=( \
+docker_safe=( \
     test_dynLayoutAware \
     test_formatCheck \
     test_layoutBasic \
@@ -43,10 +52,10 @@ DOCKER_SAFE=( \
 )
 
 # Combine the lists above to get ALL of the tests
-ALL=( "${WEB[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${DOCKER_SAFE[@]}" )
+all=( "${web[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${docker_safe[@]}" )
 
 # local mac tests are those that normally pass on a mac
-MAC=( \
+mac=( \
     test_basic_www \
     test_dynLayoutAware \
     test_http \
@@ -60,22 +69,23 @@ MAC=( \
 # this really needs selenium rather than manually building maps from the UI
     #test_createMapUi \
 
-TO_RUN=($2)
-if [ $2 == 'all' ]
-    then TO_RUN="${ALL[@]}"
-elif [ $2 == 'docker_safe' ]
-    then TO_RUN="${DOCKER_SAFE[@]}"
-elif [ $2 == 'web' ]
-    then TO_RUN="${WEB[@]}"
-elif [ $2 == 'mac' ]
-    then TO_RUN="${MAC[@]}"
+if [ $TO_RUN == 'all' ]
+    then RUN_THIS="${all[@]}"
+elif [ $TO_RUN == 'docker_safe' ]
+    then RUN_THIS="${docker_safe[@]}"
+elif [ $TO_RUN == 'web' ]
+    then RUN_THIS="${web[@]}"
+elif [ $TO_RUN == 'mac' ]
+    then RUN_THIS="${mac[@]}"
 fi
+echo 'TO_RUN:' $TO_RUN
+echo 'RUN_THIS:' $RUN_THIS
 
 # Run our well-behaved tests in parallel
-python2.7 -m unittest $TO_RUN
+python2.7 -m unittest $RUN_THIS
 
 # Run our parallel-challenged tests independently
-if [ $2 == 'all' ]
+if [ $TO_RUN == 'all' ]
     then
     echo Running parallel-challenged tests independently
     for TEST in "${DEPRECATED_PARALLEL[@]}"

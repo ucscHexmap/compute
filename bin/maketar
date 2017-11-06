@@ -1,6 +1,12 @@
 #!/bin/bash
-# make a tarball of the server for web APIs without docker
-
-rm -rf tests/out/*
-tar -cf t.tar calc/*py standalone/*py www/config www/*py www/*sh tests xtar
-scp t.tar juggernaut:/hive/groups/hexmap/dev/compute
+# Build a tarball for the compute server
+tar cf t.tar \
+    bin \
+    build \
+    calc \
+    config \
+    standalone \
+    tests \
+    www
+scp t.tar kolossus:/hive/groups/hexmap/dev/compute
+rm t.tar

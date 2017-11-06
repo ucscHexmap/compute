@@ -9,17 +9,17 @@ else
     cd $LOCALPY
     wget https://www.python.org/ftp/python/2.7.11/Python-2.7.11.tgz
     tar xf Python-2.7.11.tgz
-    #find $LOCALPY -type d | xargs chmod 0755 # TODO is this needed?
     cd Python-2.7.11
     ./configure --prefix=$LOCALPY
     make && make install
-    # PATH=$HOME/localpy/Python-2.7.11/:$PATH  # Duncan's, needed?
-    PATH=$LOCALPY/Python-2.7.11/bin:$PATH # Point to the new local python executables
+    PATH=$LOCALPY/bin:$PATH # Point to the new local python executables
 fi
 
-wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py -O - | \
-    python - --user
+wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py -O - | python - --user
 
+if [ $(uname -s) != "Darwin" ]; then
+    PATH=$HOME/.local/bin:$PATH
+fi
 pip install --user virtualenv
 
 

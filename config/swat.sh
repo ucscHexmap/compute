@@ -1,17 +1,25 @@
-#!/bin/bash
 
-HTTP=1
-WWW_SOCKET=127.0.0.1:5000
-
-# These don't propagate to where they're needed, so put it in login profile
-#DRLPATH=/Users/swat/packages/drl-graph-layout/bin
-#export PATH=$DRLPATH:$PATH
-#export PYTHONPATH=$WWW_PATH:$WWW_PATH/../calc
-
-export DATA_ROOT=/Users/swat/data/
+export ADMIN_EMAIL=swat@soe.ucsc.edu
+export ALLOWABLE_VIEWERS=http://localhost:3333,https://localhost:3333
+export BACK_OR_FOREGROUND=FORE
+#export CA=/data/certs/chain.crt
+#export CERT=/data/certs/hexdev.crt
+export DATA_ROOT=$HOME/data
+export DEBUG=0
+export DRL_PATH=$HOME/packages/drl-graph-layout/bin
 export FLASK_DEBUG=1
-export DEBUG=1
+export HUB_PATH=$HOME/dev/compute
+#export KEY=/data/certs/hexdev.key
+export PYENV=$HOME/dev/env
+export TEST_DATA_ROOT=/cluster/home/dmccoll/compute-server/tests/in/dataRoot
+#export TETE_PATH=/cluster/home/swat/tete_copy/tete
 export UNIT_TEST=0
+export USE_HTTPS=0
 export VIEWER_URL=http://localhost:3333
-export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu,http://localhost:3333
-export ADMIN_EMAIL=hexmap@ucsc.edu
+export WWW_SOCKET=127.0.0.1:5000
+
+# If the python environment is present then open it up.
+if [ -e $PYENV/bin/activate ]; then
+    echo 'entering virtualenv
+    source $PYENV/bin/activate
+fi
