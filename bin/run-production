@@ -1,5 +1,0 @@
-#!/bin/bash
-# call the server start script for this install
-INSTALL=hexmap
-WWW_PATH=/hive/groups/hexmap/prod/compute/www
-$WWW_PATH/uwsgi.sh $INSTALL $WWW_PATH

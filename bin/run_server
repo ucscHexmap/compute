@@ -1,8 +1,9 @@
 #!/bin/bash
 # First argument is the path/to/config.sh
 source $1
+export WWW_PATH=$HUB_PATH/www
 
-BASEARGS='--master --callable app --processes 2 --threads 100 --wsgi-file '$WWW_PATH/www.py' --pidfile '$WWW_PATH/../www.pid 
+BASEARGS='--master --callable app --processes 2 --threads 100 --wsgi-file '$WWW_PATH/www.py' --pidfile '$HUB_PATH/www.pid
 
 if [ $USE_HTTPS == 1 ]; then
     SOCKETARGS='--https-socket '$WWW_SOCKET,$CERT,$KEY,HIGH,$CA
@@ -13,5 +14,5 @@ fi
 if [ $BACK_OR_FOREGROUND == "FORE" ]; then
     uwsgi $BASEARGS $SOCKETARGS
 else
-    (nohup uwsgi $BASEARGS $SOCKETARGS &> $WWW_PATH/../www.log &)
+    (nohup uwsgi $BASEARGS $SOCKETARGS &> $HUB_PATH/www.log &)
 fi

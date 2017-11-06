@@ -1,23 +1,40 @@
 #!/bin/bash
 # Make your virtualenv as specified by $PYENV path
-# First argument is path to the config file.  
+# $1: the full path to the config file.
+# $2: the path to the localpy bin dir, optional, defaults to
+#     $HOME/localpy/Python-2.7.11/bin
 source $1
 
-# Start off pointing to only one python to minimize path problems/confusion
-export PYTHONPATH=$BASE_PYTHONPATH
+LOCALPY_BIN=$2
+if [ $(uname -s) == "Darwin" ]; then  # On macOS this is always here
+    LOCALPY_BIN=/usr/bin
+elif [ -z ${LOCALPY_BIN} ]; then
+    LOCALPY_BIN=$HOME/localpy/Python-2.7.11/bin
+fi
 
-echo $PYENV
+# Start off pointing to only the newly installed python to minimize path
+# problems/confusion
+PATH=$LOCALPY_BIN:$PATH
+
 mkdir $PYENV
 virtualenv $PYENV 
 
 if [ $? != 0 ]; then
    exit $?
 fi
-# Add calc, www, and db dirs to the python path in the virutal environment
-echo "export PYTHONPATH=$HUB_PATH/www:$HUB_PATH/calc:$HUB_PATH/db:\$PYTHONPATH" >> $PYENV/bin/activate
+# Add calc, www, and db dirs to the python path in the virtual environment
+# TODO the below path should be more strict by not including PATH from user's
+# environment
+echo "export PATH=$PYENV/bin:$PATH" >> $PYENV/bin/activate
+echo "export PYTHONPATH=$HUB_PATH/www:$HUB_PATH/calc:$HUB_PATH/db:$TETE_PATH:$DRLPATH" >> $PYENV/bin/activate
 
 cd $HUB_PATH
 
-# Activate the python environment and install the requirments.
+# Activate the python environment and install the requirements.
 source $PYENV/bin/activate
 pip install -r $HUB_PATH/build/requirements.txt
+
+echo 'python:'
+which python
+echo 'pip:'
+which pip
