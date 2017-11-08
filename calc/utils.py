@@ -49,6 +49,7 @@ def readPandas(datafile):
     df.index.name = datafile
     return df
 
+
 def duplicates_check(list_):
     s = pd.Series(list_)
     dups = s[s.duplicated()]
@@ -64,6 +65,7 @@ def duplicates_check(list_):
 
         raise ValueError(message)
 
+
 def duplicate_columns_check(df):
     """
     Checks for duplicate row or columns names and throws a ValueError if
@@ -72,6 +74,7 @@ def duplicate_columns_check(df):
     @return:
     """
     duplicates_check(df.columns)
+
 
 def nCols(filename):
     """
@@ -107,11 +110,13 @@ def _headerLine(datafile):
 
     return header_line
 
+
 def _firstLineArray(filename):
     with open(filename,'r') as fin:
         # Only reads the first line.
         for line in fin:
             return line.strip().split("\t")
+
 
 def getAttributes(fileNameList,dir='',debug=False):
     '''
@@ -162,6 +167,7 @@ def getAttributes(fileNameList,dir='',debug=False):
 
     return allAtts
 
+
 def sigDigs(x, sig=7,debug=False):
 
     if sig < 1:
@@ -180,11 +186,13 @@ def sigDigs(x, sig=7,debug=False):
     # Then convert back to a float
     return float(format % x)
 
+
 def toFloat(x):
     try:
         return float(x)
     except ValueError:
         return float('NaN')
+
 
 def truncate(f, n):
     '''
