@@ -140,5 +140,23 @@ class Test_formatCheck(unittest.TestCase):
         header_line = fc.type_of_3col(os.path.join(inDir,"coordinates.tab"))
         s.assertTrue(header_line == "NOT_VALID")
 
+    def test_duplicateCheck_with_dups(s):
+        passed = False
+        try:
+            hasDups = ["hello", 1, 2, "hello"]
+            utils.duplicates_check(hasDups)
+        except ValueError:
+            passed = True
+        s.assertTrue(passed, "duplicate_check did not register duplicates")
+
+    def test_duplicateCheck_with_nodups(s):
+        passed = True
+        try:
+            noDups = ["hell", 1, 2, "hello"]
+            utils.duplicates_check(noDups)
+        except ValueError:
+            passed = False
+        s.assertTrue(passed, "duplicate_check registered false duplicates")
+
 if __name__ == '__main__':
     unittest.main()
