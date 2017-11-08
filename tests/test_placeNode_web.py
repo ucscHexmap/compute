@@ -473,7 +473,8 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200)
+        s.assertTrue(rv.status_code == 200, "status code not 200, "
+                                            "data returned: " + str(data))
         # print "data", data
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
@@ -507,8 +508,8 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200)
-        # print "data", data
+        s.assertTrue(rv.status_code == 200, "status code not 200, "
+                                            "data returned: " + str(data))
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
         s.assertTrue(data['nodes']['newNode1']['x'] == 73)
@@ -541,7 +542,8 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200)
+        s.assertTrue(rv.status_code == 200, "status code not 200, "
+                                            "data returned: " + str(data))
         # print "data", data
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
@@ -578,8 +580,8 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('' == 'no json data in response')
-        #print "data", data
-        s.assertTrue(rv.status_code == 200)
+        s.assertTrue(rv.status_code == 200, "status code not 200, "
+                                            "data returned: " + str(data))
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('newNode2' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
@@ -622,7 +624,8 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             s.assertTrue('', 'no json data in response')
         #print "data['error']", data['error']
         #print "rv.status_code", rv.status_code
-        s.assertTrue(rv.status_code == 200)
+        s.assertTrue(rv.status_code == 200, "status code not 200, "
+                                            "data returned: " + str(data))
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('newNode2' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
@@ -665,8 +668,8 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200)
-        # print "data", data
+        s.assertTrue(rv.status_code == 200, "status code not 200, "
+                                            "data returned: " + str(data))
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('newNode2' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])

@@ -31,23 +31,27 @@ def readPandas(datafile):
     @return: pandas DataFrame
     """
 
-    header_line = _headerLine(datafile)
+    headerLineNumber = _headerLine(datafile)
     comment_char = '#'
+
+    # If we found a header, check for duplicates.
+    if headerLineNumber is not None:
+        duplicates_check(_firstLineArray(datafile))
 
     df = pd.read_csv(datafile,
                        index_col=0,
                        comment=comment_char,
-                       header=header_line,
+                       header=headerLineNumber,
                        sep="\t",
-                       mangle_dupe_cols=False
                        )
 
     # Put the filename as the index name
     df.index.name = datafile
     return df
 
-def duplicates_check(list):
-    s = pd.Series(list)
+
+def duplicates_check(list_):
+    s = pd.Series(list_)
     dups = s[s.duplicated()]
     n_dups = len(dups)
     if n_dups:
@@ -61,6 +65,7 @@ def duplicates_check(list):
 
         raise ValueError(message)
 
+
 def duplicate_columns_check(df):
     """
     Checks for duplicate row or columns names and throws a ValueError if
@@ -69,6 +74,7 @@ def duplicate_columns_check(df):
     @return:
     """
     duplicates_check(df.columns)
+
 
 def nCols(filename):
     """
@@ -94,23 +100,23 @@ def _headerLine(datafile):
     @param datafile:
     @return:
     """
-    # Usually or header line will be the first line
+    # Usually header line will be the first line.
     header_line = 0
     # If the file has three columns there may or may not be a header.
     n_cols = nCols(datafile)
-    if n_cols==3:
-        # If the header is the first line is not a valid header
-        # we assume there is no header.
-        if formatCheck.type_of_3col(datafile)== "NOT_VALID":
+    if n_cols == 3:
+        if formatCheck.type_of_3col(datafile) == "NOT_VALID":
             header_line = None
 
     return header_line
+
 
 def _firstLineArray(filename):
     with open(filename,'r') as fin:
         # Only reads the first line.
         for line in fin:
             return line.strip().split("\t")
+
 
 def getAttributes(fileNameList,dir='',debug=False):
     '''
@@ -161,6 +167,7 @@ def getAttributes(fileNameList,dir='',debug=False):
 
     return allAtts
 
+
 def sigDigs(x, sig=7,debug=False):
 
     if sig < 1:
@@ -179,11 +186,13 @@ def sigDigs(x, sig=7,debug=False):
     # Then convert back to a float
     return float(format % x)
 
+
 def toFloat(x):
     try:
         return float(x)
     except ValueError:
         return float('NaN')
+
 
 def truncate(f, n):
     '''

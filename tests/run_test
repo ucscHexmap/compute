@@ -5,13 +5,10 @@
 #     / all / docker_save / web /
 source $1
 TO_RUN=$2
+
+export DATA_ROOT=$TEST_DATA_ROOT
 if [ -z ${TO_RUN} ]; then
     TO_RUN=all
-fi
-
-# If the python environment is present then open it up.
-if [ -e $PYENV/bin/activate ]; then
-    source $PYENV/bin/activate
 fi
 
 export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
