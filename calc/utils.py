@@ -31,23 +31,26 @@ def readPandas(datafile):
     @return: pandas DataFrame
     """
 
-    header_line = _headerLine(datafile)
+    headerLineNumber = _headerLine(datafile)
     comment_char = '#'
+
+    # If we found a header, check for duplicates.
+    if headerLineNumber is not None:
+        duplicates_check(_firstLineArray(datafile))
 
     df = pd.read_csv(datafile,
                        index_col=0,
                        comment=comment_char,
-                       header=header_line,
+                       header=headerLineNumber,
                        sep="\t",
-                       mangle_dupe_cols=False
                        )
 
     # Put the filename as the index name
     df.index.name = datafile
     return df
 
-def duplicates_check(list):
-    s = pd.Series(list)
+def duplicates_check(list_):
+    s = pd.Series(list_)
     dups = s[s.duplicated()]
     n_dups = len(dups)
     if n_dups:
@@ -94,14 +97,12 @@ def _headerLine(datafile):
     @param datafile:
     @return:
     """
-    # Usually or header line will be the first line
+    # Usually header line will be the first line.
     header_line = 0
     # If the file has three columns there may or may not be a header.
     n_cols = nCols(datafile)
-    if n_cols==3:
-        # If the header is the first line is not a valid header
-        # we assume there is no header.
-        if formatCheck.type_of_3col(datafile)== "NOT_VALID":
+    if n_cols == 3:
+        if formatCheck.type_of_3col(datafile) == "NOT_VALID":
             header_line = None
 
     return header_line
