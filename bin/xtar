@@ -1,5 +1,5 @@
 #!/bin/bash
-# extract from a tarball of the compute server without docker
+# extract from a tarball of the server support files, not www.
 mv tests/run testsRun
 rm -rf \
     build \
@@ -8,5 +8,5 @@ rm -rf \
     standalone \
     tests \
     www
-tar -xf /hive/groups/hexmap/dev/compute/t.tar
+tar -xf /hive/groups/hexmap/compute.tar
 mv testsRun tests/run

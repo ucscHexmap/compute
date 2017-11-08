@@ -22,7 +22,7 @@ CORS(app)
 # Set up the context that will be passed to down-stream calls.
 ctx = {
     # default the view server URL to that of development
-    'viewerUrl': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
+    'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
     'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
     'adminEmail': os.environ.get('ADMIN_EMAIL'),
 }

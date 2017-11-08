@@ -150,7 +150,7 @@ def calc(dataIn, ctx):
     '''
     # Be sure we have a view server
     if not 'viewServer' in dataIn:
-        dataIn['viewServer'] = ctx['viewerUrl']
+        dataIn['viewServer'] = ctx['viewServer']
 
     jobId = job.new(newProcess, _calcComplete, ctx);
     '''

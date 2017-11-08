@@ -75,7 +75,7 @@ def calcComplete(result, ctx):
 
     # Be sure we have a view server
     if not 'viewServer' in dataIn:
-        dataIn['viewServer'] = ctx['viewerUrl']
+        dataIn['viewServer'] = ctx['viewServer']
 
     # Find the first attribute if any
     firstAttribute = util_web.getFirstAttribute(dataIn['map'], ctx)
