@@ -19,6 +19,7 @@ import scipy.stats
 import pandas as pd
 from utils import truncateNP
 from utils import duplicates_check
+from utils import readPandas
 
 VALID_METRICS = ['canberra','cosine','euclidean','manhattan','chebyshev','correlation','hamming',
                  'jaccard','rogerstanimoto','spearman']
@@ -26,6 +27,7 @@ VALID_OUTPUT_TYPE = ['SPARSE','FULL','SPARSE_PERCENT']
 
 def valid_metrics():
     return str(VALID_METRICS)
+
 
 def parse_args(args):
 
@@ -56,6 +58,51 @@ def parse_args(args):
 
     return parser.parse_args(args)
 
+
+def dropNasRowAndCols(df):
+    df.dropna(axis=1, how='all', inplace=True)
+    df.dropna(axis=0, how='all', inplace=True)
+    return df
+
+
+def replaceNAsWZero(df):
+    return df.fillna(0)
+
+
+def dropStdIs0Cols(df):
+    cols_std_0 = df.columns[df.std() == 0]
+    return df.drop(labels=cols_std_0, axis=1)
+
+
+def hasStrings(df):
+    return len(numpy.argwhere(df.dtypes == object).flatten()) > 0
+
+
+def colsHavingStrings(df):
+    return str(numpy.argwhere(df.dtypes == object).flatten())
+
+
+def processInputData(df, numeric_flag, replaceNA):
+    df = dropNasRowAndCols(df)
+    if replaceNA:
+        df = replaceNAsWZero(df)
+    if numeric_flag:
+        if hasStrings(df):
+            raise ValueError('Strings were found in input matrix, columns:'
+                             + colsHavingStrings(df))
+
+
+    return df
+
+
+def logWarningAboutNAs(df, in_file,log=None):
+    #count the number of Nas so we can warn the user
+    nas = df.isnull().sum().sum()
+    if log != None and nas:
+        print >> log, "WARNING: " + str(nas) + " Na's found in data matrix " \
+                 + in_file + "."
+
+
 def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
     '''
     Reads a tabular matrix file and returns numpy matrix, col names, row names
@@ -68,42 +115,19 @@ def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
     @return: numpy matrix, list of column names, list of rownames
     '''
 
-    df = pd.read_csv(in_file, index_col=0,sep="\t",
-                     mangle_dupe_cols=False)
-    #drop rows and columns that are full of na's
-    df.dropna(axis=1, how='all', inplace=True)
-    df.dropna(axis=0, how='all', inplace=True)
+    df = readPandas(in_file)
+    df = processInputData(df, numeric_flag, replaceNA)
 
-    if replaceNA:
-        df = df.fillna(0)
+    logWarningAboutNAs(df, in_file, log)
 
-    #count the number of Nas so we can warn the user
-    nas = df.isnull().sum().sum()
+    npMatrix, col_header, row_header = pandasToNumpy(df)
 
-    #drop any columns with standard deviation of 0
-    cols_std_0 = df.columns[df.std() == 0]
-    df.drop(labels=cols_std_0, axis=1, inplace=True)
+    return npMatrix, col_header, row_header
 
-    #check and make sure the conversions all went smoothly
-    colsHadStrings= numpy.argwhere(df.dtypes == object).flatten()
-
-    if log != None and nas:
-        print >> log, "WARNING: " + str(nas) + " Na's found in data matrix " \
-                 + in_file + "."
-
-    if len(colsHadStrings) and numeric_flag:
-            raise ValueError('Strings were found in input matrix, columns:'
-                             + str(colsHadStrings))
-
-    col_header = df.columns.values.tolist()
-    row_header = df.index.tolist()
-
-    df = df.as_matrix()
-
-    return df, col_header, row_header
 
 def numpyToPandas(mat, col_list, row_list):
-    return pd.DataFrame(mat,index=row_list,columns=col_list)
+    return pd.DataFrame(mat, index=row_list, columns=col_list)
+
 
 def pandasToNumpy(df):
     '''
