@@ -209,21 +209,20 @@ def putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
 
 def nodesToPandas(pydict):
     '''
-    input the json['nodes'] structure and outputs pandas df
-    This looks crazy because we needed to read in the new node data
-    in the same way as the original feature matrix.
+    Input the json['nodes'] structure and outputs pandas df.
+    Uses same processing pipeline as compute sparse matrix for input.
     @param pydict: the dataIn['nodes'] structure,
                    currently a dict of dicts {columns -> {rows -> values}}
     @return: a pandas dataframe
     '''
     df = pd.DataFrame(pydict)
-    s_buf = StringIO.StringIO()
-    #dump pandas data frame into buffer
-    df.to_csv(s_buf,sep='\t')
-    s_buf.seek(0)
-    return compute_sparse_matrix.numpyToPandas(
-            *compute_sparse_matrix.read_tabular(s_buf)
+    df = compute_sparse_matrix.processInputData(df,
+                                                numeric_flag=True,
+                                                replaceNA=False
                                                 )
+
+    return df
+
 
 def calcTestStub(newNodes, ctx):
     #print 'opts.newNodes', opts.newNodes
