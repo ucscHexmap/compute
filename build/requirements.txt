@@ -1,5 +1,5 @@
 colormath==2.1.1
-pandas==0.18.0
+pandas==0.19.0
 networkx==1.11
 scipy==1.0.0
 statsmodels==0.6.1
