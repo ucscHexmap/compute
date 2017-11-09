@@ -68,10 +68,9 @@ def duplicates_check(list_):
 
 def duplicate_columns_check(df):
     """
-    Checks for duplicate row or columns names and throws a ValueError if
-    found.
-    @param df:
-    @return:
+    Throw a value error if duplicate columns are found.
+    @param df: pandas dataframe
+    @return: None
     """
     duplicates_check(df.columns)
 
