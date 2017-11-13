@@ -1340,14 +1340,16 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
         else:    #'DRL'
             print 'DRL method'
-            if not (options.feature_space == None):    #full feature space matrix given
+            if not (options.feature_space == None):
                 print "Feature matrices"
                 for i, genomic_filename in enumerate(options.feature_space):
 
                     if inferring_format:
-                        # "Genomic filename is actually a pandas dataFrame
+                        # Then genomic filename is actually a pandas dataFrame.
                         dt, sample_labels, feature_labels = \
-                            compute_sparse_matrix.pandasToNumpy(genomic_filename)
+                            compute_sparse_matrix.pandasToNumpy(
+                                genomic_filename
+                            )
                     else:
                         dt, sample_labels, feature_labels = \
                             read_tabular(genomic_filename,
@@ -1356,6 +1358,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                                          )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
+
                     if options.doingRows:
                         # Swap the sample and feature labels and continue
                         sample_labels, feature_labels = \
@@ -1363,58 +1366,78 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     else:
                         dt = np.transpose(dt)
 
-                    result = sparsePandasToString(compute_similarities(dt=dt, sample_labels=sample_labels, metric_type=options.distanceMetric, num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
+                    result = sparsePandasToString(
+                        compute_similarities(
+                            dt=dt,
+                            sample_labels=sample_labels,
+                            metric_type=options.distanceMetric,
+                            num_jobs=12,
+                            output_type="SPARSE",
+                            top=options.truncation_edges,
+                            log=None
+                        )
+                    )
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
                     ctx.sparse.append(result)
 
-            elif not (options.similarity_full == None):    #full similarity matrix given
+            elif not (options.similarity_full == None):
                 print "Similarity matrices"
-                for i, similarity_filename in enumerate(options.similarity_full):
-                    print 'Opening Matrix', i, similarity_filename
-
+                for similarity_filename in options.similarity_full:
                     if inferring_format:
-                        # "similarity filename is actually a pandas dataFrame
+                        # Then similarity filename is really a pandas dataFrame.
                         dt, sample_labels, feature_labels = \
-                            compute_sparse_matrix.pandasToNumpy(similarity_filename)
+                            compute_sparse_matrix.pandasToNumpy(
+                                similarity_filename
+                            )
                     else:
-                        dt,sample_labels,feature_labels = \
+                        dt, sample_labels, feature_labels = \
                             read_tabular(similarity_filename,
                                          True,
                                          replaceNA=options.zeroReplace
                                          )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
-                    result = sparsePandasToString(extract_similarities(dt=dt, sample_labels=sample_labels, top=options.truncation_edges, log=None))
+
+                    result = sparsePandasToString(
+                        extract_similarities(
+                            dt=dt,
+                            sample_labels=sample_labels,
+                            top=options.truncation_edges,
+                            log=None
+                        )
+                    )
+
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
                     ctx.sparse.append(result)
             
-            elif not (options.similarity == None):        #sparse similarity matrix given
+            elif not (options.similarity == None):
                 print "Sparse similarity matrices"
                 open_matrices(options.similarity, ctx)
-                print options.similarity
+
             elif not(options.coordinates == None):
-                #do nothing.
                 '''already have x-y coords so don't need to do anything.'''
-            else:    #no matrix is given
+
+            else:
                 raise InvalidAction("Invalid matrix input was provided")
-            
-            # Index for drl.tab and drl.layout file naming. With indexes we can match
-            # file names, to matrices, to drl output files.
-            #print "length of ctx.matrices = "+str(len(ctx.matrices))
-            # if we have x-ys then we don't need to do drl.
+
+            # Skip DRL if we have xy positions.
             if (options.coordinates == None):
-                for index, i in enumerate (ctx.matrices):
+                # Run DRL for each of the layout input file sparse similarities.
+                for index, sparse_similarity in enumerate(ctx.matrices):
                     print "enumerating ctx.matrices "+str(index)
-                    nodes_multiple.append(drl_similarity_functions(i, index, options))
+                    nodes_multiple.append(
+                        drl_similarity_functions(
+                            sparse_similarity,
+                            index,
+                            options
+                        )
+                    )
 
     print "Opened matrices..."
-    #print nodes_multiple
-    #print len(nodes_multiple[0])
-    #print nodes_multiple
     
     # Index for drl.tab and drl.layout file naming. With indexes we can match
     # file names, to matrices, to drl output files.
