@@ -34,12 +34,6 @@ from compute_sparse_matrix import compute_similarities
 from compute_sparse_matrix import extract_similarities
 import compute_sparse_matrix
 import StringIO, gc
-from compute_layout import computePCA
-from compute_layout import computetSNE
-from compute_layout import computeisomap
-from compute_layout import computeMDS
-from compute_layout import computeICA
-from compute_layout import computeSpectralEmbedding
 from utils import getAttributes
 import leesL
 from sklearn import preprocessing
