@@ -1340,9 +1340,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
         else:    #'DRL'
             print 'DRL method'
-            print options.similarity
-            print options.feature_space
-            print options.similarity_full
             if not (options.feature_space == None):    #full feature space matrix given
                 print "Feature matrices"
                 for i, genomic_filename in enumerate(options.feature_space):
