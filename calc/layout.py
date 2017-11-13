@@ -16,27 +16,23 @@ Re-uses sample code and documentation from
 
 DEV = False # True if in development mode, False if not
 
-import argparse, sys, os, itertools, math, subprocess, shutil, tempfile, glob, io
-import collections, traceback, time, datetime, pprint, string
-import scipy.stats, scipy.linalg, scipy.misc
-import time, socket
+import argparse, os, itertools, math, subprocess, shutil, tempfile, glob
+import collections, traceback, datetime, pprint, string
+import time
 from types import *
 import os.path
 import tsv, csv, json
 from utils import sigDigs
 from statsNoLayout import statsNoLayout
-from statsLayout import statsLayout
-import pool
 from topNeighbors import topNeighbors
 from topNeighbors import topNeighbors_from_sparse
 from compute_sparse_matrix import read_tabular
 from compute_sparse_matrix import compute_similarities
 from compute_sparse_matrix import extract_similarities
 import compute_sparse_matrix
-import StringIO, gc
+import StringIO,
 from utils import getAttributes
 import leesL
-from sklearn import preprocessing
 import sklearn.metrics
 import sklearn.metrics.pairwise as sklp
 import numpy as np
