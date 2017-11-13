@@ -12,6 +12,21 @@ present in your PATH.
 
 Re-uses sample code and documentation from 
 <http://users.soe.ucsc.edu/~karplus/bme205/f12/Scaffold.html>
+
+Notes about peculiarities in code:
+    1.) --include_singletons option: the name suggests you are including nodes
+        that would otherwise not be there, but from the code it is clear this is
+        not the case. --include_singletons simply draws a self connecting edge
+        on all the nodes already on the map before running through DRL. It is
+        unclear what affect this should have on a spring embedded layout
+        clustering algorithm. Its action can be viewed in the
+        drl_similarity_functions() code.
+        Update: Testing with the mcrchropra test data suggests this
+        argument does nothing.
+    2.) --truncate_edges option: This is defaulted to 6, and gets fed into the
+        DRL clustering algorithm. The name suggests that even if you provided
+        20 neighbors, downstream the DRL clustering algorithm would trim it
+        down to six.
 """
 
 DEV = False # True if in development mode, False if not
@@ -176,20 +191,6 @@ def parse_args(args):
 
     return parser.parse_args(args)
 
-'''
-Notes about peculiarities in code:
-    1.) --include_singletons option: the name suggests you are including nodes
-        that would otherwise not be there, but from the code it is clear this is
-        not the case. --include_singletons simply draws a self connecting edge on all the nodes already on the
-        map before running through DRL. It is unclear what affect this should have on a spring embedded layout
-        clustering algorithm. Its action can be viewed in the drl_similarity_functions() code.
-        Update: Testing with the mcrchropra test data suggests this argument does nothing.
-    2.) --truncate_edges option: This is defaulted to 6, and gets fed into the DRL clustering algorithm.
-                                 The name suggests that even if you provided 20 neighbors, downstream the
-                                 DRL clustering algorthm would trim it down to six.
-'''
-##
-#DCM helpers
 def sparsePandasToString(sparseDataFrame):
     '''
     converts a sparse matrix, to edgefile formatted output string
@@ -319,7 +320,6 @@ def read_nodes(filename):
 
     # Return nodes dict back to main method for further processes
     return nodes
-##
 
 def timestamp():
     return str(datetime.datetime.now())[5:-7]
@@ -1783,58 +1783,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
     sys.stdout.close()
     sys.stdout = stdoutFd
     return log_file_name
-
-def PCA(dt):    #YN 20160620
-    pca = sklearn.decomposition.PCA(n_components=2)
-    pca.fit(dt)
-    return(pca.transform(dt))
-    
-def tSNE(dt):    #YN 20160620
-    pca = sklearn.decomposition.PCA(n_components=50)
-    dt_pca = pca.fit_transform(np.array(dt))
-    model = sklearn.manifold.TSNE(n_components=2, random_state=0)
-    np.set_printoptions(suppress=True)
-    return(model.fit_transform(dt_pca))
-
-def tSNE2(dt):    #YN 20160620
-    model = sklearn.manifold.TSNE(n_components=2, random_state=0)
-    np.set_printoptions(suppress=True)
-    return(model.fit_transform(dt))
-
-def isomap(dt):    #YN 20160620
-    return(sklearn.manifold.Isomap(N_NEIGHBORS, 2).fit_transform(dt))
-
-def MDS(dt):    #YN 20160620
-    mds = sklearn.manifold.MDS(2, max_iter=100, n_init=1)
-    return(mds.fit_transform(dt))
-
-def SpectralEmbedding(dt):    #YN 20160620
-    se = sklearn.manifold.SpectralEmbedding(n_components=2, n_neighbors=N_NEIGHBORS)
-    return(se.fit_transform(dt))
-
-def ICA(dt):    #YN 20160620
-    ica = sklearn.decomposition.FastICA(n_components=2)
-    return(ica.fit_transform(dt))
-    
-def compute_silhouette(coordinates, *args):        #YN 20160629: compute average silhouette score for an arbitrary group of nodes
-                                                #coordinates is a dictionary; example: {sample1: {"x": 200, "y": 300}, sample2: {"x": 250, "y": 175}, ...}
-                                                #args is simply 2 or more lists of samples that are present in the coordinates dictionary
-    if(len(args) < 2):
-        raise Exception('Invalid number of groupings have been specified. At least two groups are required.')
-        
-    clust_count = 1
-    cluster_assignments = []
-    samples = []
-    for a in args:
-        cluster_assignments.append([clust_count]*len(a))
-        samples.append(a)
-        clust_count += 1
-    cluster_assignments_lst = [item for sublist in cluster_assignments for item in sublist]
-    samples_lst = [item for sublist in samples for item in sublist]
-    features = []
-    for s in samples_lst:
-        features.append(np.array([coordinates[s]["x"], coordinates[s]["y"]]))
-    return(sklearn.metrics.silhouette_score(np.array(features), np.array(cluster_assignments_lst), metric='euclidean', sample_size=1000, random_state=None))
 
 def main(args):
     arg_obj = parse_args(args)
