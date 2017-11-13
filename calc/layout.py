@@ -30,7 +30,7 @@ from compute_sparse_matrix import read_tabular
 from compute_sparse_matrix import compute_similarities
 from compute_sparse_matrix import extract_similarities
 import compute_sparse_matrix
-import StringIO,
+import StringIO
 from utils import getAttributes
 import leesL
 import sklearn.metrics
@@ -39,6 +39,7 @@ import numpy as np
 from process_categoricals import create_colormaps_file
 import utils
 import formatCheck
+import sys
 
 validReflectionMapTypes = \
     ['geneMatrix']
@@ -1197,6 +1198,31 @@ def makeMapUIfiles(options, cmd_line_list=None):
     givenOptions = options
     options = fillOpts(options)
 
+    #make the destination directory for output if its not there
+    if not os.path.exists(options.directory):
+        os.makedirs(options.directory)
+
+    #Set stdout and stderr to a log file in the destination directory
+    log_file_name = options.directory + '/log'
+    stdoutFd = sys.stdout
+    sys.stdout = open(log_file_name, 'w')
+    sys.stderr = sys.stdout
+
+    if cmd_line_list:
+        print timestamp(), 'Started'
+        print 'command-line options:'
+        #print out each arg on its own line
+        print '\n'.join(cmd_line_list)
+
+    #print all the options given to the log.
+    print 'all given options:'
+    pprint.pprint(givenOptions.__dict__)
+
+    #print all the options after adjustment to the log.
+    print 'all adjusted options:'
+    pprint.pprint(options.__dict__)
+    sys.stdout.flush()
+
     # Check if we are computationally verifying the
     # "layoutInputFormat".
     inferring_format = inferringFormat(options)
@@ -1235,30 +1261,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
             last_inferred_format = inferred_format
     #####
 
-    #make the destination directory for output if its not there
-    if not os.path.exists(options.directory):
-        os.makedirs(options.directory)
-    #Set stdout and stderr to a log file in the destination directory
-    log_file_name = options.directory + '/log'
-    stdoutFd = sys.stdout
-    sys.stdout = open(log_file_name, 'w')
-    sys.stderr = sys.stdout
-
-    if cmd_line_list:
-        print timestamp(), 'Started'
-        print 'command-line options:'
-        #print out each arg on its own line
-        print '\n'.join(cmd_line_list)
-
-    #print all the options given to the log.
-    print 'all given options:'
-    pprint.pprint(givenOptions.__dict__)
-    
-    #print all the options after adjustment to the log.
-    print 'all adjusted options:'
-    pprint.pprint(options.__dict__)
-    sys.stdout.flush()
-
+    print "inferred_format was: " + inferred_format
     ctx = Context()
 
     #javascript expects at least one attribute so put something fake there
