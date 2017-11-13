@@ -1259,9 +1259,10 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
             more_than_one = True
             last_inferred_format = inferred_format
+
+        print "inferred_format was: " + inferred_format
     #####
 
-    print "inferred_format was: " + inferred_format
     ctx = Context()
 
     #javascript expects at least one attribute so put something fake there
