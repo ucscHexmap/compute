@@ -20,6 +20,6 @@ export WWW_SOCKET=127.0.0.1:5000
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then
-    echo 'entering virtualenv
+    echo 'entering virtualenv'
     source $PYENV/bin/activate
 fi
