@@ -78,8 +78,21 @@ def hasStrings(df):
     return len(numpy.argwhere(df.dtypes == object).flatten()) > 0
 
 
-def colsHavingStrings(df):
-    return str(numpy.argwhere(df.dtypes == object).flatten())
+def isNotFloat(x):
+    isnotfloat = True
+    try:
+        float(x)
+        isnotfloat = False
+    except ValueError:
+        pass
+    return isnotfloat
+
+
+def firstOccurenceOfString(df):
+    # First Column
+    col = df.columns[numpy.argwhere(df.dtypes == object).flatten()][0]
+    row = numpy.argwhere(map(isNotFloat, df[col])).flatten()[0]
+    return str(df.iloc[row, col])
 
 
 def processInputData(df, numeric_flag, replaceNA):
@@ -88,8 +101,9 @@ def processInputData(df, numeric_flag, replaceNA):
         df = replaceNAsWZero(df)
     if numeric_flag:
         if hasStrings(df):
-            raise ValueError('Strings were found in input matrix, columns:'
-                             + colsHavingStrings(df))
+            raise ValueError('Strings were found in input matrix, '
+                             'first occurence is:'
+                             + firstOccurenceOfString(df))
 
 
     return df

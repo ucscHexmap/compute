@@ -12,43 +12,49 @@ present in your PATH.
 
 Re-uses sample code and documentation from 
 <http://users.soe.ucsc.edu/~karplus/bme205/f12/Scaffold.html>
+
+Notes about peculiarities in code:
+    1.) --include_singletons option: the name suggests you are including nodes
+        that would otherwise not be there, but from the code it is clear this is
+        not the case. --include_singletons simply draws a self connecting edge
+        on all the nodes already on the map before running through DRL. It is
+        unclear what affect this should have on a spring embedded layout
+        clustering algorithm. Its action can be viewed in the
+        drl_similarity_functions() code.
+        Update: Testing with the mcrchropra test data suggests this
+        argument does nothing.
+    2.) --truncate_edges option: This is defaulted to 6, and gets fed into the
+        DRL clustering algorithm. The name suggests that even if you provided
+        20 neighbors, downstream the DRL clustering algorithm would trim it
+        down to six.
 """
 
 DEV = False # True if in development mode, False if not
 
-import argparse, sys, os, itertools, math, subprocess, shutil, tempfile, glob, io
-import collections, traceback, time, datetime, pprint, string
-import scipy.stats, scipy.linalg, scipy.misc
-import time, socket
+import argparse, os, itertools, math, subprocess, shutil, tempfile, glob
+import collections, traceback, datetime, pprint, string
+import time
 from types import *
 import os.path
 import tsv, csv, json
 from utils import sigDigs
 from statsNoLayout import statsNoLayout
-from statsLayout import statsLayout
-import pool
 from topNeighbors import topNeighbors
 from topNeighbors import topNeighbors_from_sparse
 from compute_sparse_matrix import read_tabular
 from compute_sparse_matrix import compute_similarities
 from compute_sparse_matrix import extract_similarities
 import compute_sparse_matrix
-import StringIO, gc
-from compute_layout import computePCA
-from compute_layout import computetSNE
-from compute_layout import computeisomap
-from compute_layout import computeMDS
-from compute_layout import computeICA
-from compute_layout import computeSpectralEmbedding
+import StringIO
 from utils import getAttributes
 import leesL
-from sklearn import preprocessing
 import sklearn.metrics
 import sklearn.metrics.pairwise as sklp
 import numpy as np
 from process_categoricals import create_colormaps_file
 import utils
 import formatCheck
+import sys
 
 validReflectionMapTypes = \
     ['geneMatrix']
@@ -185,20 +191,6 @@ def parse_args(args):
 
     return parser.parse_args(args)
 
-'''
-Notes about peculiarities in code:
-    1.) --include_singletons option: the name suggests you are including nodes
-        that would otherwise not be there, but from the code it is clear this is
-        not the case. --include_singletons simply draws a self connecting edge on all the nodes already on the
-        map before running through DRL. It is unclear what affect this should have on a spring embedded layout
-        clustering algorithm. Its action can be viewed in the drl_similarity_functions() code.
-        Update: Testing with the mcrchropra test data suggests this argument does nothing.
-    2.) --truncate_edges option: This is defaulted to 6, and gets fed into the DRL clustering algorithm.
-                                 The name suggests that even if you provided 20 neighbors, downstream the
-                                 DRL clustering algorthm would trim it down to six.
-'''
-##
-#DCM helpers
 def sparsePandasToString(sparseDataFrame):
     '''
     converts a sparse matrix, to edgefile formatted output string
@@ -328,7 +320,6 @@ def read_nodes(filename):
 
     # Return nodes dict back to main method for further processes
     return nodes
-##
 
 def timestamp():
     return str(datetime.datetime.now())[5:-7]
@@ -1207,6 +1198,31 @@ def makeMapUIfiles(options, cmd_line_list=None):
     givenOptions = options
     options = fillOpts(options)
 
+    #make the destination directory for output if its not there
+    if not os.path.exists(options.directory):
+        os.makedirs(options.directory)
+
+    #Set stdout and stderr to a log file in the destination directory
+    log_file_name = options.directory + '/log'
+    stdoutFd = sys.stdout
+    sys.stdout = open(log_file_name, 'w')
+    sys.stderr = sys.stdout
+
+    if cmd_line_list:
+        print timestamp(), 'Started'
+        print 'command-line options:'
+        #print out each arg on its own line
+        print '\n'.join(cmd_line_list)
+
+    #print all the options given to the log.
+    print 'all given options:'
+    pprint.pprint(givenOptions.__dict__)
+
+    #print all the options after adjustment to the log.
+    print 'all adjusted options:'
+    pprint.pprint(options.__dict__)
+    sys.stdout.flush()
+
     # Check if we are computationally verifying the
     # "layoutInputFormat".
     inferring_format = inferringFormat(options)
@@ -1243,31 +1259,9 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
             more_than_one = True
             last_inferred_format = inferred_format
+
+        print "inferred_format was: " + inferred_format
     #####
-
-    #make the destination directory for output if its not there
-    if not os.path.exists(options.directory):
-        os.makedirs(options.directory)
-    #Set stdout and stderr to a log file in the destination directory
-    log_file_name = options.directory + '/log'
-    stdoutFd = sys.stdout
-    sys.stdout = open(log_file_name, 'w')
-    sys.stderr = sys.stdout
-
-    if cmd_line_list:
-        print timestamp(), 'Started'
-        print 'command-line options:'
-        #print out each arg on its own line
-        print '\n'.join(cmd_line_list)
-
-    #print all the options given to the log.
-    print 'all given options:'
-    pprint.pprint(givenOptions.__dict__)
-    
-    #print all the options after adjustment to the log.
-    print 'all adjusted options:'
-    pprint.pprint(options.__dict__)
-    sys.stdout.flush()
 
     ctx = Context()
 
@@ -1346,17 +1340,16 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
         else:    #'DRL'
             print 'DRL method'
-            print options.similarity
-            print options.feature_space
-            print options.similarity_full
-            if not (options.feature_space == None):    #full feature space matrix given
+            if not (options.feature_space == None):
                 print "Feature matrices"
                 for i, genomic_filename in enumerate(options.feature_space):
 
                     if inferring_format:
-                        # "Genomic filename is actually a pandas dataFrame
+                        # Then genomic filename is actually a pandas dataFrame.
                         dt, sample_labels, feature_labels = \
-                            compute_sparse_matrix.pandasToNumpy(genomic_filename)
+                            compute_sparse_matrix.pandasToNumpy(
+                                genomic_filename
+                            )
                     else:
                         dt, sample_labels, feature_labels = \
                             read_tabular(genomic_filename,
@@ -1365,6 +1358,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                                          )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
+
                     if options.doingRows:
                         # Swap the sample and feature labels and continue
                         sample_labels, feature_labels = \
@@ -1372,58 +1366,78 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     else:
                         dt = np.transpose(dt)
 
-                    result = sparsePandasToString(compute_similarities(dt=dt, sample_labels=sample_labels, metric_type=options.distanceMetric, num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
+                    result = sparsePandasToString(
+                        compute_similarities(
+                            dt=dt,
+                            sample_labels=sample_labels,
+                            metric_type=options.distanceMetric,
+                            num_jobs=12,
+                            output_type="SPARSE",
+                            top=options.truncation_edges,
+                            log=None
+                        )
+                    )
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
                     ctx.sparse.append(result)
 
-            elif not (options.similarity_full == None):    #full similarity matrix given
+            elif not (options.similarity_full == None):
                 print "Similarity matrices"
-                for i, similarity_filename in enumerate(options.similarity_full):
-                    print 'Opening Matrix', i, similarity_filename
-
+                for similarity_filename in options.similarity_full:
                     if inferring_format:
-                        # "similarity filename is actually a pandas dataFrame
+                        # Then similarity filename is really a pandas dataFrame.
                         dt, sample_labels, feature_labels = \
-                            compute_sparse_matrix.pandasToNumpy(similarity_filename)
+                            compute_sparse_matrix.pandasToNumpy(
+                                similarity_filename
+                            )
                     else:
-                        dt,sample_labels,feature_labels = \
+                        dt, sample_labels, feature_labels = \
                             read_tabular(similarity_filename,
                                          True,
                                          replaceNA=options.zeroReplace
                                          )
 
                     print str(len(dt))+" x "+str(len(dt[0]))
-                    result = sparsePandasToString(extract_similarities(dt=dt, sample_labels=sample_labels, top=options.truncation_edges, log=None))
+
+                    result = sparsePandasToString(
+                        extract_similarities(
+                            dt=dt,
+                            sample_labels=sample_labels,
+                            top=options.truncation_edges,
+                            log=None
+                        )
+                    )
+
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
                     ctx.sparse.append(result)
             
-            elif not (options.similarity == None):        #sparse similarity matrix given
+            elif not (options.similarity == None):
                 print "Sparse similarity matrices"
                 open_matrices(options.similarity, ctx)
-                print options.similarity
+
             elif not(options.coordinates == None):
-                #do nothing.
                 '''already have x-y coords so don't need to do anything.'''
-            else:    #no matrix is given
+
+            else:
                 raise InvalidAction("Invalid matrix input was provided")
-            
-            # Index for drl.tab and drl.layout file naming. With indexes we can match
-            # file names, to matrices, to drl output files.
-            #print "length of ctx.matrices = "+str(len(ctx.matrices))
-            # if we have x-ys then we don't need to do drl.
+
+            # Skip DRL if we have xy positions.
             if (options.coordinates == None):
-                for index, i in enumerate (ctx.matrices):
+                # Run DRL for each of the layout input file sparse similarities.
+                for index, sparse_similarity in enumerate(ctx.matrices):
                     print "enumerating ctx.matrices "+str(index)
-                    nodes_multiple.append(drl_similarity_functions(i, index, options))
+                    nodes_multiple.append(
+                        drl_similarity_functions(
+                            sparse_similarity,
+                            index,
+                            options
+                        )
+                    )
 
     print "Opened matrices..."
-    #print nodes_multiple
-    #print len(nodes_multiple[0])
-    #print nodes_multiple
     
     # Index for drl.tab and drl.layout file naming. With indexes we can match
     # file names, to matrices, to drl output files.
@@ -1790,58 +1804,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
     sys.stdout.close()
     sys.stdout = stdoutFd
     return log_file_name
-
-def PCA(dt):    #YN 20160620
-    pca = sklearn.decomposition.PCA(n_components=2)
-    pca.fit(dt)
-    return(pca.transform(dt))
-    
-def tSNE(dt):    #YN 20160620
-    pca = sklearn.decomposition.PCA(n_components=50)
-    dt_pca = pca.fit_transform(np.array(dt))
-    model = sklearn.manifold.TSNE(n_components=2, random_state=0)
-    np.set_printoptions(suppress=True)
-    return(model.fit_transform(dt_pca))
-
-def tSNE2(dt):    #YN 20160620
-    model = sklearn.manifold.TSNE(n_components=2, random_state=0)
-    np.set_printoptions(suppress=True)
-    return(model.fit_transform(dt))
-
-def isomap(dt):    #YN 20160620
-    return(sklearn.manifold.Isomap(N_NEIGHBORS, 2).fit_transform(dt))
-
-def MDS(dt):    #YN 20160620
-    mds = sklearn.manifold.MDS(2, max_iter=100, n_init=1)
-    return(mds.fit_transform(dt))
-
-def SpectralEmbedding(dt):    #YN 20160620
-    se = sklearn.manifold.SpectralEmbedding(n_components=2, n_neighbors=N_NEIGHBORS)
-    return(se.fit_transform(dt))
-
-def ICA(dt):    #YN 20160620
-    ica = sklearn.decomposition.FastICA(n_components=2)
-    return(ica.fit_transform(dt))
-    
-def compute_silhouette(coordinates, *args):        #YN 20160629: compute average silhouette score for an arbitrary group of nodes
-                                                #coordinates is a dictionary; example: {sample1: {"x": 200, "y": 300}, sample2: {"x": 250, "y": 175}, ...}
-                                                #args is simply 2 or more lists of samples that are present in the coordinates dictionary
-    if(len(args) < 2):
-        raise Exception('Invalid number of groupings have been specified. At least two groups are required.')
-        
-    clust_count = 1
-    cluster_assignments = []
-    samples = []
-    for a in args:
-        cluster_assignments.append([clust_count]*len(a))
-        samples.append(a)
-        clust_count += 1
-    cluster_assignments_lst = [item for sublist in cluster_assignments for item in sublist]
-    samples_lst = [item for sublist in samples for item in sublist]
-    features = []
-    for s in samples_lst:
-        features.append(np.array([coordinates[s]["x"], coordinates[s]["y"]]))
-    return(sklearn.metrics.silhouette_score(np.array(features), np.array(cluster_assignments_lst), metric='euclidean', sample_size=1000, random_state=None))
 
 def main(args):
     arg_obj = parse_args(args)

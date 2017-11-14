@@ -91,7 +91,11 @@ def _isFullSimilarity(df):
 
     passed = False
     if df.shape[1] == df.shape[0]:
-        passed = np.allclose(df.as_matrix().transpose(), df.as_matrix())
+        passed = np.allclose(
+            df.as_matrix().transpose(),
+            df.as_matrix(),
+            equal_nan=True
+        )
     return passed
 
 def _isSparseSimilarity(df):
