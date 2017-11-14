@@ -3,7 +3,7 @@ import os
 import formatCheck as fc
 import utils
 import pandas as pd
-
+import compute_sparse_matrix as csm
 testDir = os.getcwd()
 inDir = os.path.join(testDir,'in/layout/' )   # The input data
 xyDir = os.path.join(testDir,'exp/layoutBasicXy/' )   # The input data
@@ -26,7 +26,40 @@ class Test_formatCheck(unittest.TestCase):
 
     edge_case1 = pd.DataFrame([[1,1],[2,3]],index=[1,2])
     edge_case2 = pd.DataFrame([["a",2],[2,3]],index=[1,2])
-    edge_case3 = pd.DataFrame([["a","b"],["a","a"]],index=["b","b"])
+    edge_case3 = pd.DataFrame([["a","b"],["c","d"]],index=["b","b"])
+
+    def test_compute_sparse_string_find(s):
+        firstStr = csm.firstOccurenceOfString(s.edge_case2)
+        s.assertTrue(firstStr == "a",
+                     "Couldn't find first string "
+                     "occurence"
+                     )
+
+    def test_compute_sparse_string_find2(s):
+        firstStr = csm.firstOccurenceOfString(s.edge_case3)
+        s.assertTrue(firstStr == "a",
+                     "Couldn't find first string "
+                     "occurence"
+                     )
+
+    def test_compute_sparse_hasStrings_does(s):
+        s.assertTrue(csm.hasStrings(s.edge_case3),
+                     "Did not identify matrix as having strings "
+                     "when strings are present"
+                     )
+
+    def test_compute_sparse_hasStrings_does2(s):
+        s.assertTrue(csm.hasStrings(s.edge_case2),
+                     "Did not identify matrix as having strings "
+                     "when strings are present"
+                     )
+
+    def test_compute_sparse_hasStrings_doesnt(s):
+        s.assertTrue(csm.hasStrings(s.edge_case1) == False,
+                     "Identified matrix as having strings "
+                     "when no strings present"
+                     )
+
 
     #test the header reading too
     def test_edge1(s):
