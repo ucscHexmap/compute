@@ -215,7 +215,7 @@ def nodesToPandas(pydict):
                    currently a dict of dicts {columns -> {rows -> values}}
     @return: a pandas dataframe
     '''
-    df = pd.DataFrame(pydict)
+    df = pd.DataFrame(pydict, dtype=float)
     utils.duplicate_columns_check(df)
     df = compute_sparse_matrix.processInputData(df,
                                                 numeric_flag=True,
