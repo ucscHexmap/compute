@@ -2,22 +2,27 @@
 # extract from a tarball of the server support files, not www.
 
 # Don't allow install on anything other than production or dev.
-PWD=pwd
-if [ $PWD != '/hive/groups/hexmap/prod/compute' ] && \
-    [ $PWD != '/hive/groups/hexmap/dev/compute' ] && \
-    [ $PWD != 'dmccolldev?' ]; then
+PWD=$(pwd)
+
+if [ $PWD == '/hive/groups/hexmap/prod/compute' ] || \
+    [ $PWD == '/hive/groups/hexmap/dev/compute' ] || \
+    [ $PWD == 'dmccolldev?' ]; then
+
+    mv bin/run binRun
+    mv tests/run testsRun
+    rm -rf \
+        build \
+        calc \
+        config \
+        standalone \
+        tests \
+        www
+    tar -xf /hive/groups/hexmap/dev/compute/install.tar
+    mv binRun bin/run
+    mv testsRun tests/run
+
+else
     echo Sorry you cannot install to here and remove all of your current code!
     echo Exiting
     exit
 fi
-
-mv tests/run testsRun
-rm -rf \
-    build \
-    calc \
-    config \
-    standalone \
-    tests \
-    www
-tar -xf /hive/groups/hexmap/dev/compute/install.tar
-mv testsRun tests/run
