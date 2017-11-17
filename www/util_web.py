@@ -48,16 +48,6 @@ def _getLayerDataTypes(mapId, ctx):
     fd = open(filename, 'rU')
     return csv.reader(fd, delimiter='\t'), fd
 
-def getFirstAttribute(mapId, ctx):
-    csv, fd = _getLayerDataTypes(mapId, ctx)
-    first = None
-    for row in csv:
-        if row[0] == 'FirstAttribute':
-            first = row[1]
-            break
-    fd.close()
-    return first
-
 def getLayoutIndex(layoutName, mapId, ctx):
     filename = os.path.join(ctx['dataRoot'], 'view', mapId, 'layouts.tab')
     with open(filename, 'rU') as f:

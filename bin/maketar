@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build a tarball for the compute server
-tar cf compute.tar \
+tar cf install.tar \
     bin \
     build \
     calc \
@@ -8,5 +8,5 @@ tar cf compute.tar \
     standalone \
     tests \
     www
-scp compute.tar kolossus:/hive/groups/hexmap/dev
+scp install.tar kolossus:/hive/groups/hexmap/dev/compute
 

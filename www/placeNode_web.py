@@ -77,10 +77,6 @@ def calcComplete(result, ctx):
     if not 'viewServer' in dataIn:
         dataIn['viewServer'] = ctx['viewServer']
 
-    # Find the first attribute if any
-    firstAttribute = util_web.getFirstAttribute(dataIn['map'], ctx)
-    logging.error('### firstAttribute ' + str(firstAttribute))
-
     # Format the result as client state in preparation to create a bookmark
     state = {
         'page': 'mapPage',
@@ -90,19 +86,20 @@ def calcComplete(result, ctx):
         'overlayNodes': {},
         'dynamic_attrs': {},
     }
-    if firstAttribute:
-        state['shortlist'].append(firstAttribute)
-        state['first_layer'] = firstAttribute
-
     mailMsg = ''
+    active_layer = None
 
     # Populate state for each node
+    needFirstLayer = True
     for node in result['nodes']:
         nData = result['nodes'][node]
         state['overlayNodes'][node] = { 'x': nData['x'], 'y': nData['y'] }
         
         # Build the neighbor places layer
         attr = node + ': ' + dataIn['layout'] + ': neighbors'
+        if needFirstLayer:
+            needFirstLayer = False
+            active_layer = attr
         state['shortlist'].append(attr)
         state['dynamic_attrs'][attr] = {
             'dynamic': True,
@@ -133,6 +130,11 @@ def calcComplete(result, ctx):
 
         # If individual Urls were requested, create a bookmark for this node
         if 'individualUrls' in dataIn and dataIn['individualUrls']:
+        
+            # Set the active_layer to color the map.
+            state['active_layers'] = [attr]
+            
+            # Create the bookmark.
             bData = createBookmark(state, dataIn['viewServer'], ctx)
             result['nodes'][node]['url'] = bData['bookmark']
             mailMsg += ' \n' + node + ': ' + bData['bookmark']
@@ -145,6 +147,11 @@ def calcComplete(result, ctx):
     # If individual urls were not requested, create one bookmark containing all
     # nodes and return that url for each node
     if not 'individualUrls' in dataIn or not dataIn['individualUrls']:
+        
+        # Set the active layer to color the map.
+        state['active_layers'] = [active_layer]
+
+        # Create the bookmark.
         bData = createBookmark(state, dataIn['viewServer'], ctx)
         for node in result['nodes']:
             result['nodes'][node]['url'] = bData['bookmark']
