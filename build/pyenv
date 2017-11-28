@@ -7,7 +7,7 @@ source $1
 LOCALPY_BIN=$2
 if [ $(uname -s) == "Darwin" ]; then  # On macOS this is always here
     LOCALPY_BIN=/usr/bin
-else
+elif [ -z ${LOCALPY_BIN} ]; then # use the default
     LOCALPY_BIN=LOCALPY_BIN:$HOME/.local/bin
 fi
 

@@ -10,8 +10,10 @@ export DRL_PATH=/cluster/home/swat/packages/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HUB_PATH=/hive/groups/hexmap/dev/compute
 export KEY=/data/certs/hexdev.key
-export LD_LIBRARY_PATH=$HUB_PATH/libPatch:$LD_LIBRARY_PATH
-export PYENV=/hive/groups/hexmap/dev/env
+export LD_LIBRARY_PATH=$HUB_PATH/libPatchHexdev:$LD_LIBRARY_PATH
+# For now we don't have a virtual environment for this server
+#export PYENV=/hive/groups/hexmap/dev/env
+#export PYENV=/cluster/home/dmccoll/compute-env
 export TEST_DATA_ROOT=/cluster/home/dmccoll/compute-server/tests/in/dataRoot
 export TETE_PATH=/cluster/home/swat/tete_copy/tete
 export USE_HTTPS=1

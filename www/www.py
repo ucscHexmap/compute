@@ -178,7 +178,7 @@ def queryRoute(operation):
          # Re-raise this error to send the response.
         raise
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         raise ErrorResp(repr(e), 500)
 
     logging.info('Success with query operation: ' + operation)

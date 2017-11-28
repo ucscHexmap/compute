@@ -7,7 +7,7 @@ Order of execution:
 localpy <install-dir>
 Build a local python which is specific to system libs already installed.
 <install-dir> a full path to the python install directory.
-You may need to install openssl.
+You may need to install openssl if you get a warning that it is missing.
 
 rm-localpy <install-dir>
 Remove a local python install if needed to clean up a bad install.
@@ -16,7 +16,7 @@ Remove a local python install if needed to clean up a bad install.
 pyenv <config-file> <localpy-bin-dir>
 Build a python virtual environment for this project.
 <config-file> should be the full path to your config file in compute/config.
-<localpy-bin-dir> the path to the localpy bin dir.
+<localpy-bin-dir> the full path to the localpy bin dir.
 
 --------------------------------------------------------------
 
