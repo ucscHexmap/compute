@@ -20,12 +20,6 @@ outDir = path.join(testDir, 'out/remoteCalc/')
 
 class Test_remoteCalc(unittest.TestCase):
 
-    # The main server needs defined in settings.json:
-    # IS_MAIN_SERVER and NOT IS_CALC_SERVER.
-    
-    # The calc server needs defined in settings.json:
-    # IS_CALC_SERVER, MAIN_MONGO_URL and NOT IS_MAIN_SERVER.
-
     viewServer = os.environ['VIEWER_URL']
 
     def cleanDataOut(s, dataOut):
