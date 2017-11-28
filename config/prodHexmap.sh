@@ -59,6 +59,6 @@ export WWW_SOCKET=tumormap.ucsc.edu:8332
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then
-    echo 'entering virtualenv'
+    echo 'entering virtualenv:' $PYENV
     source $PYENV/bin/activate
 fi

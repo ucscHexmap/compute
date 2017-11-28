@@ -4,7 +4,7 @@
 
 LOCALPY=$1
 rm -rf $LOCALPY
-if [ $(uname -s) != "Darwin" ]; then  # macOS
+if [ $(uname -s) != "Darwin" ]; then  # not macOS
     BINLIB=~/.local
     rm -rf \
         $BINLIB/bin/easy_install  \

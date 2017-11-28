@@ -1,6 +1,2 @@
-Please use the run script so your PYTHONPATH is always correctly set.
-Usage:
-    run all
-    run test_stats
-    run test_stats.TestStats.test_stats
+Please use the run_test script so your PYTHONPATH is always correctly set.
 
