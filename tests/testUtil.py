@@ -133,7 +133,7 @@ def dataFrameToStrBuf(df):
     @return:
     '''
     s_buf = StringIO.StringIO()
-    df.to_csv(s_buf,sep='\t',index_col=0)
+    df.to_csv(s_buf,sep='\t')
     s_buf.seek(0)
     return s_buf
 

@@ -148,6 +148,8 @@ class Test_layoutBasicMakeUI(unittest.TestCase):
         layout.makeMapUIfiles(opts)
         util.compareActualVsExpectedDir(s, expDir, outDir)
 
+    """
+    # we don't have tete installed everywhere.
     def test_raw_tete_fromMakeUIfiles(s):
         outDir = outDirBase + '_raw_tete/'
 
@@ -167,7 +169,8 @@ class Test_layoutBasicMakeUI(unittest.TestCase):
         util.removeOldOutFiles(outDir)
         layout.makeMapUIfiles(opts)
         util.compareActualVsExpectedDir(s, expDirTete, outDir)
-
+    """
+    
     def test_top6_no_attsfromMakeUIfiles(s):
         outDir = outDirBase + '_top6_no_atts/'
 
