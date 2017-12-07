@@ -1,6 +1,6 @@
 
-import os, json, types, csv, traceback, requests, logging
-from argparse import Namespace
+import os, json, csv, traceback, requests, logging
+import tempfile
 
 class SuccessResp(Exception):
 
@@ -13,6 +13,7 @@ class SuccessResp(Exception):
     def to_dict(self):
         return self.data
 
+
 class SuccessRespNoJson(Exception):
 
     # Define a success response class which does not convert to json.
@@ -23,6 +24,7 @@ class SuccessRespNoJson(Exception):
 
     def to_dict(self):
         return self.data
+
 
 class ErrorResp(Exception):
 
@@ -42,11 +44,13 @@ class ErrorResp(Exception):
         rv['error'] = self.message
         return rv
 
+
 def _getLayerDataTypes(mapId, ctx):
     filename = os.path.join(
         ctx['dataRoot'], 'view', mapId, 'Layer_Data_Types.tab')
     fd = open(filename, 'rU')
     return csv.reader(fd, delimiter='\t'), fd
+
 
 def getLayoutIndex(layoutName, mapId, ctx):
     filename = os.path.join(ctx['dataRoot'], 'view', mapId, 'layouts.tab')
@@ -58,6 +62,7 @@ def getLayoutIndex(layoutName, mapId, ctx):
                 index = i
                 break
         return index
+
 
 def getMapMetaData(mapId, ctx):
     
@@ -75,6 +80,7 @@ def getMapMetaData(mapId, ctx):
 
     dataFd.close()
     return data
+
 
 def createBookmark(state, viewServer, ctx):
     '''
@@ -105,7 +111,8 @@ def createBookmark(state, viewServer, ctx):
     else:
         raise ErrorResp(bData)
 
-def sendMail (fromaddr, toaddr, subject, body):
+
+def sendMail(fromaddr, toaddr, subject, body):
     import smtplib
     from email.MIMEMultipart import MIMEMultipart
     from email.MIMEText import MIMEText
@@ -123,6 +130,24 @@ def sendMail (fromaddr, toaddr, subject, body):
     except:
         logging.warning('sendMail not implemented. Message: ' + strMsg);
 
-def sendResultsEmail (emails, msg, ctx):
+
+def sendResultsEmail(emails, msg, ctx):
     sendMail(ctx['adminEmail'], emails, 'Tumor Map results', msg)
 
+
+def getProjMajor(mapId):
+    return mapId.split("/")[0]
+
+
+def getProjMinor(mapId):
+    return mapId.split("/")[1]
+
+
+def mkTempFile():
+    tempDir = tmpDir()
+    des, filepath = tempfile.mkstemp(dir=tempDir)
+    return filepath
+
+
+def tmpDir():
+    return os.path.join(os.environ.get("HUB_PATH", "/home/duncan/hex/compute"), "tmp")

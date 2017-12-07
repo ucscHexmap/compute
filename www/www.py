@@ -1,13 +1,14 @@
 
 # www
 #
-import os, json, traceback, logging
+import os, traceback, logging, pickle
 from flask import Flask, request, jsonify, current_app, Response
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
-from util_web import SuccessResp, SuccessRespNoJson, ErrorResp
+from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, tmpDir
 import placeNode_web
+import reflect_web
 
 # Set up the flask application where app.config is only accessed in this file.
 app = Flask(__name__)
@@ -169,6 +170,7 @@ def queryRoute(operation):
 
     logging.info('Received query operation: ' + operation)
     dataIn = validatePost()
+
     try:
         if operation == 'overlayNodes':
             result = placeNode_web.calc(dataIn, ctx)
@@ -183,6 +185,65 @@ def queryRoute(operation):
 
     logging.info('Success with query operation: ' + operation)
     raise SuccessResp(result)
+
+# Handle query/<operation> routes
+@app.route(
+'/reflect/metaData/majorId/<string:majorId>/minorId/<string'':minorId>',
+    methods=['GET']
+)
+def reflectMeta(majorId, minorId):
+
+    try:
+        dataTypes = reflect_web.getDataTypes(majorId)
+        toMapIds = reflect_web.getToMapIds(majorId, minorId)
+        resp = {
+            "dataTypes" : dataTypes,
+            "toMapIds" : toMapIds
+        }
+
+    except Exception as e:
+        raise ErrorResp(repr(e), 500)
+
+    raise SuccessResp(resp)
+
+# Handle query/<operation> routes
+@app.route('/reflect', methods=['POST'])
+def reflectionRequest():
+    """
+    JSON post
+        {
+        dataType : "str"
+        userId : "not Needed now"n
+        mapId : "SuchandSuch/SampleMap"
+        toMapId: ""
+        featOrSamp: "feature" anything else assumes samples
+        nodeIds: an array of nodeIds
+        rankCategories : boolean, if true returns ranked categories.
+        selectionName : used to create the new reflection Name.
+        }
+    JSON response:
+       {
+        url : /reflect/attrId/<string:fileId>,
+        haveData : 123
+        }
+    """
+    logging.info('Reflection requested')#, parms)
+    parms = validatePost()
+    jsonResp = reflect_web.calc(parms)
+    raise SuccessResp(jsonResp)
+
+
+# Handle data/<dataId> routes which are data requests by data ID.
+@app.route('/reflect/attrId/<string:id>', methods=['GET'])
+def getRefAttr(id):
+    """Returns reflection request JSON."""
+    filepath = os.path.join(tmpDir(), id)
+    with open(filepath, 'rb') as reflectData:
+        responseJson = pickle.load(reflectData)
+
+    logging.info('Reflection get request, attrid: ' + id)
+    raise SuccessResp(responseJson)
+
 
 # Handle the route to test
 @app.route('/test', methods=['POST', 'GET'])

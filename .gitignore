@@ -9,4 +9,4 @@ tests/out
 www.log*
 www.pid
 nohup.out
-
+tmp/*

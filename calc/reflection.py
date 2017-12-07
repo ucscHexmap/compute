@@ -1,177 +1,99 @@
 #!/usr/bin/env python2.7
-
 import pandas as pd
 import os
-import json
-import traceback
-import sys
 
 
-def topXbinTrans(df,top):
+def reflection(parm):
     '''
-    :param df: a dataframe with a single column
-    :return:outputs a dataframe with single column and same indecies as df, 3 is 'high, 2 is 'middle', and 1 is 'low'
+    Runs the "reflection" pipeline.
+    :param parm: {
+                  "datapath": relfection_data_file_name
+                  "featOrSamp" : 'sample' or 'feature'
+                  "node_ids" : [ "id1",...,"idn" ]
+                  "rankCategories" t/f for ordinal calculation.
+                  "n" : number of "high" and "low" if ordinal calc.
+                  ""dataType": one of 'mRNA', 'CNV', 'miRNA',
+                    'Methylation', 'RPPA'. Specifiest the type of score
+                    calculation
+                  }
+    :return: pandas Series, int.
     '''
 
+    fpath = str(parm['datapath'])
+    nodeIds = parm['nodeIds']
+    startingFromRows = parm["featOrSamp"] == "feature"
+    dataType = parm["dataType"]
+    ordinalRequested = parm["rankCategories"]
+
+    if not os.path.isfile(fpath):
+        raise IOError(fpath + " data for reflection not found")
+
+    # feature X sample matrix being used for reflection transform.
+    reflectionDF = pd.read_hdf(fpath)
+
+    if startingFromRows:
+        reflectionDF = reflectionDF.transpose()
+
+    # Discard any nodes not in the reflection matrix.
+    nodeIds = filterNodeIds(nodeIds, reflectionDF.columns)
+    nNodesReflected = len(nodeIds)
+
+    scoreCalculator = getScoreCalculator(dataType)
+
+    reflectionScores = scoreCalculator(reflectionDF, nodeIds)
+
+    if ordinalRequested:
+        topBottomBinSize = parm["n"]
+        reflectionScores = ordinalTransform(
+            reflectionScores,
+            topBottomBinSize
+        )
+
+    return reflectionScores, nNodesReflected
+
+
+def getScoreCalculator(dataType):
+    return {
+        'mRNA': tStatCalc,
+        'CNV' : average,
+        'miRNA': tStatCalc,
+        'RPPA': tStatCalc,
+        'Methylation': tStatCalc
+    }[dataType]
+
+
+def ordinalTransform(df, topN):
+    '''
+    :param df: single column pandas Dataframe
+    :return: pandas Series
+    '''
+    nanRows = df.isnull().values
     nrows = df.shape[0]
     df = df.sort_values(ascending=False)
 
-    df.iloc[0:(top)] = 2
-    df.iloc[nrows-top:nrows] = 0 #
-    df.iloc[top:-top] = 1
+    df.iloc[0:(topN)] = "high"
+    df.iloc[topN:-topN] = "middle"
+    df.iloc[nrows-topN:nrows] = "low"
+    df.iloc[nanRows] = "NAN"
 
     return pd.Series(df)
 
 
-def cnv_reflection(parm):
-
-    try:
-        TOP = int(parm['n'])
-    except KeyError:
-        TOP = 150 #TODO: this should be an input later, need to talk to Yulia and Josh before getting fancy
-
-    fpath = str(parm['datapath'])
-    fpath = fpath[:-4] + ".hdf"
-
-    node_ids = parm['node_ids']
-
-    if not os.path.isfile(fpath):
-        #TODO: Need better way for error, this error actually
-        # gets dumped into mongo
-        print "Error:", fpath, "not found, so reflection could not be computed\n"
-        return 0
-
-    ref_dat = pd.read_hdf(fpath)
-
-    #if going from features to samples then need to transpose matrix
-    if (parm['featOrSamp'] == 'feature'):
-        ref_dat = ref_dat.transpose()
-
-    #Ignore any node_ids passed that are not in the reflection matrix
-    node_ids = [node for node in node_ids if node in ref_dat.columns.values.tolist() ]
-
-    if (len(node_ids) ==0):
-        print "Error:", fpath, "none of the nodes selected were in the reflection matrix\n"
-        return 0
-
-    #calculate raw scores, store in dataframe
-    res = ref_dat[node_ids].mean(axis=1)
-
-    #NA's are filled with 0, 0 should be the most nuetral value
-    # if not done NA's will pop up in the top LOW category
-    res.fillna(value=0, inplace=True)
-
-    if parm["rankCategories"]:
-        #grab highest and lowest values and turn into: 3 highest , 2 middle, 1 lowest. 3 and 1 are of particular interest
-        res = topXbinTrans(res,TOP).to_dict()
-
-    #open('refTime1','a').write(str(time.time() - clockstart) + ' seconds\n')
-
-    return res.to_dict()
+def average(df, nodeIds):
+    return df[nodeIds].mean(axis=1)
 
 
-def exp_reflection(parm):
-    '''
-
-    :param parm: {
-                  "datapath": relfection_data_file_name
-                  "featOrSamp" : 'sample' or 'feature' this descrobes the node_ids
-                  "node_ids" = [ id1,...,idn ]
-                  }
-    :return:
-    '''
-
-    #clockstart = time.time()
-
-    #TODO: implement 'read in chunks' for large dataframes. or find a good way to do it
-
-    try:
-        TOP = int(parm['n'])
-    except KeyError:
-        TOP = 150 #TODO: this should be an input later, need to talk to Yulia and Josh before getting fancy
+def tStatCalc(df, nodeIds):
+    rowmu = df.mean(axis=1)
+    rowstd = df.std(axis=1)
+    tStats = ((df[nodeIds].mean(axis=1) - rowmu) / rowstd)
+    return tStats
 
 
-    fpath = str(parm['datapath'])
-    # Change the file extention (".tab") to .hdf
-    fpath = fpath[:-4] + ".hdf"
-    node_ids = parm['node_ids']
-
-    if not os.path.isfile(fpath):
-        #TODO: Need better way for error, this error actually
-        # gets dumped into mongo
-        print "Error:", fpath, "not found, so reflection could not be computed\n"
-        return 0
-
-    # read in data to perform query on
-    #ref_dat = pd.read_pickle(fpath)
-    #ref_dat = pd.read_csv(fpath,sep="\t",index_col=0)
-
-    ref_dat = pd.read_hdf(fpath)
-
-    #if going from features to samples then need to transpose matrix
-    if (parm['featOrSamp'] == 'feature'):
-        ref_dat = ref_dat.transpose()
-
-    #Ignore any node_ids passed that are not in the reflection matrix
-    node_ids = [node for node in node_ids if node in ref_dat.columns.values.tolist() ]
-
-    if (len(node_ids) ==0):
-        print "Error:", fpath, "none of the nodes selected were in the reflection matrix\n"
-        return 0
-
-    #TODO: For efficency sake we could store the below calcs of mean and std
-    # and only read
-    # in the necessary columns, we'd need to store a transpose though
-    # or get fancy some other way
-    """
-    manUfuct = lambda x: stats.mannwhitneyu(x[node_ids],
-                                                  x[~x.index.isin(
-                                                      node_ids)]).pvalue
-    res = ref_dat.apply(manUfuct,axis=1)
-    """
-    #grab row wise means and standard deviation for querry normalization
-    rowmu = ref_dat.mean(axis=1)
-    #take sd of each row
-    rowstd = ref_dat.std(axis=1)
-
-
-    #calculate raw scores, store in dataframe
-    res = ( (ref_dat[node_ids].mean(axis=1) - rowmu) / rowstd)#
-
-    #NA's are filled with 0, 0 should be the most nuetral value
-    # if not done NA's will pop up in the top LOW category
-    res.fillna(value=0,inplace=True)
-
-    if parm["rankCategories"]:
-        #grab highest and lowest values and turn into: 3 highest , 2 middle,
-        #1 lowest. 3 and 1 are of particular interest
-        res = topXbinTrans(res,TOP)
-
-    #open('refTime1','a').write(str(time.time() - clockstart) + ' seconds\n')
-
-    return res.to_dict()
-
-functionDictionary = {'mRNA': exp_reflection,
-                      'CNV' : cnv_reflection,
-                      'miRNA':exp_reflection,
-                      'RPPA':exp_reflection,
-                      'Methylation': exp_reflection}
-
-def fromNodejs(parm):
-    return(functionDictionary[parm['datatype']](parm))
-
-
-if __name__ == "__main__" :
-    try:
-        # Get the return code to return
-        # Don't just exit with it because sys.exit works by exceptions.
-
-        #if calling from main then assume argument is a json formatted file
-        # and output the values so different implementations can be compared
-        return_code = out_values(fromNodejs(read_json(sys.argv[1])))
-    except:
-        traceback.print_exc()
-        # Return a definite number and not some unspecified error code.
-        return_code = 1
-
-    sys.exit(return_code)
+def filterNodeIds(nodeIds, nodesInReflection):
+    filteredNodes = list(
+        set(nodeIds).intersection(set(nodesInReflection)))
+    empty = (len(filteredNodes) == 0)
+    if (empty):
+        raise ValueError("None of the nodes were in the data matrix.")
+    return filteredNodes
