@@ -7,6 +7,8 @@ from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, tmpDir
+#from jobRunner import JobRunner
+#from jobQueue import JobQueue
 import placeNode_web
 import reflect_web
 
@@ -46,6 +48,11 @@ else:
 
 logging.info('WWW server started with log level: ' + logLevel)
 logging.info('Allowable viewers: ' + str(app.config['ALLOWABLE_VIEWERS']))
+
+# Initialize the job queue and runner.
+# path = os.path.join(os.environ.get('HUB_PATH'), '../computeDb/jobQueue.db')
+# jobQueue = JobQueue(path)
+# jobRunner = JobRunner(path)
 
 # Validate a post
 def validatePost():
