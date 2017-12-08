@@ -154,6 +154,7 @@ class JobQueue(object):
         # @param id: the job ID
         # @returns: (status, result) of the job or None if job not found;
         #           only Success and Error have a result, others return None
+        #           for the result
         row = s._getOne(id)
         if row == None:
             return None
@@ -164,11 +165,15 @@ class JobQueue(object):
     
         # Add a job to the tail end of the job queue.
         # @param         user: username requesting the job
-        # @param    operation: job operation to run
-        # @param        parms: the parameters to be passed to calcMain()
+        # @param    operation: job operation to run; the python module that
+        #                      contains the calcMain() function should be in the
+        #                      file, <operation>_www.py
+        # @param        parms: parameters as a python dict to be passed to
+        #                      <operation>_www.py.calcMain()
         # @params         ctx: the context holding information for the postCalc
         # @params waitForPoll: True to wait for the polling to look for new jobs
-        #                      False to look for new jobs immediately
+        #                      to execute; False to look for new jobs
+        #                      immediately; 'True' is mostly for testing
         # @returns: the job ID
         with s._getConn() as conn:
             curs = conn.cursor()

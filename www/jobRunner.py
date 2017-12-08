@@ -148,8 +148,9 @@ class JobRunner(object):
 
     # Public interface #########################################################
 
-    # Each job operation needs functions defined as follows for the job runner
-    # to execute the operation and save the result in the job queue.
+    # Each operation needs a function defined in <operation>_www.py as below
+    # for the job runner to execute the operation and save the result in the job
+    # queue.
 
     # calcMain (parms, ctx)
     # The entry point to the calc operation which may transform the parameters
