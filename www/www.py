@@ -81,6 +81,22 @@ def errorResponse(error):
         str(response) + " " + error.message)
     return response
 
+@app.errorhandler(Exception)
+def unhandledException(e):
+    trace = traceback.format_exc()
+    errorMessage = repr(e)
+    # Build response.
+    rdict = {
+            "traceback" : trace,
+            "error" : errorMessage,
+            }
+    response = jsonify(rdict)
+    response.status_code = 500
+
+    logging.error("Uncaught exception: \n" + trace)
+
+    return response
+
 # Handle route to upload files
 @app.route('/upload/<path:dataId>', methods=['POST'])
 def upload(dataId):
