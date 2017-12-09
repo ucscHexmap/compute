@@ -1,158 +1,192 @@
-'''
-jobQueue.py
-Thanks to Thiago Arruda from http://flask.pocoo.org/snippets/88/
-Can be used in the same way as http://flask.pocoo.org/snippets/73/
-'''
-import os, sqlite3
-from cPickle import loads, dumps
-from time import sleep
+
+# The job queue.
+
+import os, sqlite3, traceback, datetime, json
 try:
     from thread import get_ident
 except ImportError:
     from dummy_thread import get_ident
 
-
 class JobQueue(object):
 
-    _create = (
-            'CREATE TABLE IF NOT EXISTS queue ' 
-            '('
-            '  id INTEGER PRIMARY KEY AUTOINCREMENT,'
-            '  item BLOB'
-            ')'
-            )
-    _count = 'SELECT COUNT(*) FROM queue'
-    _iterate = 'SELECT id, item FROM queue'
-    _append = 'INSERT INTO queue (item) VALUES (?)'
-    _write_lock = 'BEGIN IMMEDIATE'
-    _popleft_get = (
-            'SELECT id, item FROM queue '
-            'ORDER BY id LIMIT 1'
-            )
-    _popleft_del = 'DELETE FROM queue WHERE id = ?'
-    _peek = (
-            'SELECT item FROM queue '
-            'ORDER BY id LIMIT 1'
-            )
+    # Job statuses.
+    inJobQueueSt = 'InJobQueue'
+    runningSt = 'Running'
+    successSt ='Success'
+    errorSt = 'Error'
+    # future: cancelSt = 'Cancelled'
+    
+    # Column indices.
+    idI = 0
+    statusI = 1
+    userI = 2
+    lastAccessI = 3
+    processIdI = 4
+    taskI = 5
+    resultI = 6
+    
+    # Errors returned from public functions.
+    errorInvalidArgs = 'errorInvalidArgs'
+    errorBadStateChangeFrom = 'errorBadStateChangeFrom'
+    
+    # Sqlite database access.
+    _dbCreate = (
+        'CREATE TABLE IF NOT EXISTS queue '
+        '('
+        '  id INTEGER PRIMARY KEY AUTOINCREMENT,'
+        '  status text,'
+        '  user text,'
+        '  lastAccess text,'
+        '  processId integer,'
+        '  task text,'
+        '  result text'
+        ')'
+    )
+    _dbPush = (
+        'INSERT INTO queue (status, user, lastAccess, task) '
+        'VALUES (?, ?, ?, ?)'
+    )
+    _dbGetById = (
+        'SELECT * FROM queue '
+        'WHERE id = ?'
+    )
+    _dbGetAll = (
+        'SELECT * FROM queue '
+        'ORDER BY id'
+    )
+    _dbRemoveById = (
+        'DELETE FROM queue '
+        'WHERE id = ?'
+    )
 
-    def __init__(self, path):
-        self.path = os.path.abspath(path)
-        self._connection_cache = {}
-        with self._get_conn() as conn:
-            conn.execute(self._create)
-
-    def __len__(self):
-        with self._get_conn() as conn:
-            l = conn.execute(self._count).next()[0]
-        return l
-
-    def __iter__(self):
-        with self._get_conn() as conn:
-            for id, obj_buffer in conn.execute(self._iterate):
-                yield loads(str(obj_buffer))
-
-    def _get_conn(self):
+    def _getConn (s):
+    
+        # Get the sqlite connection for this thread where isolation_level=None
+        # tells sqlite to commit automatically after each db update.
         id = get_ident()
-        if id not in self._connection_cache:
-            self._connection_cache[id] = sqlite3.Connection(self.path, 
-                    timeout=60)
-        return self._connection_cache[id]
+        if id not in s._connection_cache:
+            s._connection_cache[id] = \
+                sqlite3.connect(s.path, timeout=60, isolation_level=None)
 
-    def append(self, obj):
-        '''
-        Add an entry to the queue.
-        @param obj: the entry to append to the queue
-        @return: nothing
-        Usage: $ python -mtimeit -s'from sqlite_queue import SqliteQueue; \
-            from random import random; \
-            q = SqliteQueue("/run/shm/queue")' 'q.append(random())'
-        1000 loops, best of 3: 280 usec per loop
-        '''
-        obj_buffer = buffer(dumps(obj, 2))
-        with self._get_conn() as conn:
-            conn.execute(self._append, (obj_buffer,)) 
+        return s._connection_cache[id]
 
-    def popleft(self, sleep_wait=True):
-        '''
-        Return the left-most entry after removing it from the queue.
-        @param sleep_wait: true means sleep and try again if no entries
-        @return: the entry or None
-        usage: python -mtimeit -s'from sqlite_queue import SqliteQueue; \
-            from random import random; \
-            q = SqliteQueue("/run/shm/queue")' 'q.popleft()'
-        1000 loops, best of 3: 325 usec per loop
-        '''
-        keep_pooling = True
-        wait = 0.1
-        max_wait = 2
-        tries = 0
-        with self._get_conn() as conn:
-            id = None
-            
-            # Pole until an entry is found or
-            # (end of entries and no sleep was requested).
-            while keep_pooling:
-                
-                # Try to retrieve a queue entry and its ID.
-                conn.execute(self._write_lock)
-                cursor = conn.execute(self._popleft_get)
-                try:
-                    id, obj_buffer = cursor.next()
-                    keep_pooling = False
-                except StopIteration:
-                
-                    # We're at the end of the entries.
-                    conn.commit() # unlock the database
-                    
-                    # We're done if no sleep was requested.
-                    if not sleep_wait:
-                        keep_pooling = False
-                        continue
-                    tries += 1
-                    sleep(wait)
-                    wait = min(max_wait, tries/10 + wait)
-            if id:
-            
-                # Drop this entry from the queue.
-                conn.execute(self._popleft_del, (id,))
-                
-                # Return the entry data.
-                return loads(str(obj_buffer))
-        return None
+    def _cullOld (s, conn):
+    
+        # TODO Clean up by removing any jobs older than a certain age.
+        # Older than a month?
+        # Once per day?
+        pass
+    
+    def __init__(s, path):
+    
+        # Connect to the queue database, creating if need be.
+        s.path = os.path.abspath(path)
+        s._connection_cache = {}
+        with s._getConn() as conn:
+            conn.execute(s._dbCreate)
 
-    def peek(self):
-        with self._get_conn() as conn:
+    def _getAll (s, file=None):
         
-            # Retrieve a queue entry?
-            cursor = conn.execute(self._peek)
-            try:
-                return loads(str(cursor.next()[0]))
-            except StopIteration:
-                return None
+        # Get every row in the job queue, writing to a file, or to memory.
+        # Probably only for debugging and testing.
+        with s._getConn() as conn:
+            all = conn.execute(s._dbGetAll)
+            if file:
+                with open('dump.sql', 'w') as f:
+                    for row in all:
+                        f.write('%s\n' % line)
+            else:
+                rows = []
+                for row in all:
+                    rows.append(row)
+                return rows
+    
+    def _packTask (s, operation, parms, ctx):
+    
+        # Pack the task info into a json string.
+        task = {
+            'operation': operation,
+            'parms': parms,
+            'ctx': ctx,
+        }
+        return json.dumps(task, separators=(',',':'), sort_keys=True)
 
-def queue_daemon(app, rv_ttl=500):
-    '''
-    An example from Thiago's message queue with redis.
-    Modify this to work with sqlite.
-    '''
-    while 1:
-        msg = redis.blpop(app.config['REDIS_QUEUE_KEY'])
-        func, key, args, kwargs = loads(msg[1])
-        try:
-            rv = func(*args, **kwargs)
-        except Exception, e:
-            rv = e
-        if rv is not None:
-            redis.set(key, dumps(rv))
-            redis.expire(key, rv_ttl)
+    def _getOne (s, id):
 
-'''
-An example from Thiago's message queue with redis.
-To run the daemon you can write a simple script like this:
+        # Get the entire row for the given ID.
+         with s._getConn() as conn:
+            get = conn.execute(s._dbGetById, (id,))
+            job = None
+            for row in get:
+                job = row
+            return job
 
-#!/usr/bin/env python
-from yourapp import app
-from that_queue_module import queue_daemon
-queue_daemon(app)
-'''
+    def today (s):
+    
+        # Today formatted as yyyy-mm-dd.
+        return datetime.date.today()
 
+    # Future public functions ##################################################
+
+    def remove (s, id):
+    
+        # Remove a job from the queue.
+        # TODO we should not allow removal of running jobs. They should be
+        # cancelled first.
+        with s._getConn() as conn:
+            conn.execute(s._dbRemoveById, (id,))
+
+    def cancel (s, id):
+    
+        # Mark a job as cancelled and save the error message.
+        pass # TODO
+
+    def getByUser (s, user):
+
+        # Get all jobs owned by the given user.
+        pass # TODO
+
+    # Public functions #########################################################
+
+    def getStatus (s, id):
+    
+        # Retrieve the status and result of the given job ID.
+        # @param id: the job ID
+        # @returns: (status, result) of the job or None if job not found;
+        #           only Success and Error have a result, others return None
+        #           for the result
+        row = s._getOne(id)
+        if row == None:
+            return None
+        else:
+            return (row[s.statusI], row[s.resultI])
+
+    def add (s, user, operation, parms, ctx, waitForPoll=False):
+    
+        # Add a job to the tail end of the job queue.
+        # @param         user: username requesting the job
+        # @param    operation: job operation to run; the python module that
+        #                      contains the calcMain() function should be in the
+        #                      file, <operation>_www.py
+        # @param        parms: parameters as a python dict to be passed to
+        #                      <operation>_www.py.calcMain()
+        # @params         ctx: the context holding information for the postCalc
+        # @params waitForPoll: True to wait for the polling to look for new jobs
+        #                      to execute; False to look for new jobs
+        #                      immediately; 'True' is mostly for testing
+        # @returns: the job ID
+        with s._getConn() as conn:
+            curs = conn.cursor()
+            curs.execute(s._dbPush,
+                (s.inJobQueueSt, user, s.today(),
+                s._packTask(operation, parms, ctx),))
+            jobId = curs.lastrowid
+
+            if not waitForPoll:
+
+                # Get the next job immediately so we don't wait for the polling.
+                s._getNextJob()
+            
+            # Return the id and status, but not result.
+            status, result = s.getStatus(jobId)
+            return (jobId, status)
