@@ -21,7 +21,7 @@ from utils import truncateNP
 from utils import duplicates_check
 from utils import readPandas
 
-VALID_METRICS = ['canberra','cosine','euclidean','manhattan','chebyshev','correlation','hamming',
+VALID_METRICS = ['canberra','cosine','manhattan','chebyshev','correlation','hamming',
                  'jaccard','rogerstanimoto','spearman']
 VALID_OUTPUT_TYPE = ['SPARSE','FULL','SPARSE_PERCENT']
 
