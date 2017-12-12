@@ -42,14 +42,20 @@ class ErrorResp(Exception):
         rv['error'] = self.message
         return rv
 
+class Context(object):
+    def __init__(self, entries):
+        self.__dict__.update(entries)
+    def __str__(self):
+        return str(self.__dict__)
+
 def _getLayerDataTypes(mapId, ctx):
     filename = os.path.join(
-        ctx['dataRoot'], 'view', mapId, 'Layer_Data_Types.tab')
+        ctx.app.dataRoot, 'view', mapId, 'Layer_Data_Types.tab')
     fd = open(filename, 'rU')
     return csv.reader(fd, delimiter='\t'), fd
 
 def getLayoutIndex(layoutName, mapId, ctx):
-    filename = os.path.join(ctx['dataRoot'], 'view', mapId, 'layouts.tab')
+    filename = os.path.join(ctx.app.dataRoot, 'view', mapId, 'layouts.tab')
     with open(filename, 'rU') as f:
         f = csv.reader(f, delimiter='\t')
         index = None
@@ -63,7 +69,7 @@ def getMapMetaData(mapId, ctx):
     
     # Retrieve the meta data for this map
     dataFd = None
-    filename = os.path.join(ctx['dataRoot'], 'view', mapId, 'mapMeta.json')
+    filename = os.path.join(ctx.app.dataRoot, 'view', mapId, 'mapMeta.json')
     try:
         dataFd = open(filename, 'r')
     except:
@@ -81,7 +87,7 @@ def createBookmark(state, viewServer, ctx):
     Create a bookmark.
     @param state: map state to be stored in the bookmark
     @param viewServer: view server on which the bookmark will be stored
-    @param ctx: global context
+    @param ctx: the job context
     @return: a bookmark
     '''
     # Ask the view server to create a bookmark of this client state
@@ -89,7 +95,7 @@ def createBookmark(state, viewServer, ctx):
     try:
         bResult = requests.post(
             viewServer + '/query/createBookmark',
-            #cert=(ctx['sslCert'], ctx['sslKey']),
+            #cert=(ctx.app.sslCert, ctx.app.sslKey),
             verify=False,
             headers = { 'Content-type': 'application/json' },
             data = json.dumps(state)
@@ -124,5 +130,5 @@ def sendMail (fromaddr, toaddr, subject, body):
         logging.warning('sendMail not implemented. Message: ' + strMsg);
 
 def sendResultsEmail (emails, msg, ctx):
-    sendMail(ctx['adminEmail'], emails, 'Tumor Map results', msg)
+    sendMail(ctx.app.adminEmail, emails, 'Tumor Map results', msg)
 

@@ -4,19 +4,41 @@
 
 import os
 import datetime
+import json
+import unicodedata
+
 import unittest
 import testUtil as util
 from jobRunner import JobRunner
+import jobRunner as runner
 from jobQueue import JobQueue
+from util_web import Context
 
 # TODO create a dir: out
 testDir = os.getcwd()
 quePath = os.path.join(os.getcwd() , 'out/jobQueue.db') # database file name
 
-# Tasks to execute.
-task1 = '{"ctx":"ctx1","operation":"testOperation1","parms":"parms1"}'
-task2 = '{"ctx":"ctx2","operation":"operation2","parms":"parms2"}'
-task3 = '{"ctx":"ctx3","operation":"operation3","parms":"parms3"}'
+# Job context
+ctx2 = 'ctx2'
+ctx3 = 'ctx3'
+
+appCtxDict = {'jobQueuePath': quePath, 'unitTest': True}
+appCtx = Context(appCtxDict)
+appCtxUnicode = json.loads(json.dumps(appCtxDict))
+
+ctx1NoAppUnicode = json.loads(json.dumps({'prop1': 1}))
+ctxdict = {'app': appCtx}
+ctx1 = Context(ctxdict)
+ctx1.prop1 = 1
+ctx2 = Context(ctxdict)
+ctx2.prop2 = 2
+ctx3 = Context(ctxdict)
+ctx3.prop3 = 3
+
+# Tasks to execute as stored in the queue.
+task1 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":"parms1"}'
+task2 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop2":2},"operation":"operation2","parms":"parms2"}'
+task3 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop3":3},"operation":"operation3","parms":"parms3"}'
 
 # Usernames
 user1 = 'user1'
@@ -34,7 +56,7 @@ errorMsg2 = 'errorMsg2'
 errorMsg2 = 'errorMsg3'
 
 # Test operation
-operation1 = 'testOperation1'
+operation1 = 'jobTestHelper'
 operation2 = 'operation2'
 operation3 = 'operation3'
 
@@ -42,11 +64,6 @@ operation3 = 'operation3'
 parms1 = 'parms1'
 parms2 = 'parms2'
 parms3 = 'parms3'
-
-# Www context
-ctx1 = 'ctx1'
-ctx2 = 'ctx2'
-ctx3 = 'ctx3'
 
 today = str(datetime.date.today())
 
@@ -57,113 +74,128 @@ class Test_job(unittest.TestCase):
             os.remove(quePath)
         except:
             pass
-        self.jq = JobQueue(quePath)
-        self.jr = JobRunner(quePath)
+        self.que = JobQueue(quePath)
+        self.runner = JobRunner(quePath)
 
-    def test_add(s):
-        jobId, status = \
-            s.jq.add(user1, operation1, parms1, ctx1, waitForPoll=True);
-
-        # Verify correct job ID & status was returned.
-        s.assertEqual(1, jobId);
-        s.assertEqual(s.jq.inJobQueueSt, status);
-        
-        # Verify fields were initialized properly.
-        out = s.jq._getOne(1)
-        #print 'out:', out
-        s.assertEqual(s.jq.inJobQueueSt, out[s.jq.statusI])
-        s.assertEqual(user1, out[s.jq.userI])
-        s.assertEqual(today, out[s.jq.lastAccessI])
-        s.assertEqual(None, out[s.jq.processIdI])
-        s.assertEqual(task1, out[s.jq.taskI])
-        s.assertEqual(None, out[s.jq.resultI])
-        
-    def test_getOne(s):
-        s.jq.add(user1, operation1, parms1, ctx1, waitForPoll=True);
-        job = s.jq._getOne(1)
-        s.assertEqual(1, job[s.jq.idI])
-    
-    def test_getOneWithNone(s):
-        job = s.jq._getOne(1)
-        s.assertEqual(None, job)
-    
-    def test_getStatus(s):
-        s.jq.add(user1, operation1, parms1, ctx1, waitForPoll=True);
-        status, result = s.jq.getStatus(1)
-        s.assertEqual(s.jq.inJobQueueSt, status);
-        s.assertEqual(None, result);
-    
-    def test_getStatusWithNone(s):
-        job = s.jq.getStatus(1)
-        s.assertEqual(None, job)
-    
-    def test_getAll(s):
-        s.jq.add(user1, operation1, parms1, ctx1, waitForPoll=True);
-        s.jq.add(user2, operation2, parms2, ctx2, waitForPoll=True);
-        s.jq.add(user3, operation3, parms3, ctx3, waitForPoll=True);
-        s.jr._setResult(1, s.jq.successSt, result1)
-        s.jr._setResult(2, s.jq.errorSt, errorMsg1)
-        rows = s.jq._getAll()
-        #print 'rows[0]:', rows[0]
-
-        # Verify all fields in job1.
-        s.assertEqual(1, rows[0][s.jq.idI])
-        s.assertEqual(s.jq.successSt, rows[0][s.jq.statusI])
-        s.assertEqual(user1, rows[0][s.jq.userI])
-        s.assertEqual(today, rows[0][s.jq.lastAccessI])
-        s.assertEqual(None, rows[0][s.jq.processIdI])
-        s.assertEqual(task1, rows[0][s.jq.taskI])
-        s.assertEqual(result1, rows[0][s.jq.resultI])
-
-        # Verify all fields in job2.
-        s.assertEqual(2, rows[1][s.jq.idI])
-        s.assertEqual(s.jq.errorSt, rows[1][s.jq.statusI])
-        s.assertEqual(user2, rows[1][s.jq.userI])
-        s.assertEqual(today, rows[1][s.jq.lastAccessI])
-        s.assertEqual(None, rows[1][s.jq.processIdI])
-        s.assertEqual(task2, rows[1][s.jq.taskI])
-        s.assertEqual(errorMsg1, rows[1][s.jq.resultI])
-
-        # Verify all fields in job3.
-        s.assertEqual(3, rows[2][s.jq.idI])
-        s.assertEqual(s.jq.inJobQueueSt, rows[2][s.jq.statusI])
-        s.assertEqual(user3, rows[2][s.jq.userI])
-        s.assertEqual(today, rows[2][s.jq.lastAccessI])
-        s.assertEqual(None, rows[2][s.jq.processIdI])
-        s.assertEqual(task3, rows[2][s.jq.taskI])
-        s.assertEqual(None, rows[2][s.jq.resultI])
-
-    def test_getAllWhenNone(s):
-        rows = s.jq._getAll()
-        s.assertEqual([], rows)
-    
     def test_packTask(s):
-        packed = s.jq._packTask(operation1, parms1, ctx1);
+        packed = s.runner._packTask(operation1, parms1, ctx1);
         s.assertEqual(task1, packed)
     
     def test_unpackTask(s):
-        packed = task1
-        operation, parms, ctx = s.jr._unpackTask(packed)
+        packed = s.runner._packTask(operation1, parms1, ctx1)
+        ctx, operation, parms = s.runner._unpackTask(packed)
         #print 'operation, parms, ctx:', operation, parms, ctx
         s.assertEqual(operation1, operation)
         s.assertEqual(parms1, parms)
-        s.assertEqual(ctx1, ctx)
+
+        # Check the app Context class instance.
+        #print 'appCtxUnicode:', appCtxUnicode
+        #print 'ctx.app:', ctx.app
+        s.assertEqual(str(appCtxUnicode), str(ctx.app))
+
+        # Check the job Context class instance, minus the app context.
+        del ctx.app
+        s.assertEqual(str(ctx1NoAppUnicode), str(ctx))
     
+    def test_add(s):
+        jobId, status = runner.add(user1, operation1, parms1, ctx1)
+        
+        task1 = s.runner._packTask(operation1, parms1, ctx1);
+
+        # Verify correct job ID & status was returned.
+        s.assertEqual(1, jobId);
+        s.assertEqual(s.que.inJobQueueSt, status);
+        
+        # Verify fields were initialized properly.
+        out = s.que._getOne(1)
+        #print 'out:', out
+        s.assertEqual(s.que.inJobQueueSt, out[s.que.statusI])
+        s.assertEqual(user1, out[s.que.userI])
+        s.assertEqual(today, out[s.que.lastAccessI])
+        s.assertEqual(None, out[s.que.processIdI])
+        s.assertEqual(task1, out[s.que.taskI])
+        s.assertEqual(None, out[s.que.resultI])
+        
+    def test_getOne(s):
+        runner.add(user1, operation1, parms1, ctx1);
+        job = s.que._getOne(1)
+        s.assertEqual(1, job[s.que.idI])
+    
+    def test_getOneWithNone(s):
+        job = s.que._getOne(1)
+        s.assertEqual(None, job)
+    
+    def test_getStatus(s):
+        runner.add(user1, operation1, parms1, ctx1);
+        status, result = s.que.getStatus(1)
+        s.assertEqual(s.que.inJobQueueSt, status);
+        s.assertEqual(None, result);
+    
+    def test_getStatusWithNone(s):
+        job = s.que.getStatus(1)
+        s.assertEqual(None, job)
+    
+    def test_getAll(s):
+        runner.add(user1, operation1, parms1, ctx1);
+        runner.add(user2, operation2, parms2, ctx2);
+        runner.add(user3, operation3, parms3, ctx3);
+        s.runner._setResult(1, s.que.successSt, result1)
+        s.runner._setResult(2, s.que.errorSt, errorMsg1)
+        rows = s.que._getAll()
+        #print 'rows[0]:', rows[0]
+
+        # Verify all fields in job1.
+        s.assertEqual(1, rows[0][s.que.idI])
+        s.assertEqual(s.que.successSt, rows[0][s.que.statusI])
+        s.assertEqual(user1, rows[0][s.que.userI])
+        s.assertEqual(today, rows[0][s.que.lastAccessI])
+        s.assertEqual(None, rows[0][s.que.processIdI])
+        #print '              task1:', task1
+        #print 'rows[0][s.que.taskI]:',rows[0][s.que.taskI]
+        s.assertEqual(task1, rows[0][s.que.taskI])
+        s.assertEqual(result1, rows[0][s.que.resultI])
+
+        # Verify all fields in job2.
+        s.assertEqual(2, rows[1][s.que.idI])
+        s.assertEqual(s.que.errorSt, rows[1][s.que.statusI])
+        s.assertEqual(user2, rows[1][s.que.userI])
+        s.assertEqual(today, rows[1][s.que.lastAccessI])
+        s.assertEqual(None, rows[1][s.que.processIdI])
+        s.assertEqual(task2, rows[1][s.que.taskI])
+        s.assertEqual(errorMsg1, rows[1][s.que.resultI])
+
+        # Verify all fields in job3.
+        s.assertEqual(3, rows[2][s.que.idI])
+        s.assertEqual(s.que.inJobQueueSt, rows[2][s.que.statusI])
+        s.assertEqual(user3, rows[2][s.que.userI])
+        s.assertEqual(today, rows[2][s.que.lastAccessI])
+        s.assertEqual(None, rows[2][s.que.processIdI])
+        s.assertEqual(task3, rows[2][s.que.taskI])
+        s.assertEqual(None, rows[2][s.que.resultI])
+
+    def test_getAllWhenNone(s):
+        rows = s.que._getAll()
+        s.assertEqual([], rows)
+
     def test_getNextToRun(s):
-        s.jq.add(user1, operation1, parms1, ctx1, waitForPoll=True);
-        job = s.jr._getNextToRun()
-        s.assertEqual(1, job[s.jq.idI]);
+        runner.add(user1, operation1, parms1, ctx1);
+        job = s.runner._getNextToRun()
+        s.assertEqual(1, job[s.que.idI]);
 
     def test_getNextToRunWhenNone(s):
-        job = s.jr._getNextToRun()
+        job = s.runner._getNextToRun()
         s.assertEqual(None, job);
-    
+
     def test_runner(s):
-        s.jq.add(user1, operation1, parms1, ctx1, waitForPoll=True)
-        s.jr._runner(1, task1, 'jobTestHelper')
-        status, result = s.jq.getStatus(1)
-        s.assertEqual(s.jq.successSt, status)
+        runner.add(user1, operation1, parms1, ctx1)
+        #all = s.que._getAll()
+        #print 'all:', all
+        s.runner._runner(1, task1)
+        #all = s.que._getAll()
+        #print 'all:', all
+        status, result = s.que.getStatus(1)
+        s.assertEqual(s.que.successSt, status)
         s.assertEqual(result1, result)
-    
+
 if __name__ == '__main__':
     unittest.main()

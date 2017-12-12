@@ -6,39 +6,42 @@ from flask import Flask, request, jsonify, current_app, Response
 from flask_cors import CORS, cross_origin
 from werkzeug.utils import secure_filename
 
-from util_web import SuccessResp, SuccessRespNoJson, ErrorResp
-#from jobRunner import JobRunner
-#from jobQueue import JobQueue
+from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context
+import validate_web as validate
 import placeNode_web
 
 # Set up the flask application where app.config is only accessed in this file.
 app = Flask(__name__)
-app.config['UNIT_TEST'] = int(os.environ.get('UNIT_TEST', 0))
-app.config['DEBUG'] = int(os.environ.get('DEBUG'), 0)
-# The origin is checked for some functions that we only want the viewer to do.
-app.config['ALLOWABLE_VIEWERS'] = os.environ.get('ALLOWABLE_VIEWERS').split(',')
+
+# Other local vars.
+allowableViewers = os.environ.get('ALLOWABLE_VIEWERS').split(',')
 
 # Make cross-origin AJAX possible
 CORS(app)
 
-# Set up the context that will be passed to down-stream calls.
-ctx = {
-    # default the view server URL to that of development
-    'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
-    'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
+# Set up the application context used by all threads.
+appCtxDict = {
     'adminEmail': os.environ.get('ADMIN_EMAIL'),
+    'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
+    'debug': os.environ.get('DEBUG', 0),
+    'hubPath': os.environ.get('HUB_PATH'),
+    'unitTest': int(os.environ.get('UNIT_TEST', 0)),
+    'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
 }
+appCtxDict['jobQueuePath'] = os.path.join(appCtxDict['hubPath'], '../computeDb/jobQueue.db')
+appCtxDict['viewDir'] = os.path.join(appCtxDict['dataRoot'], 'view')
+appCtx = Context(appCtxDict)
 
 # Set up logging
 logFormat = '%(asctime)s %(levelname)s: %(message)s'
 logLevel = None
-if app.config['UNIT_TEST']:
+if appCtx.unitTest:
 
     # Use critical level to disable all messages so unit tests only output
     # unit test errors.
     logging.basicConfig(level=logging.CRITICAL, format=logFormat)
     logLevel = 'CRITICAL'
-elif app.config['DEBUG']:
+elif appCtx.debug:
     logging.basicConfig(level=logging.DEBUG, format=logFormat)
     logLevel = 'DEBUG'
 else:
@@ -46,12 +49,7 @@ else:
     logLevel = 'INFO'
 
 logging.info('WWW server started with log level: ' + logLevel)
-logging.info('Allowable viewers: ' + str(app.config['ALLOWABLE_VIEWERS']))
-
-# Initialize the job queue and runner.
-# path = os.path.join(os.environ.get('HUB_PATH'), '../computeDb/jobQueue.db')
-# jobQueue = JobQueue(path)
-# jobRunner = JobRunner(path)
+logging.info('Allowable viewers: ' + str(allowableViewers))
 
 # Validate a post
 def validatePost():
@@ -61,6 +59,10 @@ def validatePost():
         dataIn = request.get_json()
     except:
         raise ErrorResp('Post content is invalid JSON')
+
+    # Validate an optional email address so we know who a job belongs to.
+    validate.email(dataIn)
+
     return dataIn
 
 # Register the success handler to convert to json
@@ -121,7 +123,7 @@ def upload(dataId):
         raise ErrorResp('No file provided for upload', 400)
         
     filename = secure_filename(file.filename)
-    path = os.path.join(ctx['dataRoot'], dataId)
+    path = os.path.join(appCtx.dataRoot, dataId)
     
     # Make the directories if they are not there.
     try:
@@ -150,8 +152,10 @@ def dataRouteInner(dataId, ok404=False):
     """
 
     # Not using flask's send_file() as it mangles files larger than 32k.
+    # Not using flask's GET because we need to capture 404-file-not-found
+    # errors in the case that is ok with the client and return success.
     try:
-        with open(os.path.join(ctx['dataRoot'], dataId)) as f:
+        with open(os.path.join(appCtx.dataRoot, dataId)) as f:
             data = f.read()
             result = Response(
                 data,
@@ -189,12 +193,12 @@ def dataRouteOk404(dataId):
 # Handle query/<operation> routes
 @app.route('/query/<string:operation>', methods=['POST'])
 def queryRoute(operation):
-
     logging.info('Received query operation: ' + operation)
     dataIn = validatePost()
     try:
         if operation == 'overlayNodes':
-            result = placeNode_web.calc(dataIn, ctx)
+            jobCtx = Context({'app': appCtx})
+            result = placeNode_web.preCalc(dataIn, jobCtx)
         else:
             raise ErrorResp('URL not found', 404)
     except ErrorResp:

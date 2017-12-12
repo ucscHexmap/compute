@@ -3,7 +3,7 @@
 # A helper for job tests
 
 import time
-def calcMain (parms):
+def calcMain (parms, ctx):
 
     # Give the job runner a chance to set the status to Running.
     time.sleep(0.01)

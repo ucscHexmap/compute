@@ -2,6 +2,8 @@
 # The job queue.
 
 import os, sqlite3, traceback, datetime, json
+from peewee import *
+
 try:
     from thread import get_ident
 except ImportError:
@@ -58,15 +60,31 @@ class JobQueue(object):
         'DELETE FROM queue '
         'WHERE id = ?'
     )
+    _dbSetRunning = (
+        'UPDATE queue '
+        'SET status = "' + runningSt + '", processId = ?, lastAccess = ? '
+        'WHERE id = ?'
+    )
+    _dbNextToRun = (
+        'SELECT * FROM queue '
+        'WHERE status = "' + inJobQueueSt + '" LIMIT 1'
+    )
+    _dbSetResult = (
+        'UPDATE queue '
+        'SET status = ?, result = ?, lastAccess = ? '
+        'WHERE id = ?'
+    )
 
+    def getConnection (s):
+        return sqlite3.connect(s.path, timeout=60, isolation_level=None)
+    
     def _getConn (s):
     
         # Get the sqlite connection for this thread where isolation_level=None
         # tells sqlite to commit automatically after each db update.
         id = get_ident()
         if id not in s._connection_cache:
-            s._connection_cache[id] = \
-                sqlite3.connect(s.path, timeout=60, isolation_level=None)
+            s._connection_cache[id] = s.getConnection()
 
         return s._connection_cache[id]
 
@@ -101,16 +119,6 @@ class JobQueue(object):
                     rows.append(row)
                 return rows
     
-    def _packTask (s, operation, parms, ctx):
-    
-        # Pack the task info into a json string.
-        task = {
-            'operation': operation,
-            'parms': parms,
-            'ctx': ctx,
-        }
-        return json.dumps(task, separators=(',',':'), sort_keys=True)
-
     def _getOne (s, id):
 
         # Get the entire row for the given ID.
@@ -120,11 +128,6 @@ class JobQueue(object):
             for row in get:
                 job = row
             return job
-
-    def today (s):
-    
-        # Today formatted as yyyy-mm-dd.
-        return datetime.date.today()
 
     # Future public functions ##################################################
 
@@ -161,32 +164,3 @@ class JobQueue(object):
         else:
             return (row[s.statusI], row[s.resultI])
 
-    def add (s, user, operation, parms, ctx, waitForPoll=False):
-    
-        # Add a job to the tail end of the job queue.
-        # @param         user: username requesting the job
-        # @param    operation: job operation to run; the python module that
-        #                      contains the calcMain() function should be in the
-        #                      file, <operation>_www.py
-        # @param        parms: parameters as a python dict to be passed to
-        #                      <operation>_www.py.calcMain()
-        # @params         ctx: the context holding information for the postCalc
-        # @params waitForPoll: True to wait for the polling to look for new jobs
-        #                      to execute; False to look for new jobs
-        #                      immediately; 'True' is mostly for testing
-        # @returns: the job ID
-        with s._getConn() as conn:
-            curs = conn.cursor()
-            curs.execute(s._dbPush,
-                (s.inJobQueueSt, user, s.today(),
-                s._packTask(operation, parms, ctx),))
-            jobId = curs.lastrowid
-
-            if not waitForPoll:
-
-                # Get the next job immediately so we don't wait for the polling.
-                s._getNextJob()
-            
-            # Return the id and status, but not result.
-            status, result = s.getStatus(jobId)
-            return (jobId, status)

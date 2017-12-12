@@ -17,6 +17,8 @@ import pandas as pd
 import StringIO
 import numpy as np
 
+import jobRunner
+
 def check_duplicate_row_error(error):
     """
     Checks to see if there is a duplicate row error and sends a more meaningful
@@ -59,29 +61,29 @@ def validateParameters(data):
         data['neighborCount'] < 1):
         raise ErrorResp('neighborCount parameter should be a positive integer')
 
-def calcComplete(result, ctx):
+def postCalc(result, ctx):
     '''
     Create bookmarks and send email from a calculation result.
     @param result: results from the calculation
     @param ctx: global context
-    @return: nothing
+    @return: ('success', result)
     '''
-    dataIn = ctx['dataIn']
+    dataIn = ctx.dataIn
 
     #logging.debug('calcComplete: result: ' + str(result))
     
     if 'error' in result:
-        raise ErrorResp(result['error'])
+        raise ErrorResp(result['error'], 500)
 
     # Be sure we have a view server
     if not 'viewServer' in dataIn:
-        dataIn['viewServer'] = ctx['viewServer']
+        dataIn['viewServer'] = ctx.app.viewServer
 
     # Format the result as client state in preparation to create a bookmark
     state = {
         'page': 'mapPage',
         'project': dataIn['map'] + '/',
-        'layoutIndex': ctx['layoutIndex'],
+        'layoutIndex': ctx.layoutIndex,
         'shortlist': [],
         'overlayNodes': {},
         'dynamic_attrs': {},
@@ -164,7 +166,7 @@ def calcComplete(result, ctx):
         util_web.sendResultsEmail(dataIn['email'],
         'New nodes have been placed.\n\n' + mailMsg[2:], ctx)
 
-    return result
+    return 'Success', result
 
 def outputToDict(neighboorhood, xys, urls):
     '''
@@ -231,36 +233,6 @@ def nodesToPandas(pydict):
 
     return df
 
-
-def calcTestStub(newNodes, ctx):
-    #print 'opts.newNodes', opts.newNodes
-    
-    ctx['layoutIndex'] = 0
-    
-    if 'testError' in newNodes:
-        raise ErrorResp('Some error message or stack trace')
-    
-    nodes = {}
-    if len(newNodes) > 0:
-        nodes['newNode1'] = {
-            'x': 73,
-            'y': 91,
-            'neighbors': {
-                'TCGA-BP-4790': 0.352,
-                'TCGA-AK-3458': 0.742,
-            }
-        }
-    if len(newNodes) > 1:
-        nodes['newNode2'] = {
-            'x': 53,
-            'y': 47,
-            'neighbors': {
-                'neighbor1': 0.567,
-                'neighbor2': 0.853,
-            }
-        }
-    return {'nodes': nodes}
-
 def getBackgroundData(data, ctx):
     '''
     Find the clustering data file for this map and layout.
@@ -271,22 +243,22 @@ def getBackgroundData(data, ctx):
     try:
         layouts = getMapMetaData(data['map'], ctx)['layouts']
         clusterData = layouts[data['layout']]['clusterData']
-        clusterDataFile = os.path.join(ctx['dataRoot'], clusterData)
+        clusterDataFile = os.path.join(ctx.app.dataRoot, clusterData)
     except:
-        raise ErrorResp(
-            'Clustering data not found for layout: ' + data['layout'], 500)
+        raise Exception(
+            'Clustering data not found for layout: ' + data['layout'])
 
     # Find the index of the layout
-    ctx['layoutIndex'] = \
+    ctx.layoutIndex = \
         util_web.getLayoutIndex(data['layout'], data['map'], ctx)
 
     # Find the xyPosition file
     xyPositionFile = os.path.join(
-        ctx['viewDir'], 'assignments' + str(ctx['layoutIndex']) + '.tab')
-    
+        ctx.mapDir, 'assignments' + str(ctx.layoutIndex) + '.tab')
+
     return clusterDataFile, xyPositionFile
 
-def calc(dataIn, ctx):
+def preCalc(dataIn, ctx):    
     '''
     The entry point from the www URL routing.
     @param dataIn: data from the HTTP post request
@@ -294,41 +266,45 @@ def calc(dataIn, ctx):
     @return: result of calcComplete()
     '''
     validateParameters(dataIn)
-    ctx['viewDir'] = os.path.join(ctx['dataRoot'], 'view', dataIn['map'])
 
-    if 'testStub' in dataIn:
-        result = calcTestStub(dataIn['nodes'], ctx)
+    # Add the job to the job queue.
+    if 'email' in dataIn:
+        email = dataIn['email']
     else:
+        email = None
+    jobRunner.add(email, 'placeNode', dataIn, ctx)
 
-        # Find the helper data needed to place nodes
-        clusterDataFile, xyPositionFile = getBackgroundData(dataIn, ctx)
+def calcMain(dataIn, ctx):
+    
+    ctx.mapDir = os.path.join(ctx.app.viewDir, dataIn['map'])
 
-        # Set any optional parms, letting the calc script set defaults.
-        if 'neighborCount' in dataIn:
-            top = dataIn['neighborCount']
-        else:
-            top = 6 # TODO: this default should be set in the calc module.
+    # Find the helper data needed to place nodes
+    clusterDataFile, xyPositionFile = getBackgroundData(dataIn, ctx)
 
-        #make expected python data structs
+    # Set any optional parms, letting the calc script set defaults.
+    if 'neighborCount' in dataIn:
+        top = dataIn['neighborCount']
+    else:
+        top = 6 # TODO: this default should be set in the calc module.
 
-        referenceDF, xyDF, newNodesDF = \
-         putDataIntoPythonStructs(clusterDataFile,
-                                  xyPositionFile,
-                                  dataIn['nodes'])
+    # Make expected python data structs
+    referenceDF, xyDF, newNodesDF = \
+     putDataIntoPythonStructs(clusterDataFile,
+                              xyPositionFile,
+                              dataIn['nodes'])
 
-        # Call the calc script.
+    # Call the calc script.
+    try:
+        neighboorhood, xys, urls = placeNode.placeNew(newNodesDF,referenceDF,
+                                                  xyDF, top, dataIn['map'],
+                                                  num_jobs=1)
 
-        try:
-            neighboorhood, xys, urls = placeNode.placeNew(newNodesDF,referenceDF,
-                                                      xyDF, top, dataIn['map'],
-                                                      num_jobs=1)
+    except ValueError as error:
+        check_duplicate_row_error(error)
 
-        except ValueError as error:
-            check_duplicate_row_error(error)
+    #format into python struct
+    result = outputToDict(neighboorhood, xys, urls)
 
-        #format into JSON-like struct
-        result = outputToDict(neighboorhood, xys, urls)
-
-
-    ctx['dataIn'] = dataIn
-    return calcComplete(result, ctx)
+    ctx.dataIn = dataIn
+    
+    return postCalc(result, ctx)
