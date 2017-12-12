@@ -1,8 +1,7 @@
 
 from reflection import reflection
-from util_web import getProjMajor, getProjMinor, mkTempFile
+from util_web import getProjMajor, getProjMinor, mkTempFile, tmpDir
 import pickle
-import tempfile
 import os
 import json
 
@@ -28,6 +27,25 @@ def calc(parms):
         "url": getRetrievalUrl(attrId),
         "nNodes": nNodes
     }
+
+
+def getReflectionAttr(attrId):
+    """Grabs a reflection attr with an attribute Id."""
+    filepath = os.path.join(tmpDir(), attrId)
+    with open(filepath, 'rb') as reflectData:
+        reflectDict = pickle.load(reflectData)
+
+    return reflectDict
+
+
+def getReflectionMetaData(majorId, minorId):
+    dataTypes = getDataTypes(majorId)
+    toMapIds = getToMapIds(majorId, minorId)
+    metadata = {
+        "dataTypes" : dataTypes,
+        "toMapIds" : toMapIds
+    }
+    return  metadata
 
 
 def formatForWeb(reflectionScores, attrName):

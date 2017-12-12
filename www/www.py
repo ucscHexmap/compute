@@ -3,12 +3,10 @@
 #
 import os, traceback, logging, pickle
 from flask import Flask, request, jsonify, current_app, Response
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, tmpDir
-#from jobRunner import JobRunner
-#from jobQueue import JobQueue
 import placeNode_web
 import reflect_web
 
@@ -64,6 +62,7 @@ def validatePost():
         raise ErrorResp('Post content is invalid JSON')
     return dataIn
 
+
 # Register the success handler to convert to json
 @app.errorhandler(SuccessResp)
 def successResponse(success):
@@ -85,8 +84,26 @@ def successResponseNoJson(success):
 def errorResponse(error):
     response = jsonify(error.to_dict())
     response.status_code = error.status_code
-    logging.error('Request failed with: ' + str(response.status_code) + ': ' + \
-        str(response) + " " + error.message)
+    statusCode, responseStr = str(response.status_code), str(response)
+    logging.error(
+        'Request failed with: ' +
+        statusCode + ': ' + responseStr + " " + error.message
+    )
+    return response
+
+@app.errorhandler(Exception)
+def unhandledException(e):
+    trace = traceback.format_exc()
+    responseDict = {
+            "traceback" : trace,
+            "error" : repr(e),
+            }
+
+    response = jsonify(responseDict)
+    response.status_code = 500
+
+    logging.error("Uncaught exception: \n" + trace)
+
     return response
 
 # Handle route to upload files
@@ -195,23 +212,12 @@ def queryRoute(operation):
 
 # Handle query/<operation> routes
 @app.route(
-'/reflect/metaData/majorId/<string:majorId>/minorId/<string'':minorId>',
+'/reflect/metaData/majorId/<string:majorId>/minorId/<string:minorId>',
     methods=['GET']
 )
-def reflectMeta(majorId, minorId):
-
-    try:
-        dataTypes = reflect_web.getDataTypes(majorId)
-        toMapIds = reflect_web.getToMapIds(majorId, minorId)
-        resp = {
-            "dataTypes" : dataTypes,
-            "toMapIds" : toMapIds
-        }
-
-    except Exception as e:
-        raise ErrorResp(repr(e), 500)
-
-    raise SuccessResp(resp)
+def getReflectMetaData(majorId, minorId):
+    responseDict = reflect_web.getReflectionMetaData(majorId, minorId)
+    raise SuccessResp(responseDict)
 
 # Handle query/<operation> routes
 @app.route('/reflect', methods=['POST'])
@@ -234,28 +240,24 @@ def reflectionRequest():
         haveData : 123
         }
     """
-    logging.info('Reflection requested')#, parms)
+    logging.info('Reflection requested')
     parms = validatePost()
-    jsonResp = reflect_web.calc(parms)
-    raise SuccessResp(jsonResp)
+    responseDict = reflect_web.calc(parms)
+
+    raise SuccessResp(responseDict)
 
 
 # Handle data/<dataId> routes which are data requests by data ID.
-@app.route('/reflect/attrId/<string:id>', methods=['GET'])
-def getRefAttr(id):
+@app.route('/reflect/attrId/<string:attrId>', methods=['GET'])
+def getRefAttr(attrId):
     """Returns reflection request JSON."""
-    filepath = os.path.join(tmpDir(), id)
-    with open(filepath, 'rb') as reflectData:
-        responseJson = pickle.load(reflectData)
-
-    logging.info('Reflection get request, attrid: ' + id)
-    raise SuccessResp(responseJson)
+    logging.info('Reflection get request, attrid: ' + attrId)
+    responseDict = reflect_web.getReflectionAttr(attrId)
+    raise SuccessResp(responseDict)
 
 
 # Handle the route to test
 @app.route('/test', methods=['POST', 'GET'])
 def testRoute():
-
     logging.debug('testRoute current_app: ' + str(current_app))
-
     raise SuccessResp('just testing')
