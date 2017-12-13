@@ -12,6 +12,7 @@ import testUtil as util
 from jobRunner import JobRunner
 import jobRunner as runner
 from jobQueue import JobQueue
+import jobQueue as que
 from util_web import Context
 
 # TODO create a dir: out
@@ -49,6 +50,7 @@ user3 = 'user3'
 result1 = 'result1'
 result2 = 'result2'
 result3 = 'result3'
+result1unicode = json.loads(json.dumps(result1))
 
 # Error message
 errorMsg1 = 'errorMsg1'
@@ -103,6 +105,7 @@ class Test_job(unittest.TestCase):
         task1 = s.runner._packTask(operation1, parms1, ctx1);
 
         # Verify correct job ID & status was returned.
+        #print 'status:', status
         s.assertEqual(1, jobId);
         s.assertEqual(s.que.inJobQueueSt, status);
         
@@ -114,7 +117,7 @@ class Test_job(unittest.TestCase):
         s.assertEqual(today, out[s.que.lastAccessI])
         s.assertEqual(None, out[s.que.processIdI])
         s.assertEqual(task1, out[s.que.taskI])
-        s.assertEqual(None, out[s.que.resultI])
+        s.assertEqual(json.dumps({}), out[s.que.resultI])
         
     def test_getOne(s):
         runner.add(user1, operation1, parms1, ctx1);
@@ -125,15 +128,25 @@ class Test_job(unittest.TestCase):
         job = s.que._getOne(1)
         s.assertEqual(None, job)
     
-    def test_getStatus(s):
+    def test__getStatus(s):
+    
+        # Test the private _getStatus()
         runner.add(user1, operation1, parms1, ctx1);
-        status, result = s.que.getStatus(1)
-        s.assertEqual(s.que.inJobQueueSt, status);
-        s.assertEqual(None, result);
+        r = s.que._getStatus(1)
+        s.assertEqual(s.que.inJobQueueSt, r['status']);
+        s.assertEqual(json.dumps({}), r['result']);
+    
+    def test_getStatus(s):
+
+        # Test the public getStatus()
+        runner.add(user1, operation1, parms1, ctx1);
+        r = que.getStatus(1, appCtx)
+        s.assertEqual(s.que.inJobQueueSt, r['status']);
+        s.assertEqual(json.dumps({}), r['result']);
     
     def test_getStatusWithNone(s):
-        job = s.que.getStatus(1)
-        s.assertEqual(None, job)
+        r = s.que._getStatus(1)
+        s.assertEqual(None, r)
     
     def test_getAll(s):
         runner.add(user1, operation1, parms1, ctx1);
@@ -152,8 +165,9 @@ class Test_job(unittest.TestCase):
         s.assertEqual(None, rows[0][s.que.processIdI])
         #print '              task1:', task1
         #print 'rows[0][s.que.taskI]:',rows[0][s.que.taskI]
+        resultUnjson = json.loads(rows[0][s.que.resultI])
         s.assertEqual(task1, rows[0][s.que.taskI])
-        s.assertEqual(result1, rows[0][s.que.resultI])
+        s.assertEqual(result1unicode, resultUnjson)
 
         # Verify all fields in job2.
         s.assertEqual(2, rows[1][s.que.idI])
@@ -162,7 +176,8 @@ class Test_job(unittest.TestCase):
         s.assertEqual(today, rows[1][s.que.lastAccessI])
         s.assertEqual(None, rows[1][s.que.processIdI])
         s.assertEqual(task2, rows[1][s.que.taskI])
-        s.assertEqual(errorMsg1, rows[1][s.que.resultI])
+        resultUnjson = json.loads(rows[1][s.que.resultI])
+        s.assertEqual(errorMsg1, resultUnjson)
 
         # Verify all fields in job3.
         s.assertEqual(3, rows[2][s.que.idI])
@@ -171,7 +186,8 @@ class Test_job(unittest.TestCase):
         s.assertEqual(today, rows[2][s.que.lastAccessI])
         s.assertEqual(None, rows[2][s.que.processIdI])
         s.assertEqual(task3, rows[2][s.que.taskI])
-        s.assertEqual(None, rows[2][s.que.resultI])
+        resultUnjson = json.loads(rows[2][s.que.resultI])
+        s.assertEqual({}, resultUnjson)
 
     def test_getAllWhenNone(s):
         rows = s.que._getAll()
@@ -193,9 +209,11 @@ class Test_job(unittest.TestCase):
         s.runner._runner(1, task1)
         #all = s.que._getAll()
         #print 'all:', all
-        status, result = s.que.getStatus(1)
-        s.assertEqual(s.que.successSt, status)
-        s.assertEqual(result1, result)
+        r = s.que._getStatus(1)
+        successUnicode = json.loads(json.dumps(s.que.successSt))
+        resultUnjson = json.loads(r['result'])
+        s.assertEqual(successUnicode, r['status'])
+        s.assertEqual(result1, resultUnjson)
 
 if __name__ == '__main__':
     unittest.main()

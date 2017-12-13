@@ -45,8 +45,8 @@ class JobQueue(object):
         ')'
     )
     _dbPush = (
-        'INSERT INTO queue (status, user, lastAccess, task) '
-        'VALUES (?, ?, ?, ?)'
+        'INSERT INTO queue (status, user, lastAccess, task, result) '
+        'VALUES (?, ?, ?, ?, ?)'
     )
     _dbGetById = (
         'SELECT * FROM queue '
@@ -129,6 +129,15 @@ class JobQueue(object):
                 job = row
             return job
 
+    def _getStatus (s, id):
+    
+        # Get the status of one job.
+        row = s._getOne(id)
+        if row == None:
+            return None
+        else:
+            return { 'status': row[s.statusI], 'result': row[s.resultI] }
+
     # Future public functions ##################################################
 
     def remove (s, id):
@@ -149,18 +158,16 @@ class JobQueue(object):
         # Get all jobs owned by the given user.
         pass # TODO
 
-    # Public functions #########################################################
+# Public functions #########################################################
 
-    def getStatus (s, id):
-    
-        # Retrieve the status and result of the given job ID.
-        # @param id: the job ID
-        # @returns: (status, result) of the job or None if job not found;
-        #           only Success and Error have a result, others return None
-        #           for the result
-        row = s._getOne(id)
-        if row == None:
-            return None
-        else:
-            return (row[s.statusI], row[s.resultI])
+def getStatus (id, appCtx):
+
+    # Retrieve the status and result of the given job ID.
+    # @param id: the job ID
+    # @param appCtx: the app context
+    # @returns: status and result as a dict of the job or None if job not
+    #           found; only Success and Error have a result, others return an
+    #           empty dict ({}) for the result so there are no json
+    #           conversion complaints.
+    return JobQueue(appCtx.jobQueuePath)._getStatus(id)
 

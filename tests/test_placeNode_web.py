@@ -415,10 +415,11 @@ class Test_placeNode_web(unittest.TestCase):
                 'someNode': 'someValue',
             },
         }
-        status, result = s.runJob(data)
-        s.assertTrue(status == 'Error')
-        s.assertTrue(result ==
-            'Clustering data not found for layout: someLayout')
+        r = s.runJob(data)
+        s.assertTrue(r['status'] == 'Error')
+        jsonMsg = \
+            json.dumps('Clustering data not found for layout: someLayout')
+        s.assertTrue(r['result'] == jsonMsg)
 
     def test_layout_has_no_background_data(s):
         data = {
@@ -428,10 +429,11 @@ class Test_placeNode_web(unittest.TestCase):
                 'someNode': 'someValue',
             },
         }
-        status, result = s.runJob(data)
-        s.assertTrue(status == 'Error')
-        s.assertTrue(result ==
-            'Clustering data not found for layout: someLayout')
+        r = s.runJob(data)
+        s.assertTrue(r['status'] == 'Error')
+        jsonMsg = \
+            json.dumps('Clustering data not found for layout: someLayout')
+        s.assertTrue(r['result'] == jsonMsg)
             
 
     def test_create_bookmark(s):
@@ -458,17 +460,17 @@ class Test_placeNode_web(unittest.TestCase):
         jobId, status = \
             jobRunner.add('swat@soe.ucsc.edu', 'placeNode', data, ctx1)
 
-        # A new process ####################
-
-        # Prepare the task as it is stored in the queue.
+        # A new process, so we need another instance of the job runner.
         myJobRunner = JobRunner(quePath)
+
+        # Prepare the task in the same form as it is stored in the queue.
         task = myJobRunner._packTask('placeNode', data, ctx1)
 
         # Execute the job.
         myJobRunner._runner(1, task)
         
         # Return the result of the job.
-        return s.jobQueue.getStatus(1)
+        return s.jobQueue._getStatus(1)
 
     def test_single_node_no_individual_urls(s):
     

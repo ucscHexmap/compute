@@ -10,6 +10,7 @@ except ImportError:
 
 from util_web import Context, ErrorResp
 from jobQueue import JobQueue
+import jobQueue
 
 class JobRunner(object):
 
@@ -24,10 +25,15 @@ class JobRunner(object):
         return datetime.date.today()
 
     def _setResult (s, id, status, result=None):
-    
-        # Set the status and optional result.
+
+        # Set the status and optional result. An empty dict is used in the case
+        # of no result so it may be jsonized and de-jsonized without complaints.
+        if result == None:
+            result = {}
+        jsonResult = json.dumps(result, sort_keys=True)
         with s._getConn() as conn:
-            conn.execute(s.queue._dbSetResult, (status, result, s._today(), id,))
+            conn.execute(s.queue._dbSetResult,
+                (status, jsonResult, s._today(), id,))
 
         # Email to user if there is a result?
         # if result != None:
@@ -80,11 +86,11 @@ class JobRunner(object):
         # Unpack the task info into its components.
         unpacked = json.loads(packedTask)
 
-        # Convert the app context to an instance of the Context class.
-        appCtx = Context(unpacked['ctx']['app'])
-
         # Convert the ctx to an instance of the Context class.
         ctx = Context(unpacked['ctx'])
+    
+        # Convert the app context to an instance of the Context class.
+        appCtx = Context(ctx.app)
 
         # Replace ctx.app as a dict with the appCtx Context class instance.
         ctx.app = appCtx
@@ -133,15 +139,6 @@ class JobRunner(object):
         if job == None:
             return # No jobs to run
         
-        '''
-        # Create a new thread and run the job.
-        thread = Thread(target = s._runner,
-            args = (job[s.idI], job[s.taskI]))
-        thread.start()
-        #thread.join()
-        #print "thread finished...exiting"
-        '''
-        
         # Create a new independent process and run the job.
         parentPid=os.fork()
         if not parentPid:
@@ -164,11 +161,13 @@ class JobRunner(object):
     def _add (s, user, operation, parms, ctx):
     
         # Add a job to the end of the job queue.
+        # An empty dict is used as the result value
+        # so it may be jsonized and de-jsonized without complaints.
         with s._getConn() as conn:
             curs = conn.cursor()
             curs.execute(s.queue._dbPush,
                 (s.queue.inJobQueueSt, user, s._today(),
-                s._packTask(operation, parms, ctx),))
+                s._packTask(operation, parms, ctx), json.dumps({}),))
             jobId = curs.lastrowid
             
             if not ctx.app.unitTest:
@@ -177,8 +176,8 @@ class JobRunner(object):
                 s._runNext()
             
             # Return the id and status.
-            status, result = s.queue.getStatus(jobId)
-            return (jobId, status)
+            r = jobQueue.getStatus(jobId, ctx.app)
+            return (jobId, r['status'])
             
 # Public interface #########################################################
 
@@ -202,7 +201,7 @@ def add (user, operation, parms, ctx):
 
 # calcMain (parms, ctx)
 # The entry point to the calc operation which may transform the parameters
-# into a convenient form before calling the calc routine that does the work.
+# into a convenient form for the calc routine that actually does the work.
 # @param parms: parameters to the calc routine as a python dict
 # @param   ctx: information needed for the calc post processing
 # returns: (status, result) where status is 'Success' or 'Error;
