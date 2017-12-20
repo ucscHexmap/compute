@@ -61,12 +61,15 @@ all=( "${web[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${docker_safe[
 mac=( \
     test_basic_web \
     test_dynLayoutAware \
+    test_formatCheck \
     test_http \
     test_job \
     test_jobHttp \
     test_layoutMetaData \
+    test_layoutZeroReplace \
     test_placeNode_web \
     test_placeNode2_web \
+    test_process_categoricals \
     test_remoteCalc \
     test_similarity \
 )

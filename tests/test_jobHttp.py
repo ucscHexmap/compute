@@ -4,7 +4,7 @@
 
 import os
 import datetime
-import json, requests
+import json, requests, time
 
 import unittest
 import testUtil as util
@@ -28,28 +28,9 @@ result1unicode = json.loads(json.dumps(result1))
 errorMsg1 = {"error": "some error"}
 errorMsg1trace = {"error": "some error", "stackTrace": "some stackTrace"}
 
-'''
-# Job context
-appCtxDict = {'jobQueuePath': quePath, 'unitTest': True}
-appCtx = Context(appCtxDict)
-appCtxUnicode = json.loads(json.dumps(appCtxDict))
+# Seconds to wait for test job to complete
+wait = 0.1
 
-ctx1NoAppUnicode = json.loads(json.dumps({'prop1': 1}))
-ctxdict = {'app': appCtx}
-ctx1 = Context(ctxdict)
-ctx1.prop1 = 1
-
-# Tasks to execute as stored in the queue.
-task1 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
-
-# Usernames
-user1 = 'user1'
-
-# Parameters to a calc operation
-parms1 = {"parms1":"parms1"}
-
-today = str(datetime.date.today())
-'''
 class Test_jobHttp(unittest.TestCase):
 
     def postQuery(s, operation, data):
@@ -138,7 +119,7 @@ class Test_jobHttp(unittest.TestCase):
         s.assertEqual(r.status_code, 200)
         s.assertEqual('InJobQueue', rText['status'])
         s.assertFalse('result' in rText)
-    '''
+
     def test_getStatusRunning(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.runningSt})
         r = requests.get(
@@ -153,9 +134,10 @@ class Test_jobHttp(unittest.TestCase):
         s.assertEqual(r.status_code, 200)
         s.assertEqual(s.que.runningSt, rText['status'])
         s.assertFalse('result' in rText)
-        '''
+
     def test_getStatusSuccess(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.successSt})
+        time.sleep(wait)
         r = requests.get(
             'http://' + wwwSocket + '/jobStatus/jobId/1',
             #cert=(ctx['sslCert'], ctx['sslKey']),
@@ -171,6 +153,7 @@ class Test_jobHttp(unittest.TestCase):
     
     def test_getStatusSuccessResult(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.successSt + 'Result'})
+        time.sleep(wait)
         r = requests.get(
             'http://' + wwwSocket + '/jobStatus/jobId/1',
             #cert=(ctx['sslCert'], ctx['sslKey']),
@@ -187,6 +170,7 @@ class Test_jobHttp(unittest.TestCase):
 
     def test_getStatusError(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt})
+        time.sleep(wait)
         r = requests.get(
             'http://' + wwwSocket + '/jobStatus/jobId/1',
             #cert=(ctx['sslCert'], ctx['sslKey']),
@@ -202,6 +186,7 @@ class Test_jobHttp(unittest.TestCase):
 
     def test_getStatusErrorResult(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt + 'Result'})
+        time.sleep(wait)
         r = requests.get(
             'http://' + wwwSocket + '/jobStatus/jobId/1',
             #cert=(ctx['sslCert'], ctx['sslKey']),
@@ -218,6 +203,7 @@ class Test_jobHttp(unittest.TestCase):
 
     def test_getStatusErrorTrace(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt + 'Trace'})
+        time.sleep(wait)
         r = s.get('/jobStatus/jobId/1')
         rText = json.loads(r.text)
         #print 'r.status_code:', r.status_code

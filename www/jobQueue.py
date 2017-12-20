@@ -60,6 +60,8 @@ class JobQueue(object):
         'SET status = "' + runningSt + '", lastAccess = ? '
         'WHERE id = ?'
     )
+    #    'SET status = "' + runningSt + '", lastAccess = ?, processId = ? ',
+
     _dbNextToRun = (
         'SELECT * FROM queue '
         'WHERE status = "' + inJobQueueSt + '" LIMIT 1'

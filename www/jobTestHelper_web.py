@@ -1,6 +1,7 @@
 #!/usr/bin/env python2.7
 
-# A helper for job tests
+# A helper for job tests and an example operation making use of the job APIs,
+# where the operation is 'jobTestHelper'.
 
 import time
 import jobRunner
@@ -19,8 +20,11 @@ def preCalc(data, ctx):
         #print "preCalc():data['testStatus'] == 'InJobQueue'"
         ctx.app.unitTest = True
     elif data['testStatus'] == 'Running':
-        data['timeout'] = 2
+        data['timeout'] = 3
     return jobRunner.add(None, 'jobTestHelper', data, ctx)
+
+def postCalc (parms, ctx):
+    return
 
 def calcMain (parms, ctx):
 
@@ -39,7 +43,9 @@ def calcMain (parms, ctx):
     if 'timeout' in parms:
 
         # Give the job runner a chance to set the status to Running.
+        print 'before sleep'
         time.sleep(parms['timeout'])
+        print 'after sleep'
         return ('Success', result1)
     elif 'testStatus' in parms:
         if parms['testStatus'] == 'Success':

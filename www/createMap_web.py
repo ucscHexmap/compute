@@ -8,7 +8,6 @@
 
 import os, json, types, requests, traceback, csv, logging, datetime
 from os import path
-from subprocess import Popen
 import validate_web as validate
 from util_web import SuccessResp, ErrorResp, getMapMetaData
 import layout
