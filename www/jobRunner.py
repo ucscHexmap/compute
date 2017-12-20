@@ -2,7 +2,7 @@
 # The job runner.
 
 import os, traceback, datetime, json, importlib
-from collections import namedtuple
+from multiprocessing import Process
 try:
     from thread import get_ident
 except ImportError:
@@ -24,20 +24,19 @@ class JobRunner(object):
         # Today formatted as yyyy-mm-dd.
         return datetime.date.today()
 
-    def _setResult (s, id, status, result=None):
+    def _setDoneStatus (s, id, status, result=None):
 
-        # Set the status and optional result. An empty dict is used in the case
-        # of no result so it may be jsonized and de-jsonized without complaints.
-        if result == None:
-            result = {}
-        jsonResult = json.dumps(result, sort_keys=True)
+        # Set the status and optional result.
+        if result != None:
+            jsonResult = json.dumps(result, sort_keys=True)
+        else:
+            jsonResult = None
+        
         with s._getConn() as conn:
             conn.execute(s.queue._dbSetResult,
                 (status, jsonResult, s._today(), id,))
 
-        # Email to user if there is a result?
-        # if result != None:
-        #   TODO email user
+        # TODO Email to user?
 
     def _findModuleName (s, operation):
     
@@ -62,10 +61,8 @@ class JobRunner(object):
             status, result = module.calcMain(parms, ctx)
         except Exception as e:
             status = 'Error'
-            result = str(e)
+            result = { 'error': repr(e), 'stackTrace': traceback.format_exc() }
 
-        #print '_execCalcMain() status, result:', status, ',', result
-        
         return (status, result)
 
     def _packTask (s, operation, parms, ctx):
@@ -108,13 +105,11 @@ class JobRunner(object):
         s.queue = JobQueue(s.jobQueuePath)
 
         # Set the job's status to 'running' and save it's process ID.
-        with s._getConn() as conn:
-            conn.execute(s.queue._dbSetRunning, (processId, s._today(), id,))
+        #with s._getConn() as conn:
+        #    conn.execute(s.queue._dbSetRunning, (processId, s._today(), id,))
         
         # Pull the components out of the jobQueue task.
         ctx, operation, parms = s._unpackTask(task)
-        
-        #print '_runner():operation:', operation
         
         if moduleName == None:
             moduleName = s._findModuleName(operation)
@@ -123,7 +118,11 @@ class JobRunner(object):
         status, result = s._execCalcMain(moduleName, parms, ctx)
         
         # Update the status and result in the jobQueue.
-        s._setResult(id, status, result)
+        #print "_runner():id:", id
+        #print "_runner():status:", status
+        #print "_runner():result:", result
+
+        s._setDoneStatus(id, status, result)
 
     def _getNextToRun(s):
         with s._getConn() as conn:
@@ -138,12 +137,22 @@ class JobRunner(object):
         job = s._getNextToRun()
         if job == None:
             return # No jobs to run
-        
-        # Create a new independent process and run the job.
-        parentPid=os.fork()
-        if not parentPid:
-            s._runner (job[s.queue.idI], job[s.queue.taskI])
 
+        id = job[s.queue.idI]
+
+        # Set the job's status to 'running'.
+        with s._getConn() as conn:
+            conn.execute(s.queue._dbSetRunning, (s._today(), id,))
+
+        # TODO we shouldn't need this:
+        # Required to force db update before executing the job.
+        r = jobQueue.getStatus(id, s.jobQueuePath)
+
+        # Create a new independent process and run the job.
+        p = Process(target=s._runner, args=(id, job[s.queue.taskI],))
+        p.start()
+        p.join()
+    
     def _pollForNew (s, conn):
     
         # Poll for new jobs.
@@ -160,23 +169,28 @@ class JobRunner(object):
 
     def _add (s, user, operation, parms, ctx):
     
+        #print '_add():ctx.app:', str(ctx.app)
+    
         # Add a job to the end of the job queue.
         # An empty dict is used as the result value
         # so it may be jsonized and de-jsonized without complaints.
         with s._getConn() as conn:
             curs = conn.cursor()
             curs.execute(s.queue._dbPush,
-                (s.queue.inJobQueueSt, user, s._today(),
-                s._packTask(operation, parms, ctx), json.dumps({}),))
+                (s.queue.inJobQueueSt, user, s._today(), s._packTask(operation, parms, ctx),))
             jobId = curs.lastrowid
             
+            # Save the id and status.
+            r = jobQueue.getStatus(jobId, s.jobQueuePath)
+            
+            #print '_add():ctx.app.unitTest:', str(ctx.app.unitTest)
+
             if not ctx.app.unitTest:
 
                 # Get the next job immediately so we don't wait for the polling.
                 s._runNext()
             
             # Return the id and status.
-            r = jobQueue.getStatus(jobId, ctx.app)
             return (jobId, r['status'])
             
 # Public interface #########################################################
@@ -192,7 +206,9 @@ def add (user, operation, parms, ctx):
     #                      <operation>_www.py.calcMain()
     # @params         ctx: the context holding information for the postCalc
     # @returns: (jobId, status)
-    return JobRunner(ctx.app.jobQueuePath)._add(user, operation, parms, ctx)
+    r = JobRunner(ctx.app.jobQueuePath)._add(user, operation, parms, ctx)
+    return { 'jobId': r[0], 'status': r[1] }
+    #return jobRunner.add(None, 'jobTestHelper', data, ctx)
 
 # calcMain()
 # Each operation needs a function defined in <operation>_www.py as below

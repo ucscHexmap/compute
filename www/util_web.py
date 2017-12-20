@@ -5,47 +5,29 @@ import tempfile
 class SuccessResp(Exception):
 
     # Define a success response class which converts to json.
-
     def __init__(self, data):
         Exception.__init__(self)
         self.data = data
-
-    def to_dict(self):
-        return self.data
-
 
 class SuccessRespNoJson(Exception):
 
     # Define a success response class which does not convert to json.
-
     def __init__(self, data):
         Exception.__init__(self)
         self.data = data
 
-    def to_dict(self):
-        return self.data
-
-
 class ErrorResp(Exception):
 
     # Define an error response class
-
     DEFAULT_STATUS = 400 # default to 'invalid usage'
 
     def __init__(self,
                  message,
-                 status_code=DEFAULT_STATUS,
-                 payload=None):
+                 status_code=DEFAULT_STATUS):
 
         Exception.__init__(self)
-        self.message = message
+        self.message = {'error': message}
         self.status_code = status_code
-        self.payload = payload
-
-    def to_dict(self):
-        rv = dict(self.payload or ())
-        rv['error'] = self.message
-        return rv
 
 class Context(object):
     def __init__(self, entries):

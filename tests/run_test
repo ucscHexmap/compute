@@ -18,9 +18,11 @@ fi
 export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
 export DEBUG=1
 
-# Test only the *_web_tests.py files
+# Test only the *_web.py files
 web=( \
-    test_basic_www \
+    test_basic_web \
+    test_job \
+    test_jobHttp \
     test_placeNode_web \
     test_placeNode2_web \
 )
@@ -57,9 +59,11 @@ all=( "${web[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${docker_safe[
 
 # local mac tests are those that normally pass on a mac
 mac=( \
-    test_basic_www \
+    test_basic_web \
     test_dynLayoutAware \
     test_http \
+    test_job \
+    test_jobHttp \
     test_layoutMetaData \
     test_placeNode_web \
     test_placeNode2_web \

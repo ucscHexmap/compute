@@ -2,12 +2,12 @@
 # The job queue.
 
 import os, sqlite3, traceback, datetime, json
-from peewee import *
-
 try:
     from thread import get_ident
 except ImportError:
     from dummy_thread import get_ident
+
+from util_web import ErrorResp
 
 class JobQueue(object):
 
@@ -16,7 +16,6 @@ class JobQueue(object):
     runningSt = 'Running'
     successSt ='Success'
     errorSt = 'Error'
-    # future: cancelSt = 'Cancelled'
     
     # Column indices.
     idI = 0
@@ -26,10 +25,6 @@ class JobQueue(object):
     processIdI = 4
     taskI = 5
     resultI = 6
-    
-    # Errors returned from public functions.
-    errorInvalidArgs = 'errorInvalidArgs'
-    errorBadStateChangeFrom = 'errorBadStateChangeFrom'
     
     # Sqlite database access.
     _dbCreate = (
@@ -45,8 +40,8 @@ class JobQueue(object):
         ')'
     )
     _dbPush = (
-        'INSERT INTO queue (status, user, lastAccess, task, result) '
-        'VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO queue (status, user, lastAccess, task) '
+        'VALUES (?, ?, ?, ?)'
     )
     _dbGetById = (
         'SELECT * FROM queue '
@@ -62,7 +57,7 @@ class JobQueue(object):
     )
     _dbSetRunning = (
         'UPDATE queue '
-        'SET status = "' + runningSt + '", processId = ?, lastAccess = ? '
+        'SET status = "' + runningSt + '", lastAccess = ? '
         'WHERE id = ?'
     )
     _dbNextToRun = (
@@ -135,8 +130,10 @@ class JobQueue(object):
         row = s._getOne(id)
         if row == None:
             return None
+        elif row[s.resultI]:
+            return { 'status': row[s.statusI], 'result': json.loads(row[s.resultI]) }
         else:
-            return { 'status': row[s.statusI], 'result': row[s.resultI] }
+            return { 'status': row[s.statusI] }
 
     # Future public functions ##################################################
 
@@ -145,8 +142,7 @@ class JobQueue(object):
         # Remove a job from the queue.
         # TODO we should not allow removal of running jobs. They should be
         # cancelled first.
-        with s._getConn() as conn:
-            conn.execute(s._dbRemoveById, (id,))
+        pass
 
     def cancel (s, id):
     
@@ -160,14 +156,21 @@ class JobQueue(object):
 
 # Public functions #########################################################
 
-def getStatus (id, appCtx):
+def getAllJobs (jobQueuePath):
+
+    # Dump all jobs in the queue.
+    
+    return { 'jobs': JobQueue(jobQueuePath)._getAll() }
+
+def getStatus (id, jobQueuePath):
 
     # Retrieve the status and result of the given job ID.
     # @param id: the job ID
     # @param appCtx: the app context
     # @returns: status and result as a dict of the job or None if job not
-    #           found; only Success and Error have a result, others return an
-    #           empty dict ({}) for the result so there are no json
-    #           conversion complaints.
-    return JobQueue(appCtx.jobQueuePath)._getStatus(id)
-
+    #           found; only Success and Error may have an optional result; if
+    #           there is no result, no result property is returned
+    statusResult = JobQueue(jobQueuePath)._getStatus(id)
+    if statusResult == None:
+        raise ErrorResp('unknown job ID of: ' + str(id))
+    return statusResult

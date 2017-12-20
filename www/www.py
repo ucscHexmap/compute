@@ -11,6 +11,8 @@ from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, tmpDir, \
 import validate_web as validate
 import placeNode_web
 import reflect_web
+import jobTestHelper_web
+import jobQueue
 
 # Set up the flask application where app.config is only accessed in this file.
 app = Flask(__name__)
@@ -67,11 +69,10 @@ def validatePost():
 
     return dataIn
 
-
 # Register the success handler to convert to json
 @app.errorhandler(SuccessResp)
 def successResponse(success):
-    response = jsonify(success.to_dict())
+    response = jsonify(success.data)
     response.status_code = 200
     #logging.info('success json response: ' + str(response))
     return response
@@ -79,7 +80,7 @@ def successResponse(success):
 # Register the success handler that doesn't convert to json
 @app.errorhandler(SuccessRespNoJson)
 def successResponseNoJson(success):
-    response = success.to_dict()
+    response = success.data
     response.status_code = 200
     #logging.info('success no json response: ' + str(response))
     return response
@@ -87,30 +88,14 @@ def successResponseNoJson(success):
 # Register the error handler
 @app.errorhandler(ErrorResp)
 def errorResponse(error):
-    response = jsonify(error.to_dict())
+    response = jsonify(error.message)
     response.status_code = error.status_code
     statusCode, responseStr = str(response.status_code), str(response)
     logging.error(
-        'Request failed with: ' +
-        statusCode + ': ' + responseStr + " " + error.message
-    )
+        'Request failed with: ' + statusCode + ': ' + str(error.message))
     return response
 
-@app.errorhandler(Exception)
-def unhandledException(e):
-    trace = traceback.format_exc()
-    responseDict = {
-            "traceback" : trace,
-            "error" : repr(e),
-            }
-
-    response = jsonify(responseDict)
-    response.status_code = 500
-
-    logging.error("Uncaught exception: \n" + trace)
-
-    return response
-
+# Register the unhandled Exception handler
 @app.errorhandler(Exception)
 def unhandledException(e):
     trace = traceback.format_exc()
@@ -211,29 +196,42 @@ def dataRouteOk404(dataId):
     logging.debug('Received data OK 404 request for ' + dataId)
     dataRouteInner(dataId, True)
 
-# Handle query/<operation> routes
-@app.route('/query/<string:operation>', methods=['POST'])
-def queryRoute(operation):
-    logging.info('Received query operation: ' + operation)
-    dataIn = validatePost()
-
-    try:
-        if operation == 'overlayNodes':
-            jobCtx = Context({'app': appCtx})
-            result = placeNode_web.preCalc(dataIn, jobCtx)
-        else:
-            raise ErrorResp('URL not found', 404)
-    except ErrorResp:
-         # Re-raise this error to send the response.
-        raise
-    except Exception as e:
-        traceback.print_exc()
-        raise ErrorResp(repr(e), 500)
-
-    logging.info('Success with query operation: ' + operation)
+# Handle get all jobs route
+@app.route('/getAllJobs', methods=['GET'])
+def getAllJobsRoute():
+    #logging.info('Received get all jobs request')
+    result = jobQueue.getAllJobs(appCtx.jobQueuePath)
+    #logging.info('Successful get all job srequest')
     raise SuccessResp(result)
 
-# Handle query/<operation> routes
+# Handle jobStatus route
+@app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
+def jobStatusRoute(jobId):
+    #logging.info('Received jobStatus request for job ID: ' + str(jobId))
+    result = jobQueue.getStatus(jobId, appCtx.jobQueuePath)
+    #logging.info('Successful jobStatus request for job ID: ' + str(jobId))
+    raise SuccessResp(result)
+
+# Handle query/jobTestHelper routes
+@app.route('/query/jobTestHelper', methods=['POST'])
+def queryJobTestHelperRoute():
+    #logging.info('Received query jobTestHelper')
+    result = jobTestHelper_web.preCalc(validatePost(), Context({'app': appCtx}))
+    #logging.info('Success with query jobTestHelper')
+    #print 'queryJobTestHelperRoute():result', result
+    raise SuccessResp(result)
+
+# Handle query/overlayNodes routes
+@app.route('/query/overlayNodes', methods=['POST'])
+def queryOverlayNodesRoute():
+    logging.info('Received query overlayNodes')
+    dataIn = validatePost()
+    jobCtx = Context({'app': appCtx})
+    result = placeNode_web.preCalc(dataIn, jobCtx)
+    logging.info('Success with query overlayNodes')
+    raise SuccessResp(result)
+
+# Handle reflect/metadata routes
 @app.route(
 '/reflect/metaData/majorId/<string:majorId>/minorId/<string:minorId>',
     methods=['GET']
@@ -242,7 +240,7 @@ def getReflectMetaData(majorId, minorId):
     responseDict = reflect_web.getReflectionMetaData(majorId, minorId)
     raise SuccessResp(responseDict)
 
-# Handle query/<operation> routes
+# Handle reflect routes
 @app.route('/reflect', methods=['POST'])
 def reflectionRequest():
     """
@@ -269,8 +267,7 @@ def reflectionRequest():
 
     raise SuccessResp(responseDict)
 
-
-# Handle data/<dataId> routes which are data requests by data ID.
+# Handle reflect/attrId routes
 @app.route('/reflect/attrId/<string:attrId>', methods=['GET'])
 def getRefAttr(attrId):
     """Returns reflection request JSON."""
@@ -278,9 +275,8 @@ def getRefAttr(attrId):
     responseDict = reflect_web.getReflectionAttr(attrId)
     raise SuccessResp(responseDict)
 
-
 # Handle the route to test
 @app.route('/test', methods=['POST', 'GET'])
 def testRoute():
     logging.debug('testRoute current_app: ' + str(current_app))
-    raise SuccessResp('just testing')
+    raise SuccessResp('just testing data server')

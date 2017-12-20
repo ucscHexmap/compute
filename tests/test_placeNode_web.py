@@ -417,9 +417,12 @@ class Test_placeNode_web(unittest.TestCase):
         }
         r = s.runJob(data)
         s.assertTrue(r['status'] == 'Error')
-        jsonMsg = \
-            json.dumps('Clustering data not found for layout: someLayout')
-        s.assertTrue(r['result'] == jsonMsg)
+        #print 'r:', r
+        #print "r['result']['error']:@@" + r['result']['error'] + '@@'
+        expectedResult = \
+            "Exception(u'Clustering data not found for layout: someLayout',)"
+        s.assertEqual(expectedResult, r['result']['error'])
+        s.assertTrue('stackTrace' in r['result'])
 
     def test_layout_has_no_background_data(s):
         data = {
@@ -431,13 +434,13 @@ class Test_placeNode_web(unittest.TestCase):
         }
         r = s.runJob(data)
         s.assertTrue(r['status'] == 'Error')
-        jsonMsg = \
-            json.dumps('Clustering data not found for layout: someLayout')
-        s.assertTrue(r['result'] == jsonMsg)
-            
+        expectedResult = \
+            "Exception(u'Clustering data not found for layout: someLayout',)"
+        s.assertEqual(expectedResult, r['result']['error'])
+        s.assertTrue('stackTrace' in r['result'])
+
 
     def test_create_bookmark(s):
-        #resData = '{"TESTpythonCallStub":"success"}\n';
         opts = [
             '-d', json.dumps(dict(
                 page = 'mapPage',
@@ -451,7 +454,6 @@ class Test_placeNode_web(unittest.TestCase):
         ]
         rc = testUtil.doCurl(opts, s.viewServer + '/query/createBookmark')
         #print "rc['code']:", rc['code']
-        #print "rc['data']:", rc['data']
         s.assertTrue(rc['code'] == '200')
     
     def runJob (s, data):
