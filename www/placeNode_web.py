@@ -17,7 +17,7 @@ import pandas as pd
 import StringIO
 import numpy as np
 
-import jobRunner
+import job
 
 def check_duplicate_row_error(error):
     """
@@ -37,7 +37,7 @@ def check_duplicate_row_error(error):
 
     raise error
 
-def validateParameters(data):
+def validateParms(data):
     '''
     Validate the query.
     @param data: data received in the http post request
@@ -272,7 +272,7 @@ def preCalc(dataIn, ctx):
         email = dataIn['email']
     else:
         email = None
-    jobRunner.add(email, 'placeNode', dataIn, ctx)
+    job.add(email, 'placeNode', dataIn, ctx)
 
 def calcMain(dataIn, ctx):
     

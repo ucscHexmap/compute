@@ -57,10 +57,9 @@ class JobQueue(object):
     )
     _dbSetRunning = (
         'UPDATE queue '
-        'SET status = "' + runningSt + '", lastAccess = ? '
+        'SET status = "' + runningSt + '", lastAccess = ?, processId = ? '
         'WHERE id = ?'
     )
-    #    'SET status = "' + runningSt + '", lastAccess = ?, processId = ? ',
 
     _dbNextToRun = (
         'SELECT * FROM queue '
@@ -73,34 +72,44 @@ class JobQueue(object):
     )
 
     def getConnection (s):
-        return sqlite3.connect(s.path, timeout=60, isolation_level=None)
-    
-    def _getConn (s):
     
         # Get the sqlite connection for this thread where isolation_level=None
         # tells sqlite to commit automatically after each db update.
+        return sqlite3.connect(s.queuePath, timeout=60, isolation_level=None)
+    
+    def _getConn (s):
+    
+        # Get the sqlite connection for this thread..
         id = get_ident()
         if id not in s._connection_cache:
             s._connection_cache[id] = s.getConnection()
 
         return s._connection_cache[id]
 
-    def _cullOld (s, conn):
+    def _today (s):
     
-        # TODO Clean up by removing any jobs older than a certain age.
-        # Older than a month?
-        # Once per day?
-        pass
-    
-    def __init__(s, path):
+        # Today formatted as yyyy-mm-dd.
+        return datetime.date.today()
+
+    def __init__(s, queuePath):
     
         # Connect to the queue database, creating if need be.
-        s.path = os.path.abspath(path)
+        s.queuePath = queuePath
         s._connection_cache = {}
         with s._getConn() as conn:
             conn.execute(s._dbCreate)
 
-    def _getAll (s, file=None):
+    def _getOne (s, id):
+
+        # Get the entire row for the given ID.
+         with s._getConn() as conn:
+            get = conn.execute(s._dbGetById, (id,))
+            job = None
+            for row in get:
+                job = row
+            return job
+
+    def getAll (s, file=None):
         
         # Get every row in the job queue, writing to a file, or to memory.
         # Probably only for debugging and testing.
@@ -115,64 +124,40 @@ class JobQueue(object):
                 for row in all:
                     rows.append(row)
                 return rows
-    
-    def _getOne (s, id):
 
-        # Get the entire row for the given ID.
-         with s._getConn() as conn:
-            get = conn.execute(s._dbGetById, (id,))
-            job = None
-            for row in get:
-                job = row
-            return job
-
-    def _getStatus (s, id):
+    def getStatus (s, id):
     
         # Get the status of one job.
         row = s._getOne(id)
         if row == None:
             return None
         elif row[s.resultI]:
-            return { 'status': row[s.statusI], 'result': json.loads(row[s.resultI]) }
+            return {
+                'status': row[s.statusI], 'result': json.loads(row[s.resultI])
+            }
         else:
             return { 'status': row[s.statusI] }
 
-    # Future public functions ##################################################
-
-    def remove (s, id):
+    def setResult (s, id, status, jsonResult):
+        with s._getConn() as conn:
+            conn.execute(s._dbSetResult, (status, jsonResult, s._today(), id,))
     
-        # Remove a job from the queue.
-        # TODO we should not allow removal of running jobs. They should be
-        # cancelled first.
-        pass
+    def getTask (s, id):
+        job = s._getOne(id)
+        if job == None:
+            return None
+        return job[s.taskI]
 
-    def cancel (s, id):
+    def setStatusRunning (s, id, processId=None):
     
-        # Mark a job as cancelled and save the error message.
-        pass # TODO
+        # Set the job's status to 'running'.
+        with s.getConnection() as conn:
+            conn.execute(s._dbSetRunning, (s._today(), processId, id,))
 
-    def getByUser (s, user):
-
-        # Get all jobs owned by the given user.
-        pass # TODO
-
-# Public functions #########################################################
-
-def getAllJobs (jobQueuePath):
-
-    # Dump all jobs in the queue.
+    def add (s, id, packedTask, user):
     
-    return { 'jobs': JobQueue(jobQueuePath)._getAll() }
-
-def getStatus (id, jobQueuePath):
-
-    # Retrieve the status and result of the given job ID.
-    # @param id: the job ID
-    # @param appCtx: the app context
-    # @returns: status and result as a dict of the job or None if job not
-    #           found; only Success and Error may have an optional result; if
-    #           there is no result, no result property is returned
-    statusResult = JobQueue(jobQueuePath)._getStatus(id)
-    if statusResult == None:
-        raise ErrorResp('unknown job ID of: ' + str(id))
-    return statusResult
+        # Add a job to the job queue.
+        with s._getConn() as conn:
+            curs = conn.cursor()
+            curs.execute(s._dbPush, (s.inJobQueueSt, user, s._today(), packedTask,))
+            return curs.lastrowid

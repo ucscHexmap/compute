@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-# This tests the job queue and job runner.
+# This tests the job functionality without going through the server.
 
 import os
 import datetime
@@ -8,10 +8,11 @@ import json
 
 import unittest
 import testUtil as util
-from jobRunner import JobRunner
-import jobRunner as runner
+import job
 from jobQueue import JobQueue
 import jobQueue as que
+from jobProcess import JobProcess
+import jobProcess
 from util_web import Context
 
 # TODO create a dir: out
@@ -77,15 +78,15 @@ class Test_job(unittest.TestCase):
         except:
             pass
         self.que = JobQueue(quePath)
-        self.runner = JobRunner(quePath)
+        self.jobProcess = JobProcess(quePath)
 
     def test_packTask(s):
-        packed = s.runner._packTask(operation1, parms1, ctx1);
+        packed = job._packTask(operation1, parms1, ctx1);
         s.assertEqual(task1, packed)
     
     def test_unpackTask(s):
-        packed = s.runner._packTask(operation1, parms1, ctx1)
-        ctx, operation, parms = s.runner._unpackTask(packed)
+        packed = job._packTask(operation1, parms1, ctx1)
+        ctx, operation, parms = s.jobProcess._unpackTask(packed)
         #print 'operation, parms, ctx:', operation, parms, ctx
         s.assertEqual(operation1, operation)
         s.assertEqual(parms1, parms)
@@ -100,8 +101,8 @@ class Test_job(unittest.TestCase):
         s.assertEqual(str(ctx1NoAppUnicode), str(ctx))
     
     def test_add(s):
-        r = runner.add(user1, operation1, parms1, ctx1)
-        task1 = s.runner._packTask(operation1, parms1, ctx1);
+        r = job.add(user1, operation1, parms1, ctx1)
+        task1 = job._packTask(operation1, parms1, ctx1);
 
         # Verify correct job ID & status was returned.
         s.assertEqual(1, r['jobId']);
@@ -118,74 +119,74 @@ class Test_job(unittest.TestCase):
         s.assertEqual(None, out[s.que.resultI])
 
     def test_getOne(s):
-        runner.add(user1, operation1, parms1, ctx1);
-        job = s.que._getOne(1)
-        s.assertEqual(1, job[s.que.idI])
+        job.add(user1, operation1, parms1, ctx1);
+        aJob = s.que._getOne(1)
+        s.assertEqual(1, aJob[s.que.idI])
     
     def test_getOneWithNone(s):
-        job = s.que._getOne(1)
-        s.assertEqual(None, job)
+        aJob = s.que._getOne(1)
+        s.assertEqual(None, aJob)
     
     def test__getStatus(s):
     
-        # Test the private _getStatus()
-        runner.add(user1, operation1, parms1, ctx1);
-        r = s.que._getStatus(1)
+        # Test the queue getStatus()
+        job.add(user1, operation1, parms1, ctx1);
+        r = s.que.getStatus(1)
         s.assertEqual(s.que.inJobQueueSt, r['status']);
         s.assertFalse('result' in r)
 
     def test__getStatusBadJobId(s):
     
-        # Test the private _getStatus() for unknown job ID
-        r = s.que._getStatus(1)
+        # Test the queue getStatus() for unknown job ID
+        r = s.que.getStatus(1)
         s.assertEqual(None, r);
     
     def test_getStatusInJobQueue(s):
 
-        # Test the public getStatus()
-        runner.add(user1, operation1, parms1, ctx1);
-        r = que.getStatus(1, quePath)
+        # Test the job getStatus()
+        job.add(user1, operation1, parms1, ctx1);
+        r = job.getStatus(1, quePath)
         s.assertEqual(s.que.inJobQueueSt, r['status']);
         s.assertFalse('result' in r)
 
     def test_getStatusRunning(s):
-        runner.add(user1, operation1, parms1, ctx1);
-        s.runner._setDoneStatus(1, s.que.runningSt)
-        r = que.getStatus(1, quePath)
+        job.add(user1, operation1, parms1, ctx1);
+        jobProcess._setDoneStatus(quePath, 1, s.que.runningSt)
+        r = job.getStatus(1, quePath)
         #print 'r:', r
         s.assertEqual(s.que.runningSt, r['status']);
         s.assertFalse('result' in r)
 
     def test_getStatusSuccess(s):
-        runner.add(user1, operation1, parms1, ctx1);
-        s.runner._setDoneStatus(1, s.que.successSt, result1)
-        r = que.getStatus(1, quePath)
+        job.add(user1, operation1, parms1, ctx1);
+        jobProcess._setDoneStatus(quePath, 1, s.que.successSt, result1)
+        r = job.getStatus(1, quePath)
         #print 'r:', r
         s.assertEqual(s.que.successSt, r['status']);
         #s.assertEqual(json.dumps('result1'), r['result']);
         s.assertEqual(result1, r['result']);
 
     def test_getStatusError(s):
-        runner.add(user1, operation1, parms1, ctx1);
-        s.runner._setDoneStatus(1, s.que.errorSt, errorMsg1)
-        r = que.getStatus(1, quePath)
+        job.add(user1, operation1, parms1, ctx1);
+        jobProcess._setDoneStatus(quePath, 1, s.que.errorSt, errorMsg1)
+        r = job.getStatus(1, quePath)
         s.assertEqual(s.que.errorSt, r['status']);
         s.assertEqual(errorMsg1, r['result']);
 
     def test_getStatusErrorWithTrace(s):
-        runner.add(user1, operation1, parms1, ctx1);
-        s.runner._setDoneStatus(1, s.que.errorSt, errorMsg1trace)
-        r = que.getStatus(1, quePath)
+        job.add(user1, operation1, parms1, ctx1);
+        jobProcess._setDoneStatus(quePath, 1, s.que.errorSt, errorMsg1trace)
+        r = job.getStatus(1, quePath)
         s.assertEqual(s.que.errorSt, r['status']);
         s.assertEqual(errorMsg1trace, r['result']);
 
     def test_getAll(s):
-        runner.add(user1, operation1, parms1, ctx1);
-        runner.add(user2, operation2, parms2, ctx2);
-        runner.add(user3, operation3, parms3, ctx3);
-        s.runner._setDoneStatus(1, s.que.successSt, result1)
-        s.runner._setDoneStatus(2, s.que.errorSt, errorMsg1)
-        rows = s.que._getAll()
+        job.add(user1, operation1, parms1, ctx1);
+        job.add(user2, operation2, parms2, ctx2);
+        job.add(user3, operation3, parms3, ctx3);
+        jobProcess._setDoneStatus(quePath, 1, s.que.successSt, result1)
+        jobProcess._setDoneStatus(quePath, 2, s.que.errorSt, errorMsg1)
+        rows = job.getAll(quePath)['jobs']
         #print 'rows[0]:', rows[0]
 
         # Verify all fields in job1.
@@ -220,25 +221,8 @@ class Test_job(unittest.TestCase):
         s.assertEqual(None, rows[2][s.que.resultI])
 
     def test_getAllWhenNone(s):
-        rows = s.que._getAll()
-        s.assertEqual([], rows)
+        rows = job.getAll(quePath)
+        s.assertEqual({'jobs': []}, rows)
 
-    def test_getNextToRun(s):
-        runner.add(user1, operation1, parms1, ctx1);
-        job = s.runner._getNextToRun()
-        s.assertEqual(1, job[s.que.idI]);
-
-    def test_getNextToRunWhenNone(s):
-        job = s.runner._getNextToRun()
-        s.assertEqual(None, job);
-
-    def test_runner(s):
-        runner.add(user1, operation1, parms1, ctx1)
-        s.runner._runner(1, task1)
-        r = s.que._getStatus(1)
-        #print 'r:', r
-        s.assertEqual('Success', r['status'])
-        s.assertEqual(result1, r['result'])
-    
 if __name__ == '__main__':
     unittest.main()

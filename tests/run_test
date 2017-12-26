@@ -23,9 +23,9 @@ web=( \
     test_basic_web \
     test_job \
     test_jobHttp \
-    test_placeNode_web \
     test_placeNode2_web \
 )
+    #test_placeNode_web \
 
 # Deprecated with hexagram server code moving to the compute server
 DEPRECATED=( \
@@ -57,7 +57,7 @@ docker_safe=( \
 # Combine the lists above to get ALL of the tests
 all=( "${web[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${docker_safe[@]}" )
 
-# local mac tests are those that normally pass on a mac
+# tests that normally pass on a mac
 mac=( \
     test_basic_web \
     test_dynLayoutAware \
@@ -67,12 +67,12 @@ mac=( \
     test_jobHttp \
     test_layoutMetaData \
     test_layoutZeroReplace \
-    test_placeNode_web \
     test_placeNode2_web \
     test_process_categoricals \
     test_remoteCalc \
     test_similarity \
 )
+#    test_placeNode_web \
 
 # this really needs selenium rather than manually building maps from the UI
     #test_createMapUi \

@@ -12,7 +12,7 @@ import validate_web as validate
 import placeNode_web
 import reflect_web
 import jobTestHelper_web
-import jobQueue
+import job
 
 # Set up the flask application where app.config is only accessed in this file.
 app = Flask(__name__)
@@ -32,7 +32,8 @@ appCtxDict = {
     'unitTest': int(os.environ.get('UNIT_TEST', 0)),
     'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
 }
-appCtxDict['jobQueuePath'] = os.path.join(appCtxDict['hubPath'], '../computeDb/jobQueue.db')
+appCtxDict['jobQueuePath'] = os.path.abspath(
+    os.path.join(appCtxDict['hubPath'], '../computeDb/jobQueue.db'))
 appCtxDict['viewDir'] = os.path.join(appCtxDict['dataRoot'], 'view')
 appCtx = Context(appCtxDict)
 
@@ -200,25 +201,25 @@ def dataRouteOk404(dataId):
 @app.route('/getAllJobs', methods=['GET'])
 def getAllJobsRoute():
     #logging.info('Received get all jobs request')
-    result = jobQueue.getAllJobs(appCtx.jobQueuePath)
+    result = job.getAll(appCtx.jobQueuePath)
     #logging.info('Successful get all job srequest')
     raise SuccessResp(result)
 
 # Handle jobStatus route
 @app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
 def jobStatusRoute(jobId):
-    #logging.info('Received jobStatus request for job ID: ' + str(jobId))
-    result = jobQueue.getStatus(jobId, appCtx.jobQueuePath)
-    #logging.info('Successful jobStatus request for job ID: ' + str(jobId))
+    logging.info('Received jobStatus request for job ID: ' + str(jobId))
+    result = job.getStatus(jobId, appCtx.jobQueuePath)
+    logging.info('Successful jobStatus request for job ID: ' + str(jobId))
     raise SuccessResp(result)
 
 # Handle query/jobTestHelper routes
 @app.route('/query/jobTestHelper', methods=['POST'])
 def queryJobTestHelperRoute():
-    #logging.info('Received query jobTestHelper')
+    logging.info('Received query jobTestHelper')
     result = jobTestHelper_web.preCalc(validatePost(), Context({'app': appCtx}))
-    #logging.info('Success with query jobTestHelper')
-    #print 'queryJobTestHelperRoute():result', result
+    logging.info('Success with query jobTestHelper')
+    print 'queryJobTestHelperRoute():result', result
     raise SuccessResp(result)
 
 # Handle query/overlayNodes routes

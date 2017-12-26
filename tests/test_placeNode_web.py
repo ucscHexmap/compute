@@ -472,7 +472,7 @@ class Test_placeNode_web(unittest.TestCase):
         myJobRunner._runner(1, task)
         
         # Return the result of the job.
-        return s.jobQueue._getStatus(1)
+        return s.jobQueue.getStatus(1)
 
     def test_single_node_no_individual_urls(s):
     
