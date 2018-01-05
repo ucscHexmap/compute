@@ -38,13 +38,10 @@ def preCalc(data, ctx):
         # Set unitTest to False so the job will run immediately.
         ctx.app.unitTest = False
 
-    print 'preCalc():ctx.app.unitTest:', ctx.app.unitTest
-    print "preCalc():data['testStatus']:", data['testStatus']
-
     # Add this task to the job queue.
     return job.add(None, 'jobTestHelper', data, ctx)
 
-def postCalc ():
+def _postCalc ():
 
     # Whatever post calculation work to be done before storing the result in
     # the job database.
@@ -69,13 +66,13 @@ def calcMain (parms, ctx):
     if 'testStatus' in parms:
         if parms['testStatus'] == 'Running':
             time.sleep(secondsToRun)
-            postCalc()
+            _postCalc()
             return ('Success', result)
         elif parms['testStatus'] == 'Success':
-            postCalc()
+            _postCalc()
             return ('Success', None)
         elif parms['testStatus'] == 'SuccessResult':
-            postCalc()
+            _postCalc()
             return ('Success', result)
         elif parms['testStatus'] == 'Error':
             return ('Error', None)

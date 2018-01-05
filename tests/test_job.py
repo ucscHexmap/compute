@@ -23,7 +23,13 @@ quePath = os.path.join(os.getcwd() , 'out/jobQueue.db') # database file name
 ctx2 = 'ctx2'
 ctx3 = 'ctx3'
 
-appCtxDict = {'jobQueuePath': quePath, 'unitTest': True}
+jobStatusUrl = 'http://127.0.0.1:5000/jobStatus/jobId/'
+
+appCtxDict = {
+    'jobQueuePath': quePath,
+    'jobStatusUrl': jobStatusUrl,
+    'unitTest': True,
+}
 appCtx = Context(appCtxDict)
 appCtxUnicode = json.loads(json.dumps(appCtxDict))
 
@@ -37,9 +43,9 @@ ctx3 = Context(ctxdict)
 ctx3.prop3 = 3
 
 # Tasks to execute as stored in the queue.
-task1 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
-task2 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop2":2},"operation":"operation2","parms":"parms2"}'
-task3 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop3":3},"operation":"operation3","parms":"parms3"}'
+task1 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
+task2 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop2":2},"operation":"operation2","parms":"parms2"}'
+task3 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop3":3},"operation":"operation3","parms":"parms3"}'
 
 # Usernames
 user1 = 'user1'

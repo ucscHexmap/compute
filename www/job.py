@@ -1,7 +1,7 @@
 
-# The job manager.
+# The job API.
 
-import os, traceback, datetime, json, importlib
+import os, traceback, datetime, json, importlib, logging
 from multiprocessing import Process
 import subprocess
 try:
@@ -60,24 +60,24 @@ def add (user, operation, parms, ctx):
     #                      file, <operation>_www.py
     # @param        parms: parameters as a python dict to be passed to
     #                      <operation>_www.py.calcMain()
-    # @params         ctx: the context holding information for the postCalc
+    # @params         ctx: the job context holding information for the postCalc
     # @returns: (jobId, status)
-    
-    # Add a job to the job queue.
     queuePath = ctx.app.jobQueuePath
     jobId = JobQueue(queuePath).add(id, _packTask(operation, parms, ctx), user)
     
     # Get the status of the job just added to the queue.
-    r = getStatus(jobId, queuePath)
-
-    print "add():ctx.app.unitTest:", ctx.app.unitTest
+    result = getStatus(jobId, queuePath)
 
     # Run the job now.
     if not ctx.app.unitTest:
         _runNow(jobId, queuePath)
 
     # Return the id and status.
-    return { 'jobId': jobId, 'status': r['status'] }
+    return {
+        'status': 'InJobQueue',
+        'jobId': jobId,
+        'jobStatusUrl': ctx.app.jobStatusUrl + str(jobId),
+    }
 
 # calcMain()
 # Each operation needs a function defined in <operation>_www.py as below

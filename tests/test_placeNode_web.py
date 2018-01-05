@@ -3,20 +3,23 @@ import unittest
 import testUtil
 import www
 import placeNode_web
-import jobRunner
-from jobRunner import JobRunner
+import job
+import jobProcess
+from jobProcess import JobProcess
 from jobQueue import JobQueue
 from util_web import Context
 
 # Job runner contexts
 quePath = os.path.join(os.getcwd() , 'out/placeNodeJobQueue.db') # database file name
+jobStatusUrl = 'http://127.0.0.1:5000/jobStatus/jobId/'
+
 appCtxDict = {
     'adminEmail': os.environ.get('ADMIN_EMAIL'),
     'dataRoot': 'in/dataRoot',
-    #'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
     'debug': os.environ.get('DEBUG', 0),
     'hubPath': os.environ.get('HUB_PATH'),
     'jobQueuePath': quePath,
+    'jobStatusUrl': jobStatusUrl,
     'unitTest': int(os.environ.get('UNIT_TEST', 0)),
     'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
 }
@@ -28,10 +31,8 @@ ctx1NoAppUnicode = json.loads(json.dumps({'prop1': 1}))
 ctxdict = {'app': appCtx}
 ctx1 = Context(ctxdict)
 ctx1.prop1 = 1
-#task1 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","unitTest":true},"prop1":1},"operation":"placeNode","parms":"parms1"}'
 
-
-class Test_placeNode_web(unittest.TestCase):
+class Test_placeNode(unittest.TestCase):
 
     # This view server must be running for these tests.
     viewServer = os.environ['VIEWER_URL']
@@ -44,7 +45,6 @@ class Test_placeNode_web(unittest.TestCase):
         except:
             pass
         self.jobQueue = JobQueue(quePath)
-        self.jobRunner = JobRunner(quePath)
 
     def tearDown(self):
         pass
@@ -407,6 +407,25 @@ class Test_placeNode_web(unittest.TestCase):
         s.assertTrue(data['error'] ==
             'neighborCount parameter should be a positive integer')
             
+    def runJob (s, data):
+    
+        # Add the job to the queue.
+        r = job.add('swat@soe.ucsc.edu', 'placeNode', data, ctx1)
+        jobId = r['jobId']
+        status = r['status']
+
+        # A new process, so we need another instance of the job runner.
+        myJobProcess = JobProcess(quePath)
+
+        # Prepare the task in the same form as it is stored in the queue.
+        task = job._packTask('placeNode', data, ctx1)
+
+        # Execute the job.
+        jobProcess.main([quePath, str(jobId)])
+        
+        # Return the result of the job.
+        return s.jobQueue.getStatus(1)
+
     def test_map_has_no_background_data(s):
         data = {
             'map': 'someMap',
@@ -420,7 +439,7 @@ class Test_placeNode_web(unittest.TestCase):
         #print 'r:', r
         #print "r['result']['error']:@@" + r['result']['error'] + '@@'
         expectedResult = \
-            "Exception(u'Clustering data not found for layout: someLayout',)"
+            'Clustering data not found for layout: someLayout'
         s.assertEqual(expectedResult, r['result']['error'])
         s.assertTrue('stackTrace' in r['result'])
 
@@ -435,7 +454,7 @@ class Test_placeNode_web(unittest.TestCase):
         r = s.runJob(data)
         s.assertTrue(r['status'] == 'Error')
         expectedResult = \
-            "Exception(u'Clustering data not found for layout: someLayout',)"
+            'Clustering data not found for layout: someLayout'
         s.assertEqual(expectedResult, r['result']['error'])
         s.assertTrue('stackTrace' in r['result'])
 
@@ -456,27 +475,9 @@ class Test_placeNode_web(unittest.TestCase):
         #print "rc['code']:", rc['code']
         s.assertTrue(rc['code'] == '200')
     
-    def runJob (s, data):
-    
-        # Add the job to the queue.
-        jobId, status = \
-            jobRunner.add('swat@soe.ucsc.edu', 'placeNode', data, ctx1)
-
-        # A new process, so we need another instance of the job runner.
-        myJobRunner = JobRunner(quePath)
-
-        # Prepare the task in the same form as it is stored in the queue.
-        task = myJobRunner._packTask('placeNode', data, ctx1)
-
-        # Execute the job.
-        myJobRunner._runner(1, task)
-        
-        # Return the result of the job.
-        return s.jobQueue.getStatus(1)
-
     def test_single_node_no_individual_urls(s):
     
-        # Test that postCalc() knows how to compose a bookmark from this data
+        # Test that _postCalc() knows how to compose a bookmark from this data
         # returned from the calc routine.
         
         # Build the data input to the calc routine.
@@ -510,7 +511,10 @@ class Test_placeNode_web(unittest.TestCase):
                 }
             }
         }
-        status, result = placeNode_web.postCalc(result, ctx)
+        
+        #print 'placeNode.test_single_node_no_individual_urls:result:', result
+        #print 'placeNode.test_single_node_no_individual_urls:ctx:', ctx
+        status, result = placeNode_web._postCalc(result, ctx)
         #print 'result:', result
         data = result
         
@@ -529,7 +533,7 @@ class Test_placeNode_web(unittest.TestCase):
     
     def test_single_node_individual_urls_false(s):
     
-        # Test that postCalc() knows how to compose a bookmark from this data
+        # Test that _postCalc() knows how to compose a bookmark from this data
         # returned from the calc routine.
         
         # Build the data input to the calc routine.
@@ -563,7 +567,7 @@ class Test_placeNode_web(unittest.TestCase):
                 }
             }
         }
-        status, result = placeNode_web.postCalc(result, ctx)
+        status, result = placeNode_web._postCalc(result, ctx)
         #print 'result:', result
         data = result
 
@@ -581,7 +585,7 @@ class Test_placeNode_web(unittest.TestCase):
 
     def test_single_node_individual_urls_true(s):
    
-        # Test that postCalc() knows how to compose a bookmark from this data
+        # Test that _postCalc() knows how to compose a bookmark from this data
         # returned from the calc routine.
         
         # Build the data input to the calc routine.
@@ -615,7 +619,7 @@ class Test_placeNode_web(unittest.TestCase):
                 }
             }
         }
-        status, result = placeNode_web.postCalc(result, ctx)
+        status, result = placeNode_web._postCalc(result, ctx)
         #print 'result:', result
         data = result
         s.assertTrue('newNode1' in data['nodes'])
@@ -632,7 +636,7 @@ class Test_placeNode_web(unittest.TestCase):
 
     def test_multi_nodes_no_individual_urls(s):
    
-        # Test that postCalc() knows how to compose a bookmark from this data
+        # Test that _postCalc() knows how to compose a bookmark from this data
         # returned from the calc routine.
         
         # Build the data input to the calc routine.
@@ -677,7 +681,7 @@ class Test_placeNode_web(unittest.TestCase):
                 }
             }
         }
-        status, result = placeNode_web.postCalc(result, ctx)
+        status, result = placeNode_web._postCalc(result, ctx)
         #print 'result:', result
         data = result
         s.assertTrue('newNode1' in data['nodes'])
@@ -698,7 +702,7 @@ class Test_placeNode_web(unittest.TestCase):
             
     def test_multi_nodes_individual_urls_false(s):
    
-        # Test that postCalc() knows how to compose a bookmark from this data
+        # Test that _postCalc() knows how to compose a bookmark from this data
         # returned from the calc routine.
         
         # Build the data input to the calc routine.
@@ -744,7 +748,7 @@ class Test_placeNode_web(unittest.TestCase):
                 }
             }
         }
-        status, result = placeNode_web.postCalc(result, ctx)
+        status, result = placeNode_web._postCalc(result, ctx)
         #print 'result:', result
         data = result
         s.assertTrue('newNode1' in data['nodes'])
@@ -767,7 +771,7 @@ class Test_placeNode_web(unittest.TestCase):
 
     def test_multi_nodes_individual_urls_true(s):
    
-        # Test that postCalc() knows how to compose a bookmark from this data
+        # Test that _postCalc() knows how to compose a bookmark from this data
         # returned from the calc routine.
         
         # Build the data input to the calc routine.
@@ -813,7 +817,7 @@ class Test_placeNode_web(unittest.TestCase):
                 }
             }
         }
-        status, result = placeNode_web.postCalc(result, ctx)
+        status, result = placeNode_web._postCalc(result, ctx)
         #print 'result:', result
         data = result
         s.assertTrue('newNode1' in data['nodes'])

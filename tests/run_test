@@ -23,6 +23,8 @@ web=( \
     test_basic_web \
     test_job \
     test_jobHttp \
+    test_overlayNode_web \
+    test_placeNode_web \
     test_placeNode2_web \
 )
     #test_placeNode_web \
@@ -67,12 +69,13 @@ mac=( \
     test_jobHttp \
     test_layoutMetaData \
     test_layoutZeroReplace \
+    test_overlayNode_web \
+    test_placeNode_web \
     test_placeNode2_web \
     test_process_categoricals \
     test_remoteCalc \
     test_similarity \
 )
-#    test_placeNode_web \
 
 # this really needs selenium rather than manually building maps from the UI
     #test_createMapUi \

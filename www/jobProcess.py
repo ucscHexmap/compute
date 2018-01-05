@@ -1,6 +1,8 @@
 #!/usr/bin/env python2.7
 
-# The independent process under which a job runs.
+# The independent process under which a job runs, internal implementation of
+# the API in job.py
+
 import sys
 import os, traceback, datetime, json, importlib
 try:
@@ -83,7 +85,7 @@ def main(args):
         status, result = jobProcess.run(jobId)
     except Exception as e:
         status = 'Error'
-        result = { 'error': repr(e), 'stackTrace': traceback.format_exc() }
+        result = { 'error': str(e), 'stackTrace': traceback.format_exc() }
     
     # Set the completion status.
     _setDoneStatus(queuePath, jobId, status, result)

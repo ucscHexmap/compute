@@ -49,7 +49,7 @@ class CreateMapPositiveTestCase(unittest.TestCase):
         try:
             shutil.rmtree(myDataRoot)
         except Exception as e:
-            msg = 'unable to remove dataRoot: ' + myDataRoot + ' : ' + repr(e)
+            msg = 'unable to remove dataRoot: ' + myDataRoot + ' : ' + str(e)
             s.assertTrue(msg, '')
 
         # Make the path for the feature data.

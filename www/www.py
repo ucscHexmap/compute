@@ -1,7 +1,7 @@
 
 # www
 #
-import os, traceback, logging, pickle
+import os, traceback, logging, json
 from flask import Flask, request, jsonify, current_app, Response
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
@@ -17,44 +17,46 @@ import job
 # Set up the flask application where app.config is only accessed in this file.
 app = Flask(__name__)
 
-# Other local vars.
-allowableViewers = os.environ.get('ALLOWABLE_VIEWERS').split(',')
-
-# Make cross-origin AJAX possible
-CORS(app)
-
 # Set up the application context used by all threads.
-appCtxDict = {
-    'adminEmail': os.environ.get('ADMIN_EMAIL'),
-    'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
-    'debug': os.environ.get('DEBUG', 0),
-    'hubPath': os.environ.get('HUB_PATH'),
-    'unitTest': int(os.environ.get('UNIT_TEST', 0)),
-    'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
-}
-appCtxDict['jobQueuePath'] = os.path.abspath(
-    os.path.join(appCtxDict['hubPath'], '../computeDb/jobQueue.db'))
-appCtxDict['viewDir'] = os.path.join(appCtxDict['dataRoot'], 'view')
-appCtx = Context(appCtxDict)
+def contextInit ():
+    appCtxDict = {
+        'adminEmail': os.environ.get('ADMIN_EMAIL'),
+        'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
+        'debug': os.environ.get('DEBUG', 0),
+        'hubPath': os.environ.get('HUB_PATH'),
+        'unitTest': int(os.environ.get('UNIT_TEST', 0)),
+        'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
+    }
+    appCtx = Context(appCtxDict)
+    appCtx.jobQueuePath = os.path.abspath(
+        os.path.join(appCtx.hubPath, '../computeDb/jobQueue.db'))
+    appCtx.viewDir = os.path.join(appCtx.dataRoot, 'view')
+    jobStatusUrl = os.environ['WWW_SOCKET'] + '/jobStatus/jobId/'
+    if os.environ['USE_HTTPS'] == 1:
+        appCtx.jobStatusUrl = 'https://' + jobStatusUrl
+    else:
+        appCtx.jobStatusUrl = 'http://' + jobStatusUrl
+    return appCtx
 
 # Set up logging
-logFormat = '%(asctime)s %(levelname)s: %(message)s'
-logLevel = None
-if appCtx.unitTest:
+def loggingInit ():
+    logFormat = '%(asctime)s %(levelname)s: %(message)s'
+    logLevel = None
+    if appCtx.unitTest:
 
-    # Use critical level to disable all messages so unit tests only output
-    # unit test errors.
-    logging.basicConfig(level=logging.CRITICAL, format=logFormat)
-    logLevel = 'CRITICAL'
-elif appCtx.debug:
-    logging.basicConfig(level=logging.DEBUG, format=logFormat)
-    logLevel = 'DEBUG'
-else:
-    logging.basicConfig(level=logging.INFO, format=logFormat)
-    logLevel = 'INFO'
+        # Use critical level to disable all messages so unit tests only output
+        # unit test errors.
+        logging.basicConfig(level=logging.CRITICAL, format=logFormat)
+        logLevel = 'CRITICAL'
+    elif appCtx.debug:
+        logging.basicConfig(level=logging.DEBUG, format=logFormat)
+        logLevel = 'DEBUG'
+    else:
+        logging.basicConfig(level=logging.INFO, format=logFormat)
+        logLevel = 'INFO'
 
-logging.info('WWW server started with log level: ' + logLevel)
-logging.info('Allowable viewers: ' + str(allowableViewers))
+    logging.info('WWW server started with log level: ' + logLevel)
+    logging.info('Allowable viewers: ' + str(allowableViewers))
 
 # Validate a post
 def validatePost():
@@ -100,11 +102,10 @@ def errorResponse(error):
 @app.errorhandler(Exception)
 def unhandledException(e):
     trace = traceback.format_exc()
-    errorMessage = repr(e)
     # Build response.
     rdict = {
             "traceback" : trace,
-            "error" : errorMessage,
+            "error" : str(e),
             }
     response = jsonify(rdict)
     response.status_code = 500
@@ -179,7 +180,7 @@ def dataRouteInner(dataId, ok404=False):
             raise ErrorResp('File not found or other IOError', 404)
     except Exception as e:
         #traceback.print_exc()
-        raise ErrorResp(repr(e), 500)
+        raise ErrorResp(str(e), 500)
 
     raise SuccessRespNoJson(result)
 
@@ -208,28 +209,37 @@ def getAllJobsRoute():
 # Handle jobStatus route
 @app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
 def jobStatusRoute(jobId):
-    logging.info('Received jobStatus request for job ID: ' + str(jobId))
+    #logging.info('Received jobStatus request for job ID: ' + str(jobId))
     result = job.getStatus(jobId, appCtx.jobQueuePath)
-    logging.info('Successful jobStatus request for job ID: ' + str(jobId))
+    #logging.info('Successful jobStatus request for job ID: ' + str(jobId))
     raise SuccessResp(result)
 
 # Handle query/jobTestHelper routes
 @app.route('/query/jobTestHelper', methods=['POST'])
 def queryJobTestHelperRoute():
-    logging.info('Received query jobTestHelper')
+    #logging.info('Received query jobTestHelper')
     result = jobTestHelper_web.preCalc(validatePost(), Context({'app': appCtx}))
-    logging.info('Success with query jobTestHelper')
-    print 'queryJobTestHelperRoute():result', result
+    #logging.info('Success with query jobTestHelper')
     raise SuccessResp(result)
 
-# Handle query/overlayNodes routes
+# Handle query/overlayNode route, older version of placeNode
 @app.route('/query/overlayNodes', methods=['POST'])
 def queryOverlayNodesRoute():
-    logging.info('Received query overlayNodes')
+    #logging.info('Received query overlayNodes')
+    dataIn = validatePost()
+    jobCtx = Context({'app': appCtx, 'overlayNodes': True})
+    result = placeNode_web.preCalc(dataIn, jobCtx)
+    #logging.info('Success with query overlayNodes')
+    raise SuccessResp(result)
+
+# Handle query/placeNode routes
+@app.route('/query/placeNode', methods=['POST'])
+def queryPlaceNodeRoute():
+    #logging.info('Received query placeNode')
     dataIn = validatePost()
     jobCtx = Context({'app': appCtx})
     result = placeNode_web.preCalc(dataIn, jobCtx)
-    logging.info('Success with query overlayNodes')
+    #logging.info('Success with query placeNode')
     raise SuccessResp(result)
 
 # Handle reflect/metadata routes
@@ -281,3 +291,13 @@ def getRefAttr(attrId):
 def testRoute():
     logging.debug('testRoute current_app: ' + str(current_app))
     raise SuccessResp('just testing data server')
+
+# Other local vars.
+allowableViewers = os.environ.get('ALLOWABLE_VIEWERS').split(',')
+
+# Make cross-origin AJAX possible
+CORS(app)
+
+appCtx = contextInit()
+loggingInit()
+

@@ -7,6 +7,7 @@
 
 import os, json, types, requests, traceback, csv, logging
 from argparse import Namespace
+from flask import request
 import validate_web as validate
 import util_web
 from util_web import SuccessResp, ErrorResp, getMapMetaData, createBookmark
@@ -19,7 +20,7 @@ import numpy as np
 
 import job
 
-def check_duplicate_row_error(error):
+def _checkDuplicateRowError(error):
     """
     Checks to see if there is a duplicate row error and sends a more meaningful
     error message.
@@ -37,7 +38,7 @@ def check_duplicate_row_error(error):
 
     raise error
 
-def validateParms(data):
+def _validateParms(data):
     '''
     Validate the query.
     @param data: data received in the http post request
@@ -61,7 +62,7 @@ def validateParms(data):
         data['neighborCount'] < 1):
         raise ErrorResp('neighborCount parameter should be a positive integer')
 
-def postCalc(result, ctx):
+def _postCalc(result, ctx):
     '''
     Create bookmarks and send email from a calculation result.
     @param result: results from the calculation
@@ -244,9 +245,9 @@ def getBackgroundData(data, ctx):
         layouts = getMapMetaData(data['map'], ctx)['layouts']
         clusterData = layouts[data['layout']]['clusterData']
         clusterDataFile = os.path.join(ctx.app.dataRoot, clusterData)
-    except:
-        raise Exception(
-            'Clustering data not found for layout: ' + data['layout'])
+    except Exception as e:
+        raise Exception('Clustering data not found for layout: ' + \
+            data['layout'])
 
     # Find the index of the layout
     ctx.layoutIndex = \
@@ -265,17 +266,20 @@ def preCalc(dataIn, ctx):
     @param ctx: global context
     @return: result of calcComplete()
     '''
-    validateParameters(dataIn)
+    _validateParms(dataIn)
+
+    if hasattr(ctx, 'overlayNodes'):
+
+        # Execute the job immediately when using the older API.
+        return calcMain(dataIn, ctx)
 
     # Add the job to the job queue.
+    email = None
     if 'email' in dataIn:
         email = dataIn['email']
-    else:
-        email = None
-    job.add(email, 'placeNode', dataIn, ctx)
+    return job.add(email, 'placeNode', dataIn, ctx)
 
 def calcMain(dataIn, ctx):
-    
     ctx.mapDir = os.path.join(ctx.app.viewDir, dataIn['map'])
 
     # Find the helper data needed to place nodes
@@ -300,11 +304,18 @@ def calcMain(dataIn, ctx):
                                                   num_jobs=1)
 
     except ValueError as error:
-        check_duplicate_row_error(error)
+        _checkDuplicateRowError(error)
 
     #format into python struct
     result = outputToDict(neighboorhood, xys, urls)
 
     ctx.dataIn = dataIn
     
-    return postCalc(result, ctx)
+    if hasattr(ctx, 'overlayNodes'):
+    
+        # Respond to request here when using the older API.
+        status, result = _postCalc(result, ctx)
+        return result
+    
+    # Save the result in the job queue.
+    return _postCalc(result, ctx)

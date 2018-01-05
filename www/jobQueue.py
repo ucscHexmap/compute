@@ -1,5 +1,6 @@
 
-# The job queue.
+# The job queue internal implementation of the API in job.py
+
 
 import os, sqlite3, traceback, datetime, json
 try:
