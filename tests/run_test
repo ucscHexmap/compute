@@ -22,7 +22,6 @@ export DEBUG=1
 web=( \
     test_basic_web \
     test_job \
-    test_jobHttp \
     test_overlayNode_web \
     test_placeNode_web \
     test_placeNode2_web \

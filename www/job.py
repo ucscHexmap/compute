@@ -25,10 +25,13 @@ def _packTask (operation, parms, ctx):
         
     return jsonTask
     
-def _runNow(id, queuePath):
+def _runNow(id, jobProcessPath, queuePath):
+
+    print '_runNow():queuePath:', queuePath
+    print '_runNow():jobProcessPath:', jobProcessPath
 
     # Run the operation in a new process.
-    p = subprocess.Popen(['jobProcess.py', queuePath, str(id)])
+    p = subprocess.Popen([jobProcessPath, queuePath, str(id)])
 
 def getAll (queuePath):
 
@@ -70,7 +73,7 @@ def add (user, operation, parms, ctx):
 
     # Run the job now.
     if not ctx.app.unitTest:
-        _runNow(jobId, queuePath)
+        _runNow(jobId, ctx.app.jobProcessPath, queuePath)
 
     # Return the id and status.
     return {

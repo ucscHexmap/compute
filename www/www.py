@@ -30,9 +30,10 @@ def contextInit ():
     appCtx = Context(appCtxDict)
     appCtx.jobQueuePath = os.path.abspath(
         os.path.join(appCtx.hubPath, '../computeDb/jobQueue.db'))
+    appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
     appCtx.viewDir = os.path.join(appCtx.dataRoot, 'view')
     jobStatusUrl = os.environ['WWW_SOCKET'] + '/jobStatus/jobId/'
-    if os.environ['USE_HTTPS'] == 1:
+    if os.environ['USE_HTTPS'] == '1':
         appCtx.jobStatusUrl = 'https://' + jobStatusUrl
     else:
         appCtx.jobStatusUrl = 'http://' + jobStatusUrl
