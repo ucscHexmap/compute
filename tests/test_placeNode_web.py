@@ -2,16 +2,49 @@ import os, json, requests
 import unittest
 import testUtil
 import www
+import placeNode_web
+import job
+import jobProcess
+from jobProcess import JobProcess
+from jobQueue import JobQueue
+from util_web import Context
 
-class PlaceNodeWebTestCase(unittest.TestCase):
+# Job runner contexts
+quePath = os.path.join(os.getcwd() , 'out/placeNodeJobQueue.db') # database file name
+jobStatusUrl = 'http://127.0.0.1:5000/jobStatus/jobId/'
+
+appCtxDict = {
+    'adminEmail': os.environ.get('ADMIN_EMAIL'),
+    'dataRoot': 'in/dataRoot',
+    'debug': os.environ.get('DEBUG', 0),
+    'hubPath': os.environ.get('HUB_PATH'),
+    'jobQueuePath': quePath,
+    'jobStatusUrl': jobStatusUrl,
+    'unitTest': int(os.environ.get('UNIT_TEST', 0)),
+    'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
+}
+appCtxDict['jobQueuePath'] = os.path.join(quePath)
+appCtxDict['viewDir'] = os.path.join(appCtxDict['dataRoot'], 'view')
+appCtx = Context(appCtxDict)
+appCtxUnicode = json.loads(json.dumps(appCtxDict))
+ctx1NoAppUnicode = json.loads(json.dumps({'prop1': 1}))
+ctxdict = {'app': appCtx}
+ctx1 = Context(ctxdict)
+ctx1.prop1 = 1
+
+class Test_placeNode(unittest.TestCase):
 
     # This view server must be running for these tests.
     viewServer = os.environ['VIEWER_URL']
     unprintable = '09'.decode('hex')  # tab character
 
     def setUp(self):
-        www.app.config['UNIT_TEST'] = True
         self.app = www.app.test_client()
+        try:
+            os.remove(quePath)
+        except:
+            pass
+        self.jobQueue = JobQueue(quePath)
 
     def tearDown(self):
         pass
@@ -60,6 +93,7 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
+        #print "rv.status_code", rv.status_code
         #print "data['error']", data['error']
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] == 'map parameter missing or malformed')
@@ -372,72 +406,60 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         #print "data['error']", data['error']
         s.assertTrue(data['error'] ==
             'neighborCount parameter should be a positive integer')
-    
-    def test_map_has_background_data(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='someMap',
-                layout='someLayout',
-                nodes = dict(
-                    someNode='someValue',
-                )
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        #print "### rv.status_code:", rv.status_code
-        #print "### data['error']:", data['error']
-        s.assertTrue(rv.status_code == 500)
-        s.assertTrue(data['error'] ==
-            'Clustering data not found for layout: someLayout')
-
-    def test_layout_has_background_data(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='someLayout',
-                nodes = dict(
-                    someNode='someValue',
-                ),
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        #print "rv.status_code", rv.status_code
-        #print "data['error']", data['error']
-        s.assertTrue(rv.status_code == 500)
-        s.assertTrue(data['error'] ==
-            'Clustering data not found for layout: someLayout')
             
-    def test_some_calc_error(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='mRNA',
-                nodes = dict(
-                    testError='something',
-                ),
-                testStub=True
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        #print "rv.status_code", rv.status_code
-        #print "data['error']", data['error']
-        s.assertTrue(rv.status_code == 400 or rv.status_code == 500)
-        s.assertTrue(data['error'] == 'Some error message or stack trace')
+    def runJob (s, data):
+    
+        # Add the job to the queue.
+        r = job.add('swat@soe.ucsc.edu', 'placeNode', data, ctx1)
+        jobId = r['jobId']
+        status = r['status']
+
+        # A new process, so we need another instance of the job runner.
+        myJobProcess = JobProcess(quePath)
+
+        # Prepare the task in the same form as it is stored in the queue.
+        task = job._packTask('placeNode', data, ctx1)
+
+        # Execute the job.
+        jobProcess.main([quePath, str(jobId)])
+        
+        # Return the result of the job.
+        return s.jobQueue.getStatus(1)
+
+    def test_map_has_no_background_data(s):
+        data = {
+            'map': 'someMap',
+            'layout': 'someLayout',
+            'nodes': {
+                'someNode': 'someValue',
+            },
+        }
+        r = s.runJob(data)
+        s.assertTrue(r['status'] == 'Error')
+        #print 'r:', r
+        #print "r['result']['error']:@@" + r['result']['error'] + '@@'
+        expectedResult = \
+            'Clustering data not found for layout: someLayout'
+        s.assertEqual(expectedResult, r['result']['error'])
+        s.assertTrue('stackTrace' in r['result'])
+
+    def test_layout_has_no_background_data(s):
+        data = {
+            'map': 'unitTest/layoutBasicExp',
+            'layout': 'someLayout',
+            'nodes': {
+                'someNode': 'someValue',
+            },
+        }
+        r = s.runJob(data)
+        s.assertTrue(r['status'] == 'Error')
+        expectedResult = \
+            'Clustering data not found for layout: someLayout'
+        s.assertEqual(expectedResult, r['result']['error'])
+        s.assertTrue('stackTrace' in r['result'])
+
 
     def test_create_bookmark(s):
-        #resData = '{"TESTpythonCallStub":"success"}\n';
         opts = [
             '-d', json.dumps(dict(
                 page = 'mapPage',
@@ -451,31 +473,51 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         ]
         rc = testUtil.doCurl(opts, s.viewServer + '/query/createBookmark')
         #print "rc['code']:", rc['code']
-        #print "rc['data']:", rc['data']
         s.assertTrue(rc['code'] == '200')
     
     def test_single_node_no_individual_urls(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='mRNA',
-                nodes = dict(
-                    newNode1= {
-                        'TP53': 0.54,
-                        'ALK': 0.32,
-                    },
-                ),
-                testStub=True
-            ))
+    
+        # Test that _postCalc() knows how to compose a bookmark from this data
+        # returned from the calc routine.
+        
+        # Build the data input to the calc routine.
+        dataIn = dict(
+            map='unitTest/layoutBasicExp',
+            layout='mRNA',
+            nodes = dict(
+                newNode1= {
+                    'TP53': 0.54,
+                    'ALK': 0.32,
+                },
+            ),
+            testStub=True
         )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200, "status code not 200, "
-                                            "data returned: " + str(data))
-        # print "data", data
+        
+        # Build the calc result.
+        ctx = Context({
+            'app': appCtx,
+            'dataIn': dataIn,
+            'layoutIndex': 0,
+        })
+        result = {
+            'nodes': {
+                'newNode1': {
+                    'x': 73,
+                    'y': 91,
+                    'neighbors': {
+                        'TCGA-BP-4790': 0.352,
+                        'TCGA-AK-3458': 0.742,
+                    }
+                }
+            }
+        }
+        
+        #print 'placeNode.test_single_node_no_individual_urls:result:', result
+        #print 'placeNode.test_single_node_no_individual_urls:ctx:', ctx
+        status, result = placeNode_web._postCalc(result, ctx)
+        #print 'result:', result
+        data = result
+        
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
         s.assertTrue(data['nodes']['newNode1']['x'] == 73)
@@ -487,29 +529,48 @@ class PlaceNodeWebTestCase(unittest.TestCase):
         sLen = len(s.viewServer) + len(bookmarkParm)
         s.assertTrue(data['nodes']['newNode1']['url'][:sLen] == \
             s.viewServer + bookmarkParm)
+        
     
     def test_single_node_individual_urls_false(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='mRNA',
-                individualUrls=False,
-                nodes = dict(
-                    newNode1= {
-                        'TP53': 0.54,
-                        'ALK': 0.32,
-                    },
-                ),
-                testStub=True
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200, "status code not 200, "
-                                            "data returned: " + str(data))
+    
+        # Test that _postCalc() knows how to compose a bookmark from this data
+        # returned from the calc routine.
+        
+        # Build the data input to the calc routine.
+        dataIn = {
+            'map': 'unitTest/layoutBasicExp',
+            'layout': 'mRNA',
+            'individualUrls': False,
+            'nodes': {
+                'newNode1': {
+                    'TP53': 0.54,
+                    'ALK': 0.32,
+                },
+            },
+        }
+
+        # Build the calc result.
+        ctx = Context({
+            'app': appCtx,
+            'dataIn': dataIn,
+            'layoutIndex': 0,
+        })
+        result = {
+            'nodes': {
+                'newNode1': {
+                    'x': 73,
+                    'y': 91,
+                    'neighbors': {
+                        'TCGA-BP-4790': 0.352,
+                        'TCGA-AK-3458': 0.742,
+                    }
+                }
+            }
+        }
+        status, result = placeNode_web._postCalc(result, ctx)
+        #print 'result:', result
+        data = result
+
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
         s.assertTrue(data['nodes']['newNode1']['x'] == 73)
@@ -523,28 +584,44 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             s.viewServer + bookmarkParm)
 
     def test_single_node_individual_urls_true(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='mRNA',
-                individualUrls=True,
-                nodes = dict(
-                    newNode1= {
-                        'TP53': 0.54,
-                        'ALK': 0.32,
-                    },
-                ),
-                testStub=True
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200, "status code not 200, "
-                                            "data returned: " + str(data))
-        # print "data", data
+   
+        # Test that _postCalc() knows how to compose a bookmark from this data
+        # returned from the calc routine.
+        
+        # Build the data input to the calc routine.
+        dataIn = {
+            'map': 'unitTest/layoutBasicExp',
+            'layout': 'mRNA',
+            'individualUrls': True,
+            'nodes': {
+                'newNode1': {
+                    'TP53': 0.54,
+                    'ALK': 0.32,
+                },
+            },
+        }
+
+        # Build the calc result.
+        ctx = Context({
+            'app': appCtx,
+            'dataIn': dataIn,
+            'layoutIndex': 0,
+        })
+        result = {
+            'nodes': {
+                'newNode1': {
+                    'x': 73,
+                    'y': 91,
+                    'neighbors': {
+                        'TCGA-BP-4790': 0.352,
+                        'TCGA-AK-3458': 0.742,
+                    }
+                }
+            }
+        }
+        status, result = placeNode_web._postCalc(result, ctx)
+        #print 'result:', result
+        data = result
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
         s.assertTrue(data['nodes']['newNode1']['x'] == 73)
@@ -558,30 +635,55 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             s.viewServer + bookmarkParm)
 
     def test_multi_nodes_no_individual_urls(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='mRNA',
-                nodes = dict(
-                    newNode1= {
-                        'TP53': 0.54,
-                        'ALK': 0.32,
-                    },
-                    newNode2= {
-                        'TP53': 0.42,
-                        'ALK': 0.36,
-                    },
-                ),
-                testStub=True
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('' == 'no json data in response')
-        s.assertTrue(rv.status_code == 200, "status code not 200, "
-                                            "data returned: " + str(data))
+   
+        # Test that _postCalc() knows how to compose a bookmark from this data
+        # returned from the calc routine.
+        
+        # Build the data input to the calc routine.
+        dataIn = {
+            'map': 'unitTest/layoutBasicExp',
+            'layout': 'mRNA',
+            'nodes': {
+                'newNode1': {
+                    'TP53': 0.54,
+                    'ALK': 0.32,
+                },
+                'newNode2': {
+                    'TP53': 0.42,
+                    'ALK': 0.36,
+                },
+            },
+        }
+
+        # Build the calc result.
+        ctx = Context({
+            'app': appCtx,
+            'dataIn': dataIn,
+            'layoutIndex': 0,
+        })
+        result = {
+            'nodes': {
+                'newNode1': {
+                    'x': 73,
+                    'y': 91,
+                    'neighbors': {
+                        'TCGA-BP-4790': 0.352,
+                        'TCGA-AK-3458': 0.742,
+                    }
+                },
+                'newNode2': {
+                    'x': 53,
+                    'y': 47,
+                    'neighbors': {
+                        'neighbor1': 0.567,
+                        'neighbor2': 0.853,
+                    }
+                }
+            }
+        }
+        status, result = placeNode_web._postCalc(result, ctx)
+        #print 'result:', result
+        data = result
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('newNode2' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
@@ -599,33 +701,56 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data['nodes']['newNode2']['url'])
             
     def test_multi_nodes_individual_urls_false(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='mRNA',
-                individualUrls=False,
-                nodes = dict(
-                    newNode1= {
-                        'TP53': 0.54,
-                        'ALK': 0.32,
-                    },
-                    newNode2= {
-                        'TP53': 0.42,
-                        'ALK': 0.36,
-                    },
-                ),
-                testStub=True
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        #print "data['error']", data['error']
-        #print "rv.status_code", rv.status_code
-        s.assertTrue(rv.status_code == 200, "status code not 200, "
-                                            "data returned: " + str(data))
+   
+        # Test that _postCalc() knows how to compose a bookmark from this data
+        # returned from the calc routine.
+        
+        # Build the data input to the calc routine.
+        dataIn = {
+            'map': 'unitTest/layoutBasicExp',
+            'layout': 'mRNA',
+            'individualUrls': False,
+            'nodes': {
+                'newNode1': {
+                    'TP53': 0.54,
+                    'ALK': 0.32,
+                },
+                'newNode2': {
+                    'TP53': 0.42,
+                    'ALK': 0.36,
+                },
+            },
+        }
+
+        # Build the calc result.
+        ctx = Context({
+            'app': appCtx,
+            'dataIn': dataIn,
+            'layoutIndex': 0,
+        })
+        result = {
+            'nodes': {
+                'newNode1': {
+                    'x': 73,
+                    'y': 91,
+                    'neighbors': {
+                        'TCGA-BP-4790': 0.352,
+                        'TCGA-AK-3458': 0.742,
+                    }
+                },
+                'newNode2': {
+                    'x': 53,
+                    'y': 47,
+                    'neighbors': {
+                        'neighbor1': 0.567,
+                        'neighbor2': 0.853,
+                    }
+                }
+            }
+        }
+        status, result = placeNode_web._postCalc(result, ctx)
+        #print 'result:', result
+        data = result
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('newNode2' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])
@@ -645,31 +770,56 @@ class PlaceNodeWebTestCase(unittest.TestCase):
             data['nodes']['newNode2']['url'])
 
     def test_multi_nodes_individual_urls_true(s):
-        rv = s.app.post('/query/overlayNodes',
-            content_type='application/json',
-            data=json.dumps(dict(
-                map='unitTest/layoutBasicExp',
-                layout='mRNA',
-                individualUrls=True,
-                nodes = dict(
-                    newNode1= {
-                        'TP53': 0.54,
-                        'ALK': 0.32,
-                    },
-                    newNode2= {
-                        'TP53': 0.42,
-                        'ALK': 0.36,
-                    },
-                ),
-                testStub=True
-            ))
-        )
-        try:
-            data = json.loads(rv.data)
-        except:
-            s.assertTrue('', 'no json data in response')
-        s.assertTrue(rv.status_code == 200, "status code not 200, "
-                                            "data returned: " + str(data))
+   
+        # Test that _postCalc() knows how to compose a bookmark from this data
+        # returned from the calc routine.
+        
+        # Build the data input to the calc routine.
+        dataIn = {
+            'map': 'unitTest/layoutBasicExp',
+            'layout': 'mRNA',
+            'individualUrls': True,
+            'nodes': {
+                'newNode1': {
+                    'TP53': 0.54,
+                    'ALK': 0.32,
+                },
+                'newNode2': {
+                    'TP53': 0.42,
+                    'ALK': 0.36,
+                },
+            },
+        }
+
+        # Build the calc result.
+        ctx = Context({
+            'app': appCtx,
+            'dataIn': dataIn,
+            'layoutIndex': 0,
+        })
+        result = {
+            'nodes': {
+                'newNode1': {
+                    'x': 73,
+                    'y': 91,
+                    'neighbors': {
+                        'TCGA-BP-4790': 0.352,
+                        'TCGA-AK-3458': 0.742,
+                    }
+                },
+                'newNode2': {
+                    'x': 53,
+                    'y': 47,
+                    'neighbors': {
+                        'neighbor1': 0.567,
+                        'neighbor2': 0.853,
+                    }
+                }
+            }
+        }
+        status, result = placeNode_web._postCalc(result, ctx)
+        #print 'result:', result
+        data = result
         s.assertTrue('newNode1' in data['nodes'])
         s.assertTrue('newNode2' in data['nodes'])
         s.assertTrue('x' in data['nodes']['newNode1'])

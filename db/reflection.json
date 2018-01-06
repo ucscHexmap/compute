@@ -1,0 +1,32 @@
+{
+  "Pancan12":
+    {
+      "dataTypes": [
+                    "mRNA",
+                    "CNV",
+                    "miRNA",
+                    "RPPA",
+                    "Methylation"
+                  ],
+      "SampleMap" : {
+          "toMapIds": ["Pancan12/GeneMap"],
+          "featOrSamp" : "sample"
+      },
+      "GeneMap" : {
+       "toMapIds" : ["Pancan12/SampleMap"],
+        "featOrSamp" : "feature"
+      }
+    },
+  "PancanAtlas":
+    {
+      "dataTypes": ["mRNA"],
+      "SampleMap" : {
+       "toMapIds" : ["PancanAtlas/GeneMap"],
+        "featOrSamp" : "sample"
+      },
+      "GeneMap" : {
+        "toMapIds" : ["PancanAtlas/SampleMap"],
+       "featOrSamp" :"feature"
+      }
+    }
+}

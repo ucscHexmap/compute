@@ -18,12 +18,15 @@ fi
 export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
 export DEBUG=1
 
-# Test only the *_web_tests.py files
+# Test only the *_web.py files
 web=( \
-    test_basic_www \
+    test_basic_web \
+    test_job \
+    test_overlayNode_web \
     test_placeNode_web \
     test_placeNode2_web \
 )
+    #test_placeNode_web \
 
 # Deprecated with hexagram server code moving to the compute server
 DEPRECATED=( \
@@ -55,14 +58,20 @@ docker_safe=( \
 # Combine the lists above to get ALL of the tests
 all=( "${web[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${docker_safe[@]}" )
 
-# local mac tests are those that normally pass on a mac
+# tests that normally pass on a mac
 mac=( \
-    test_basic_www \
+    test_basic_web \
     test_dynLayoutAware \
+    test_formatCheck \
     test_http \
+    test_job \
+    test_jobHttp \
     test_layoutMetaData \
+    test_layoutZeroReplace \
+    test_overlayNode_web \
     test_placeNode_web \
     test_placeNode2_web \
+    test_process_categoricals \
     test_remoteCalc \
     test_similarity \
 )
