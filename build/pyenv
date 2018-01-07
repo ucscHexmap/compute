@@ -15,9 +15,6 @@ fi
 # problems/confusion
 PATH=$LOCALPY_BIN:$PATH
 
-echo
-echo 'python'
-which python
 echo 'LOCALPY_BIN'
 echo $LOCALPY_BIN
 echo 'pip'

@@ -35,7 +35,7 @@ export KEY=/cluster/home/swat/kolossus_certs/server.key
 # Only needed for some centos. Centos complains about missing a shared
 # library when calling uwsgi. The solution is to provide sym lynks
 # to make the file names conform. 
-export LD_LIBRARY_PATH=$HUB_PATH/libPatch:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$HUB_PATH/libPatchKolossus:$LD_LIBRARY_PATH
 
 # This path has to be above/equal to your 'compute' dir in the
 # file hierarchy.
