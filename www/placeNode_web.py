@@ -169,7 +169,7 @@ def _postCalc(result, ctx):
 
     return 'Success', result
 
-def outputToDict(neighboorhood, xys, urls):
+def _outputToDict(neighboorhood, xys, urls):
     '''
     This function takes the output from the newplacement call
       into the expected format
@@ -202,7 +202,7 @@ def outputToDict(neighboorhood, xys, urls):
 
     return retDict
 
-def putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
+def _putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
     '''
     takes in the filenames and nodes dictionary needed for placement calc
     @param featurePath:
@@ -214,10 +214,10 @@ def putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
             *compute_sparse_matrix.read_tabular(featurePath)
                                                 ),
             utils.readXYs(xyPath),
-            nodesToPandas(nodesDict)
+            _nodesToPandas(nodesDict)
           )
 
-def nodesToPandas(pydict):
+def _nodesToPandas(pydict):
     '''
     Input the json['nodes'] structure and outputs pandas df.
     Uses same processing pipeline as compute sparse matrix for input.
@@ -234,7 +234,7 @@ def nodesToPandas(pydict):
 
     return df
 
-def getBackgroundData(data, ctx):
+def _getBackgroundData(data, ctx):
     '''
     Find the clustering data file for this map and layout.
     @param data: background data of the existing map
@@ -283,7 +283,7 @@ def calcMain(dataIn, ctx):
     ctx.mapDir = os.path.join(ctx.app.viewDir, dataIn['map'])
 
     # Find the helper data needed to place nodes
-    clusterDataFile, xyPositionFile = getBackgroundData(dataIn, ctx)
+    clusterDataFile, xyPositionFile = _getBackgroundData(dataIn, ctx)
 
     # Set any optional parms, letting the calc script set defaults.
     if 'neighborCount' in dataIn:
@@ -293,7 +293,7 @@ def calcMain(dataIn, ctx):
 
     # Make expected python data structs
     referenceDF, xyDF, newNodesDF = \
-     putDataIntoPythonStructs(clusterDataFile,
+     _putDataIntoPythonStructs(clusterDataFile,
                               xyPositionFile,
                               dataIn['nodes'])
 
@@ -307,7 +307,7 @@ def calcMain(dataIn, ctx):
         _checkDuplicateRowError(error)
 
     #format into python struct
-    result = outputToDict(neighboorhood, xys, urls)
+    result = _outputToDict(neighboorhood, xys, urls)
 
     ctx.dataIn = dataIn
     

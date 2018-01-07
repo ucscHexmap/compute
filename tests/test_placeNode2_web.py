@@ -1,7 +1,7 @@
 import os
 import unittest
 import pandas as pd
-from placeNode_web import *
+from placeNode_web import _putDataIntoPythonStructs, _outputToDict
 import placeNode
 import compute_sparse_matrix
 
@@ -22,7 +22,7 @@ class Nof1CalcTestCase(unittest.TestCase):
         preSquig = inDir + '/coordinates.tab'
         nodesDict = pd.read_csv(featMat,index_col=0,sep='\t').to_dict()
 
-        refDF,xyDF,newNodesDF = putDataIntoPythonStructs(featMat,
+        refDF,xyDF,newNodesDF = _putDataIntoPythonStructs(featMat,
                                                          preSquig,
                                                          nodesDict)
 
@@ -41,7 +41,7 @@ class Nof1CalcTestCase(unittest.TestCase):
         nodesDict = pd.read_csv(featMat,index_col=0,sep='\t').to_dict()
 
 
-        refDF,xyDF,newNodesDF = putDataIntoPythonStructs(featMat,
+        refDF,xyDF,newNodesDF = _putDataIntoPythonStructs(featMat,
                                                          preSquig,
                                                          nodesDict)
 
@@ -59,11 +59,11 @@ class Nof1CalcTestCase(unittest.TestCase):
         nodesDict = pd.read_csv(featMat,index_col=0,sep='\t').to_dict()
 
 
-        refDF,xyDF,newNodesDF = putDataIntoPythonStructs(featMat,
+        refDF,xyDF,newNodesDF = _putDataIntoPythonStructs(featMat,
                                                          preSquig,
                                                          nodesDict)
 
-        retDict = outputToDict(*placeNode.placeNew(newNodesDF,
+        retDict = _outputToDict(*placeNode.placeNew(newNodesDF,
                                                    refDF,
                                                    xyDF,
                                                    6,
@@ -86,7 +86,7 @@ class Nof1CalcTestCase(unittest.TestCase):
         newNodesDF = newNodesDF[[newNodesDF.columns[0]]]
         passed = False
         try:
-            retDictBoth = outputToDict(*placeNode.placeNew(newNodesDF,
+            retDictBoth = _outputToDict(*placeNode.placeNew(newNodesDF,
                                                    refDF,
                                                    xyDF,
                                                    6,
@@ -112,7 +112,7 @@ class Nof1CalcTestCase(unittest.TestCase):
 
         passed = False
         try:
-            retDictBoth = outputToDict(*placeNode.placeNew(newNodesDF,
+            retDictBoth = _outputToDict(*placeNode.placeNew(newNodesDF,
                                                    refDF,
                                                    xyDF,
                                                    6,
@@ -146,32 +146,32 @@ class Nof1CalcTestCase(unittest.TestCase):
         ##
         #uses the same input function as the calc routine
         # to get data into pandas structs
-        refDF,xyDF,newNodesDF = putDataIntoPythonStructs(featMat,
+        refDF,xyDF,newNodesDF = _putDataIntoPythonStructs(featMat,
                                                          preSquig,
                                                          nodesDictBoth)
 
-        refDF,xyDF,newNode1 = putDataIntoPythonStructs(featMat,
+        refDF,xyDF,newNode1 = _putDataIntoPythonStructs(featMat,
                                                          preSquig,
                                                          nodesDict1)
 
-        refDF,xyDF,newNode2 = putDataIntoPythonStructs(featMat,
+        refDF,xyDF,newNode2 = _putDataIntoPythonStructs(featMat,
                                                          preSquig,
                                                          nodesDict2)
         ##
         #uses the same output function as the calc routine
-        retDictBoth = outputToDict(*placeNode.placeNew(newNodesDF,
+        retDictBoth = _outputToDict(*placeNode.placeNew(newNodesDF,
                                                    refDF,
                                                    xyDF,
                                                    6,
                                                    'mapId'))
 
-        retDict1 = outputToDict(*placeNode.placeNew(newNode1,
+        retDict1 = _outputToDict(*placeNode.placeNew(newNode1,
                                                    refDF,
                                                    xyDF,
                                                    6,
                                                    'mapId'))
 
-        retDict2 = outputToDict(*placeNode.placeNew(newNode2,
+        retDict2 = _outputToDict(*placeNode.placeNew(newNode2,
                                                    refDF,
                                                    xyDF,
                                                    6,

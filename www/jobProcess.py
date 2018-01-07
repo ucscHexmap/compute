@@ -75,8 +75,6 @@ def _setDoneStatus (queuePath, id, status, result=None):
     
     JobQueue(queuePath).setResult(id, status, jsonResult)
 
-    # TODO Email to user?
-
 def main(args):
     queuePath = args[0]
     jobId = int(args[1])
