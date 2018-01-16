@@ -89,28 +89,7 @@ class Test_jobHttp(unittest.TestCase):
         #print 'rData:', rData
         s.assertEqual(r.status_code, 200)
         s.assertEqual('just testing data server', rData)
-
-    '''
-    # The unit tester doesn't do so well on this due to multiple processes.
-    def test_postQuery(s):
-        # This may fail if the job completes before the job status query.
-        r = s.postQuery('jobTestHelper', {'testStatus': s.que.inJobQueueSt})
-        #print 'r.text:', r.text
-        rData = json.loads(r.text)
-        #print 'rData:', rData
-        s.assertEqual(r.status_code, 200)
-        s.assertEqual('InJobQueue', rData['status'])
-        s.assertEqual(1, rData['jobId'])
-    '''
-    def test_getAllJobs(s):
-        s.postQuery('jobTestHelper', {'testStatus': s.que.successSt})
-        s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt})
-        r = s.get('/getAllJobs')
-        rData = json.loads(r.text)
-        #print 'rData:', rData
-        s.assertEqual(1, rData['jobs'][0][0])
-        s.assertEqual(2, rData['jobs'][1][0])
-
+    
     def test_getStatusInJobQueue(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.inJobQueueSt})
         r = s.get('/jobStatus/jobId/1')

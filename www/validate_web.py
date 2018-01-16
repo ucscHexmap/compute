@@ -2,7 +2,7 @@
 import os, json, types, re
 from util_web import SuccessResp, ErrorResp
 
-def _validateFileName (dirty, name):
+def _validateFileName (dirty, name, allowSlash=False):
     '''
     check to be sure this is a file-safe name without any problem characters
     Valid characters:
@@ -10,16 +10,23 @@ def _validateFileName (dirty, name):
     All other characters are replaced with underscores.
     @param dirty: the string to check
     @param name: the data property name
+    @param allowSlash: allow a slash (/) in the string for paths
     @return: nothing or raise an ErrorResp
     '''
-    regex = r'[^A-Za-z0-9_\-\.].*'
     msg = name + ' parameter may only contain the characters:' + \
             ' a-z, A-Z, 0-9, dash (-), dot (.), underscore (_)'
-    if name == 'map':
-        msg += ', one slash (/)'
+    if allowSlash:
+        regex = r'[^A-Za-z0-9_\-\.\//].*'
+        msg += ', slash (/)'
+    else:
+        regex = r'[^A-Za-z0-9_\-\.].*'
+
     search = re.search(regex, dirty)
     if not search == None:
         raise ErrorResp(msg)
+
+def _validatePathName (dirty, name):
+    _validateFileName (dirty, name, allowSlash=True)
 
 def _validateStringChars(val, name):
     '''
@@ -73,6 +80,15 @@ def _validateString(name, data, required=False, arrayAllowed=False):
     elif required: # name is not in data
         raise ErrorResp(name + ' parameter missing or malformed')
 
+def _validateInteger (name, data, required=False):
+    if name in data:
+        try:
+            val = int(data[name])
+        except ValueError:
+            raise ErrorResp(name + ' parameter must be an integer')
+    elif required: # name is not in data
+        raise ErrorResp(name + ' parameter missing or malformed')
+
 def map(data, required):
     _validateString('map', data, required)
 
@@ -83,13 +99,8 @@ def map(data, required):
     if slashCount > 1:
         raise ErrorResp('map IDs may not contain more than one slash')
     
-    elif slashCount < 1:
-        _validateFileName(val, 'map')
-    
-    else:  # one slash
-        i = val.find('/')
-        _validateFileName(val[0:i], 'map')
-        _validateFileName(val[i+2:], 'map')
+    else:
+        _validateFileName(val, 'map', allowSlash=True)
 
 def layoutInputName(data, required):
     _validateString('layoutInputName', data, required, True)
@@ -107,3 +118,21 @@ def viewServer(data):
     if 'viewServer' not in data:
         return
     _validateString('viewServer', data)
+
+def layoutInputDataId (data, required=False):
+    name = 'layoutInputDataId'
+    _validateString(name, data, required)
+    _validatePathName(data[name], name)
+
+def colorAttributeDataId (data, required=False):
+    name = 'colorAttributeDataId'
+    if name in data:
+        _validateString(name, data)
+        _validatePathName(data[name], name)
+
+def neighborCount (data):
+    name = 'neighborCount'
+    _validateInteger (name, data)
+    if name in data:
+        if data[name] < 1 or data[name] > 30:
+            raise ErrorResp('neighborCount parameter must be within the range, 1-30')

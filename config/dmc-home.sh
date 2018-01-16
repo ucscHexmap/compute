@@ -6,6 +6,7 @@ export CA= #Needed for https
 export CERT= #Needed for https
 export DATA_ROOT=/home/duncan/data
 export DEBUG=1
+export DEV=1
 export FLASK_DEBUG=1
 export HEXMAP=
 export HUB_DBPATH=/home/duncan/hex/compute/db/map.db

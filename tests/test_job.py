@@ -26,9 +26,11 @@ ctx3 = 'ctx3'
 jobStatusUrl = 'http://127.0.0.1:5000/jobStatus/jobId/'
 
 appCtxDict = {
+    'dev': int(os.environ.get('DEV', 0)),
     'jobQueuePath': quePath,
     'jobStatusUrl': jobStatusUrl,
     'unitTest': True,
+    'adminEmail': 'admin@x.y',
 }
 appCtx = Context(appCtxDict)
 appCtxUnicode = json.loads(json.dumps(appCtxDict))
@@ -43,9 +45,9 @@ ctx3 = Context(ctxdict)
 ctx3.prop3 = 3
 
 # Tasks to execute as stored in the queue.
-task1 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
-task2 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop2":2},"operation":"operation2","parms":"parms2"}'
-task3 = '{"ctx":{"app":{"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop3":3},"operation":"operation3","parms":"parms3"}'
+task1 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
+task2 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop2":2},"operation":"operation2","parms":"parms2"}'
+task3 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop3":3},"operation":"operation3","parms":"parms3"}'
 
 # Usernames
 user1 = 'user1'
@@ -59,8 +61,8 @@ result3 = 'result3'
 result1unicode = json.loads(json.dumps(result1))
 
 # Error message
-errorMsg1 = '{"error": "some error"}'
-errorMsg1trace = '{"error": "some error", "stackTrace": "some stackTrace"}'
+errorMsg1 = {"error": "some error"}
+errorMsg1trace = {"error": "some error", "stackTrace": "some stackTrace"}
 errorMsg2 = 'errorMsg2'
 errorMsg2 = 'errorMsg3'
 
@@ -92,7 +94,7 @@ class Test_job(unittest.TestCase):
     
     def test_unpackTask(s):
         packed = job._packTask(operation1, parms1, ctx1)
-        ctx, operation, parms = s.jobProcess._unpackTask(packed)
+        operation, parms, ctx = s.jobProcess.unpackTask(packed)
         #print 'operation, parms, ctx:', operation, parms, ctx
         s.assertEqual(operation1, operation)
         s.assertEqual(parms1, parms)
@@ -118,7 +120,7 @@ class Test_job(unittest.TestCase):
         out = s.que._getOne(1)
         #print 'out:', out
         s.assertEqual(s.que.inJobQueueSt, out[s.que.statusI])
-        s.assertEqual(user1, out[s.que.userI])
+        s.assertEqual(user1, out[s.que.emailI])
         s.assertEqual(today, out[s.que.lastAccessI])
         s.assertEqual(None, out[s.que.processIdI])
         s.assertEqual(task1, out[s.que.taskI])
@@ -157,7 +159,7 @@ class Test_job(unittest.TestCase):
 
     def test_getStatusRunning(s):
         job.add(user1, operation1, parms1, ctx1);
-        jobProcess._setDoneStatus(quePath, 1, s.que.runningSt)
+        s.que.setResult(1, s.que.runningSt, None, ctx1, operation1)
         r = job.getStatus(1, quePath)
         #print 'r:', r
         s.assertEqual(s.que.runningSt, r['status']);
@@ -165,7 +167,7 @@ class Test_job(unittest.TestCase):
 
     def test_getStatusSuccess(s):
         job.add(user1, operation1, parms1, ctx1);
-        jobProcess._setDoneStatus(quePath, 1, s.que.successSt, result1)
+        s.que.setResult(1, s.que.successSt, result1, ctx1, operation1)
         r = job.getStatus(1, quePath)
         #print 'r:', r
         s.assertEqual(s.que.successSt, r['status']);
@@ -174,14 +176,14 @@ class Test_job(unittest.TestCase):
 
     def test_getStatusError(s):
         job.add(user1, operation1, parms1, ctx1);
-        jobProcess._setDoneStatus(quePath, 1, s.que.errorSt, errorMsg1)
+        s.que.setResult(1, s.que.errorSt, errorMsg1, ctx1, operation1)
         r = job.getStatus(1, quePath)
         s.assertEqual(s.que.errorSt, r['status']);
         s.assertEqual(errorMsg1, r['result']);
 
     def test_getStatusErrorWithTrace(s):
         job.add(user1, operation1, parms1, ctx1);
-        jobProcess._setDoneStatus(quePath, 1, s.que.errorSt, errorMsg1trace)
+        s.que.setResult(1, s.que.errorSt, errorMsg1trace, ctx1, operation1)
         r = job.getStatus(1, quePath)
         s.assertEqual(s.que.errorSt, r['status']);
         s.assertEqual(errorMsg1trace, r['result']);
@@ -190,15 +192,15 @@ class Test_job(unittest.TestCase):
         job.add(user1, operation1, parms1, ctx1);
         job.add(user2, operation2, parms2, ctx2);
         job.add(user3, operation3, parms3, ctx3);
-        jobProcess._setDoneStatus(quePath, 1, s.que.successSt, result1)
-        jobProcess._setDoneStatus(quePath, 2, s.que.errorSt, errorMsg1)
+        s.que.setResult(1, s.que.successSt, result1, ctx1, operation1)
+        s.que.setResult(2, s.que.errorSt, errorMsg1, ctx2, operation1)
         rows = job.getAll(quePath)['jobs']
         #print 'rows[0]:', rows[0]
 
         # Verify all fields in job1.
         s.assertEqual(1, rows[0][s.que.idI])
         s.assertEqual(s.que.successSt, rows[0][s.que.statusI])
-        s.assertEqual(user1, rows[0][s.que.userI])
+        s.assertEqual(user1, rows[0][s.que.emailI])
         s.assertEqual(today, rows[0][s.que.lastAccessI])
         s.assertEqual(None, rows[0][s.que.processIdI])
         #print '              task1:', task1
@@ -210,7 +212,7 @@ class Test_job(unittest.TestCase):
         # Verify all fields in job2.
         s.assertEqual(2, rows[1][s.que.idI])
         s.assertEqual(s.que.errorSt, rows[1][s.que.statusI])
-        s.assertEqual(user2, rows[1][s.que.userI])
+        s.assertEqual(user2, rows[1][s.que.emailI])
         s.assertEqual(today, rows[1][s.que.lastAccessI])
         s.assertEqual(None, rows[1][s.que.processIdI])
         s.assertEqual(task2, rows[1][s.que.taskI])
@@ -220,7 +222,7 @@ class Test_job(unittest.TestCase):
         # Verify all fields in job3.
         s.assertEqual(3, rows[2][s.que.idI])
         s.assertEqual(s.que.inJobQueueSt, rows[2][s.que.statusI])
-        s.assertEqual(user3, rows[2][s.que.userI])
+        s.assertEqual(user3, rows[2][s.que.emailI])
         s.assertEqual(today, rows[2][s.que.lastAccessI])
         s.assertEqual(None, rows[2][s.que.processIdI])
         s.assertEqual(task3, rows[2][s.que.taskI])

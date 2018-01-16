@@ -144,7 +144,7 @@ class Test_overlayNode(unittest.TestCase):
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'map parameter may only contain the characters: ' + \
-            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)')
 
     def test_map_not_file_safe_major(s):
         rv = s.app.post('/query/overlayNodes',
@@ -162,7 +162,7 @@ class Test_overlayNode(unittest.TestCase):
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'map parameter may only contain the characters: ' + \
-            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)')
 
     def test_map_not_file_safe_minor(s):
         rv = s.app.post('/query/overlayNodes',
@@ -180,7 +180,7 @@ class Test_overlayNode(unittest.TestCase):
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'map parameter may only contain the characters: ' + \
-            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)')
 
     def test_no_layout(s):
         rv = s.app.post('/query/overlayNodes',
@@ -391,7 +391,7 @@ class Test_overlayNode(unittest.TestCase):
         #print "### rv.status_code:", rv.status_code
         #print "### data['error']:", data['error']
         s.assertTrue(rv.status_code == 500)
-        s.assertTrue(data['error'] == 'Clustering data not found for layout: someLayout')
+        s.assertTrue(data['error'] == 'Server uncaught exception: Clustering data not found for layout: someLayout')
 
     def test_layout_has_background_data(s):
         rv = s.app.post('/query/overlayNodes',
@@ -413,8 +413,8 @@ class Test_overlayNode(unittest.TestCase):
         expectedResult = \
             'Clustering data not found for layout: someLayout'
         s.assertTrue(rv.status_code == 500)
-        s.assertTrue(expectedResult == data['error'])
-            
+        s.assertTrue(data['error'] == 'Server uncaught exception: Clustering data not found for layout: someLayout')
+
     def test_create_bookmark(s):
         #resData = '{"TESTpythonCallStub":"success"}\n';
         opts = [

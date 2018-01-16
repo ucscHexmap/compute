@@ -27,9 +27,6 @@ def _packTask (operation, parms, ctx):
     
 def _runNow(id, jobProcessPath, queuePath):
 
-    print '_runNow():queuePath:', queuePath
-    print '_runNow():jobProcessPath:', jobProcessPath
-
     # Run the operation in a new process.
     p = subprocess.Popen([jobProcessPath, queuePath, str(id)])
 
@@ -54,10 +51,10 @@ def getStatus (id, queuePath):
         raise ErrorResp('unknown job ID of: ' + str(id))
     return statusResult
 
-def add (user, operation, parms, ctx):
+def add (email, operation, parms, ctx):
 
     # Add a job to the tail end of the job queue.
-    # @param         user: username requesting the job
+    # @param         email: email/username requesting the job
     # @param    operation: job operation to run; the python module that
     #                      contains the calcMain() function should be in the
     #                      file, <operation>_www.py
@@ -66,10 +63,21 @@ def add (user, operation, parms, ctx):
     # @params         ctx: the job context holding information for the postCalc
     # @returns: (jobId, status)
     queuePath = ctx.app.jobQueuePath
-    jobId = JobQueue(queuePath).add(id, _packTask(operation, parms, ctx), user)
+    packedTask = _packTask(operation, parms, ctx)
+    jobId = JobQueue(queuePath).add(id, packedTask, email)
     
     # Get the status of the job just added to the queue.
     result = getStatus(jobId, queuePath)
+
+    '''
+    # TODO debug doNotEmail
+    from jobProcess import JobProcess
+    jp = JobProcess(queuePath)
+    unpackedTask = jp.unpackTask(packedTask)
+    print 'JOB.ADD:PARMS:', str(parms)
+    print 'JOB.ADD:PACKEDTASK:', str(packedTask)
+    print 'JOB.ADD:UNPACKEDTASK:', str(unpackedTask)
+    '''
 
     # Run the job now.
     if not ctx.app.unitTest:

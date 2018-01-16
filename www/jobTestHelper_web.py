@@ -8,7 +8,7 @@ import job
 
 secondsToRun = 0.3
 
-def validateParms (data):
+def _validateParms (data):
 
     # Whatever validation that may be done to return immediate feedback
     # to the caller.
@@ -25,7 +25,7 @@ def preCalc(data, ctx):
     # @returns: the result of the call to job.add(), an object like:
     #           { 'jobId': <jobId>, 'status': <status> }
     
-    validateParms(data)
+    _validateParms(data)
     
     if data['testStatus'] == 'InJobQueue':
     

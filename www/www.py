@@ -1,20 +1,21 @@
 
-# www
-#
+# Main module for the http server, including all routes.
+
 import os, traceback, logging, json
-from flask import Flask, request, jsonify, current_app, Response
+from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
-from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, tmpDir, \
-    Context
-import validate_web as validate
+import createMap_web
+import job
+import jobTestHelper_web
 import placeNode_web
 import reflect_web
-import jobTestHelper_web
-import job
+from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
+    reportRouteError
+import validate_web as validate
 
-# Set up the flask application where app.config is only accessed in this file.
+# Set up the flask application.
 app = Flask(__name__)
 
 # Set up the application context used by all threads.
@@ -23,6 +24,7 @@ def contextInit ():
         'adminEmail': os.environ.get('ADMIN_EMAIL'),
         'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
         'debug': os.environ.get('DEBUG', 0),
+        'dev': int(os.environ.get('DEV', 0)),
         'hubPath': os.environ.get('HUB_PATH'),
         'unitTest': int(os.environ.get('UNIT_TEST', 0)),
         'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
@@ -95,8 +97,6 @@ def errorResponse(error):
     response = jsonify(error.message)
     response.status_code = error.status_code
     statusCode, responseStr = str(response.status_code), str(response)
-    logging.error(
-        'Request failed with: ' + statusCode + ': ' + str(error.message))
     return response
 
 # Register the unhandled Exception handler
@@ -105,28 +105,27 @@ def unhandledException(e):
     trace = traceback.format_exc()
     # Build response.
     rdict = {
-            "traceback" : trace,
-            "error" : str(e),
+            "stackTrace" : trace,
+            "error" : 'Server uncaught exception: ' + str(e),
             }
     response = jsonify(rdict)
     response.status_code = 500
-
-    logging.error("Uncaught exception: \n" + trace)
-
+    reportRouteError(response.status_code, rdict['error'], appCtx,
+        rdict['stackTrace'])
     return response
 
 # Handle route to upload files
 @app.route('/upload/<path:dataId>', methods=['POST'])
 def upload(dataId):
         
-    # If the caller does not include a file property in the post
+    # If the client does not include a file property in the post
     # there is nothing to upload. So bail.
     if 'file' not in request.files:
         raise ErrorResp('No file property provided for upload', 400)
     
     file = request.files['file']
 
-    # If a browser user does not include a file, the browser submits an
+    # If a browser user does not select a file, the browser submits an
     # empty file property. So bail.
     if file.filename == '':
         raise ErrorResp('No file provided for upload', 400)
@@ -179,16 +178,12 @@ def dataRouteInner(dataId, ok404=False):
             raise SuccessRespNoJson(result)
         else:
             raise ErrorResp('File not found or other IOError', 404)
-    except Exception as e:
-        #traceback.print_exc()
-        raise ErrorResp(str(e), 500)
 
     raise SuccessRespNoJson(result)
 
 # Handle data/<dataId> routes which are data requests by data ID.
 @app.route('/data/<path:dataId>', methods=['GET'])
 def dataRoute(dataId):
-    logging.debug('Received data request for ' + dataId)
     dataRouteInner(dataId)
 
 # Handle data404ok/<dataId> routes which are data requests by data ID.
@@ -196,51 +191,43 @@ def dataRoute(dataId):
 # will not be thrown on the client console.
 @app.route('/dataOk404/<path:dataId>', methods=['GET'])
 def dataRouteOk404(dataId):
-    logging.debug('Received data OK 404 request for ' + dataId)
     dataRouteInner(dataId, True)
 
 # Handle get all jobs route
 @app.route('/getAllJobs', methods=['GET'])
 def getAllJobsRoute():
-    #logging.info('Received get all jobs request')
     result = job.getAll(appCtx.jobQueuePath)
-    #logging.info('Successful get all job srequest')
     raise SuccessResp(result)
 
 # Handle jobStatus route
 @app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
 def jobStatusRoute(jobId):
-    #logging.info('Received jobStatus request for job ID: ' + str(jobId))
     result = job.getStatus(jobId, appCtx.jobQueuePath)
-    #logging.info('Successful jobStatus request for job ID: ' + str(jobId))
     raise SuccessResp(result)
 
 # Handle query/jobTestHelper routes
 @app.route('/query/jobTestHelper', methods=['POST'])
 def queryJobTestHelperRoute():
-    #logging.info('Received query jobTestHelper')
     result = jobTestHelper_web.preCalc(validatePost(), Context({'app': appCtx}))
-    #logging.info('Success with query jobTestHelper')
+    raise SuccessResp(result)
+
+# Handle query/createMap route.
+@app.route('/query/createMap', methods=['POST'])
+def queryCreateMapRoute():
+    result = createMap_web.preCalc(validatePost(), Context({'app': appCtx }))
     raise SuccessResp(result)
 
 # Handle query/overlayNode route, older version of placeNode
 @app.route('/query/overlayNodes', methods=['POST'])
 def queryOverlayNodesRoute():
-    #logging.info('Received query overlayNodes')
-    dataIn = validatePost()
-    jobCtx = Context({'app': appCtx, 'overlayNodes': True})
-    result = placeNode_web.preCalc(dataIn, jobCtx)
-    #logging.info('Success with query overlayNodes')
+    result = placeNode_web.preCalc(validatePost(),
+        Context({'app': appCtx, 'overlayNodes': True}))
     raise SuccessResp(result)
 
 # Handle query/placeNode routes
 @app.route('/query/placeNode', methods=['POST'])
 def queryPlaceNodeRoute():
-    #logging.info('Received query placeNode')
-    dataIn = validatePost()
-    jobCtx = Context({'app': appCtx})
-    result = placeNode_web.preCalc(dataIn, jobCtx)
-    #logging.info('Success with query placeNode')
+    result = placeNode_web.preCalc(validatePost(), Context({'app': appCtx}))
     raise SuccessResp(result)
 
 # Handle reflect/metadata routes
@@ -290,7 +277,6 @@ def getRefAttr(attrId):
 # Handle the route to test
 @app.route('/test', methods=['POST', 'GET'])
 def testRoute():
-    logging.debug('testRoute current_app: ' + str(current_app))
     raise SuccessResp('just testing data server')
 
 # Other local vars.

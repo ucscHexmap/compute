@@ -8,153 +8,120 @@
 
 import os, json, types, requests, traceback, csv, logging, datetime
 from os import path
+from argparse import Namespace
 import validate_web as validate
+import util_web
 from util_web import SuccessResp, ErrorResp, getMapMetaData
 import layout
+import job
 
-def _validateParameters(data):
-    '''
-    Validate the query.
-    @param data: data received in the http post request
-    @return: nothing
-    '''
-    #print 'validateParameters():data:', data
+def _postCalc(result, ctx):
+
+    # Be sure we have a view server
+    if not 'viewServer' in ctx.parms:
+        ctx.parms['viewServer'] = ctx.app.viewServer
+
+    # Open the log file which is the result returned.
+    logFile = result
+    try:
+        f = open(logFile,'r')
+    except (e):
+        raise Exception('Could not open log file')
+    
+    # Check for the success message in the log file.
+    successMsg = 'Visualization generation complete!'
+    success = False
+    for line in f:
+        if line.find(successMsg) > -1:
+            success = True
+            break
+    if not success:
+        raise Exception('Error when creating a map. Calc script had an ' + \
+            'unknown error. ' + 'logfile: ' + logFile)
+
+    result = {
+        'url': ctx.app.viewServer + '/?p=' + ctx.parms['map'],
+        'logFile': logFile
+    }
+    return "Success", result
+
+def calcMain(parms, ctx):
+
+    # The main process in which the job executes.
+    # Use standard exceptions here to report errors.
+    # @param parms: the parameters for the operation
+    # @param ctx: the job context
+    # @returns: (status, result) where the status is 'Success' or 'Error'
+    #           and the result depends on the status:
+    #               Success: a dict like:
+    #                   {
+    #                       'status': 'Success',
+    #                       'url': 'https://tumormap.ucsc.edu/?p=myMap',
+    #                       'logFile': <logFileName>
+    #                   }
+    #               Error: a dict containing one of the below:
+    #                   {'error': <message>}
+    #                   {'error': <message>, 'stackTrace': <trace>}
+
+    # Fix up relative paths and map any newer parm names to old parm names
+    # that are expected by the calc function.
+    # TODO These adjustments to the parms are only for UI caller.
+    # These need to change to make the createMap API public.
+    opts = Namespace()
+    opts.layoutInputFile = \
+        [path.join(ctx.app.dataRoot, parms['layoutInputDataId'])]
+    opts.names = [parms['layoutInputName']]
+    opts.directory = path.join(ctx.app.dataRoot, parms['outputDirectory'])
+    if 'zeroReplace' in parms:
+        opts.zeroReplace = parms['zeroReplace']
+    if 'colorAttributeDataId' in parms:
+        opts.scores = \
+            [path.join(ctx.app.dataRoot, parms['colorAttributeDataId'])]
+    if 'noLayoutIndependentStats' in parms:
+        opts.associations = not parms['noLayoutIndependentStats']
+    if 'noLayoutAwareStats' in parms:
+        opts.mutualinfo = not parms['noLayoutAwareStats']
+
+    # Call the calc function.
+    result = layout.makeMapUIfiles(opts)
+    ctx.parms = parms
+
+    return _postCalc(result, ctx)
+
+def _validateParms(data):
+
+    # Validate the query.
+    # @param data: data received in the http post request
+    # @return: nothing
+
     # Checks on required parameters
     validate.map(data, True)
-    validate.layoutInputDataId(data, True)
-    validate.layoutInputName(data, True)
+    validate.layoutInputDataId(data, required=True)
+    validate.layoutInputName(data, required=True)
+    # TODO: validate.outputDirectory(data, required=True)
 
     # Checks on optional parameters
-    validate.authGroup(data)
+    #validate.authGroup(data)
     validate.email(data)
     validate.neighborCount(data)
     validate.colorAttributeDataId(data)
-    validate.firstColorAttribute(data)
-    validate.colormapDataId(data)
-    validate.layoutAwareStats(data)
-    validate.layoutIndependentStats(data)
-    validate.viewServer(data)
+    #validate.firstColorAttribute(data)
+    #validate.colormapDataId(data)
+    #validate.layoutAwareStats(data)
+    #validate.layoutIndependentStats(data)
+    #validate.viewServer(data)
 
-'''
-def _calcComplete(result, ctx):
+def preCalc(data, ctx):
 
-    # Check job status for createMap
-
-    # Check for success in the log file which is the result returned.
-    try:
-        f = open(result,'r')
-    catch:
-        raise ErrorResp('Could not open log file')
+    # The entry point from the URL routing.
+    # @param data: data from the HTTP post request
+    # @param ctx: job context
+    # @return: result of _calcComplete()
     
-    successMsg = 'Visualization generation complete!'
-    for line in f:
-        if line.find(successMsg) > -1:
-            return result
+    _validateParms(data)
     
-    logging.error('Calc script had an unknown error; log file: ' + result)
-    raise ErrorResp('Calc script had an unknown error', 500)
-
-    # javascript:
-    // Check the python layout log for success
-    var log = fs.readFileSync(context.js_result, 'utf8');
-    var log_array = log.split('\n');
-    var success_msg = 'Visualization generation complete!';
-    var success = _.find(log_array, function(line) {
-        return line.indexOf(success_msg) > -1;
-    });
-    if (_.isUndefined(success)) {
+    # Execute the job immediately for debugging.
+    #return calcMain(data, ctx)
     
-        // Send the log to the admin & throw an error.
-        var subject = 'Error when creating a map';
-        var msg = 'log file: ' + result.data;
-        sendMail(ADMIN_EMAIL, subject, msg);
-        
-        PythonCall.report_calc_result ({
-            statusCode: 500,
-            data: 'Calc script had an unknown error',
-            }, context);
-    } else {
-
-        // Return the layout log file name
-        PythonCall.report_calc_result(result, context);
-    }
-'''
-
-argKeys = ['layoutInputFile', 'layoutName', 'colorAttributeFile', 'colormaps',
-        'firstAttribute', 'outputDirectory', 'authGroup', 'zeroReplace',
-        'attributeTags', 'noLayoutIndependentStats', 'noLayoutAwareStats']
-
-def _apiToArgsList(dataIn, ctx):
-    aList = []
-    aList.append('--layoutInputFile')
-    aList.append(path.join(ctx['dataRoot'], dataIn['layoutInputDataId']))
-    aList.append('--layoutName')
-    aList.append(dataIn['layoutInputName'])
-    aList.append('--outputDirectory')
-    aList.append(path.join(ctx['dataRoot'], 'view', dataIn['map']))
-    return aList
-
-def calc(dataIn, ctx):
-    '''
-    The entry point from the www URL routing.
-    @param dataIn: data from the HTTP post request
-    @param ctx: global context
-    @return: result of _calcComplete()
-    '''
-    print 'calc()'
-    _validateParameters(dataIn)
-    
-    # Prepend the data root to the data IDs,
-    dataIn['layoutInputFile'] = path.join(ctx['dataRoot'],
-        dataIn['layoutInputDataId'])
-    if 'colorAttributeDataId' in dataIn:
-        dataIn['colorAttributeFile'] = path.join(ctx['dataRoot'],
-        dataIn['colorAttributeDataId'])
-    if 'colormapDataId' in dataIn:
-        dataIn['colormaps'] = path.join(ctx['dataRoot'],
-        dataIn['colormapDataId'])
-
-    argsList = _apiToArgsList(dataIn, ctx);
-
-    print 'argsList', argsList
-
-    print 'making job'
-    
-    #jobId = job.new(_calcComplete, ctx)
-    jobId = '1111'
-
-    print 'jobId:', jobId
-
-    #raise SuccessResp({ 'status': 'Request received', 'jobId': jobId })
-
-    #print 'made it past the SuccessResp'
-
-    #return
-    
-
-
-    print 'before', str(datetime.datetime.now())
-    returned = 'rats'
-    
-    try:
-       returned = layout.withArgsAsList(argsList)
-       #returned = subprocess.check_call(
-       #     ["layout.withArgsAsList", '"' + dataIn + '"'])
-    except:
-        ErrorResp('Unknown error starting compute process', 500);
-
-    print 'after', str(datetime.datetime.now())
-    print 'returned', str(returned)
-
-    '''
-    # Be sure we have a view server
-    if not 'viewServer' in dataIn:
-        dataIn['viewServer'] = ctx['viewServer']
-
-    jobId = job.new(newProcess, _calcComplete, ctx);
-    '''
-    
-    return {
-        'status': 'Request received',
-        'jobId': jobId,
-    }
+    # Add this task to the job queue.
+    return job.add(data['email'], 'createMap', data, ctx)

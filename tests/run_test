@@ -21,22 +21,16 @@ export DEBUG=1
 # Test only the *_web.py files
 web=( \
     test_basic_web \
+    test_createMap_web \
     test_job \
     test_overlayNode_web \
     test_placeNode_web \
     test_placeNode2_web \
 )
-    #test_placeNode_web \
 
 # Deprecated with hexagram server code moving to the compute server
 DEPRECATED=( \
     test_http \
-)
-
-# Deprecated with hexagram server code moving to the compute server
-DEPRECATED_PARALLEL=( \
-    test_http_parallel \
-    test_remoteCalc \
 )
 
 # The rest of the tests.
@@ -56,11 +50,12 @@ docker_safe=( \
 )
 
 # Combine the lists above to get ALL of the tests
-all=( "${web[@]}" "${DEPRECATED[@]}" "${DEPRECATED_PARALLEL[@]}" "${docker_safe[@]}" )
+all=( "${web[@]}" "${DEPRECATED[@]}" "${docker_safe[@]}" )
 
 # tests that normally pass on a mac
 mac=( \
     test_basic_web \
+    test_createMap_web \
     test_dynLayoutAware \
     test_formatCheck \
     test_http \
@@ -72,7 +67,6 @@ mac=( \
     test_placeNode_web \
     test_placeNode2_web \
     test_process_categoricals \
-    test_remoteCalc \
     test_similarity \
 )
 
@@ -91,15 +85,5 @@ else
     RUN_THIS=$TO_RUN
 fi
 
-# Run our well-behaved tests in parallel
+# Run the tests
 python2.7 -m unittest $RUN_THIS
-
-# Run our parallel-challenged tests independently
-if [ $TO_RUN == 'all' ]
-    then
-    echo Running parallel-challenged tests independently
-    for TEST in "${DEPRECATED_PARALLEL[@]}"
-    do
-        python2.7 $TEST.py
-    done
-fi

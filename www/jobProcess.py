@@ -32,7 +32,7 @@ class JobProcess(object):
 
         return (status, result)
 
-    def _unpackTask (s, packedTask):
+    def unpackTask (s, packedTask):
 
         # Unpack the task info into its components.
         unpacked = json.loads(packedTask)
@@ -44,13 +44,11 @@ class JobProcess(object):
         # Replace ctx.app as a dict with the appCtx Context class instance.
         ctx.app = appCtx
 
-        return ctx, unpacked['operation'], unpacked['parms'],
+        return unpacked['operation'], unpacked['parms'], ctx
 
-    def run (s, id, moduleName=None):
-
+    def run (s, id, operation, parms, ctx, moduleName=None):
+    
         # Run the job now.
-        ctx, operation, parms = s._unpackTask(s.queue.getTask(id))
-        
         if moduleName == None:
             moduleName = operation + '_web'
 
@@ -65,28 +63,35 @@ class JobProcess(object):
         s._connection_cache = {}
         s.queue = JobQueue(queuePath)
 
-def _setDoneStatus (queuePath, id, status, result=None):
-
-    # Set the status and optional result.
-    if result != None:
-        jsonResult = json.dumps(result, sort_keys=True)
-    else:
-        jsonResult = None
-    
-    JobQueue(queuePath).setResult(id, status, jsonResult)
+def _formatError (errorMsg, stackTrace, operation, parms):
+    result = { 'error': 'Server error: ' }
+    if errorMsg:
+        result['error'] += errorMsg
+    result['stackTrace'] = stackTrace
+    if 'map' in parms:
+        result['map'] = parms['map']
+    return result
 
 def main(args):
     queuePath = args[0]
-    jobId = int(args[1])
+    id = int(args[1])
+
+    # TODO these should be wrapped with a try-except because any errors here
+    # will not be reported in the server log.
+    jobProcess = JobProcess(queuePath)
+    operation, parms, ctx = jobProcess.unpackTask(jobProcess.queue.getTask(id))
+
     try:
-        jobProcess = JobProcess(queuePath)
-        status, result = jobProcess.run(jobId)
+        status, result = jobProcess.run(id, operation, parms, ctx)
     except Exception as e:
         status = 'Error'
-        result = { 'error': str(e), 'stackTrace': traceback.format_exc() }
-    
+        result = _formatError(str(e), traceback.format_exc(), operation, parms)
+    except:
+        status = 'Error'
+        result = _formatError(None, traceback.format_exc(), operation, parms)
+
     # Set the completion status.
-    _setDoneStatus(queuePath, jobId, status, result)
+    JobQueue(queuePath).setResult(id, status, result, ctx, operation)
 
 if __name__ == "__main__" :
     try:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
-
+# NOTE: These tests compare the output of a UI session to expected values.
+# does not work across all platforms
 
 import sys
 import unittest

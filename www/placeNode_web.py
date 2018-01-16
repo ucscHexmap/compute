@@ -20,6 +20,29 @@ import numpy as np
 
 import job
 
+def formatEmailResult(result):
+
+    # Format the results for sending in an email.
+    
+    # Find all of the urls.
+    url = {}
+    for node in result['nodes']:
+        url[node] = result['nodes'][node]['url']
+    uniqueUrls = set(url.values())
+    msg = '\nFor placing the new nodes:'
+    
+    # Include each node.
+    for nodeName in sorted(result['nodes'].keys()):
+        msg += '\n' + nodeName
+        if len(uniqueUrls) > 1:
+            msg += ': ' + url[nodeName]
+
+    # If there is only one url, include that one.
+    if len(uniqueUrls) < 2:
+        msg = '\n' + list(uniqueUrls)[0] + '\n' + msg
+
+    return msg
+
 def _checkDuplicateRowError(error):
     """
     Checks to see if there is a duplicate row error and sends a more meaningful
@@ -38,30 +61,6 @@ def _checkDuplicateRowError(error):
 
     raise error
 
-def _validateParms(data):
-    '''
-    Validate the query.
-    @param data: data received in the http post request
-    @return: nothing
-    '''
-    # Basic checks on required parameters
-    validate.map(data, True)
-    validate.layout(data, True)
-    if 'nodes' not in data:
-        raise ErrorResp('nodes parameter missing or malformed')
-    if not isinstance(data['nodes'], dict):
-        raise ErrorResp('nodes parameter should be a dictionary')
-    if len(data['nodes'].keys()) < 1:
-        raise ErrorResp('there are no nodes in the nodes dictionary')
-    
-    # Basic checks on optional parameters
-    validate.email(data)
-    validate.viewServer(data)
-    if 'neighborCount' in data and \
-        (not isinstance(data['neighborCount'], int) or \
-        data['neighborCount'] < 1):
-        raise ErrorResp('neighborCount parameter should be a positive integer')
-
 def _postCalc(result, ctx):
     '''
     Create bookmarks and send email from a calculation result.
@@ -69,13 +68,16 @@ def _postCalc(result, ctx):
     @param ctx: global context
     @return: ('success', result)
     '''
-    dataIn = ctx.dataIn
-
-    #logging.debug('calcComplete: result: ' + str(result))
-    
     if 'error' in result:
-        raise ErrorResp(result['error'], 500)
+    
+        # Notify user & save result.
+        result['error'] = 'Error in placing nodes.\n\n' + result['error']
+        #util_web.sendResultsEmail(dataIn, 'Error in placing nodes.\n\n' +
+        #    result['error'], ctx.app)
+        return 'Error', result
 
+    dataIn = ctx.dataIn
+    
     # Be sure we have a view server
     if not 'viewServer' in dataIn:
         dataIn['viewServer'] = ctx.app.viewServer
@@ -160,12 +162,7 @@ def _postCalc(result, ctx):
             result['nodes'][node]['url'] = bData['bookmark']
             mailMsg += ', ' + node
         
-        mailMsg += '\n' + bData['bookmark']
-
-    # Notify any email addresses provided.
-    if 'email' in dataIn:
-        util_web.sendResultsEmail(dataIn['email'],
-        'New nodes have been placed.\n\n' + mailMsg[2:], ctx)
+        mailMsg = mailMsg[2:] + '\n' + bData['bookmark']
 
     return 'Success', result
 
@@ -259,26 +256,6 @@ def _getBackgroundData(data, ctx):
 
     return clusterDataFile, xyPositionFile
 
-def preCalc(dataIn, ctx):    
-    '''
-    The entry point from the www URL routing.
-    @param dataIn: data from the HTTP post request
-    @param ctx: global context
-    @return: result of calcComplete()
-    '''
-    _validateParms(dataIn)
-
-    if hasattr(ctx, 'overlayNodes'):
-
-        # Execute the job immediately when using the older API.
-        return calcMain(dataIn, ctx)
-
-    # Add the job to the job queue.
-    email = None
-    if 'email' in dataIn:
-        email = dataIn['email']
-    return job.add(email, 'placeNode', dataIn, ctx)
-
 def calcMain(dataIn, ctx):
     ctx.mapDir = os.path.join(ctx.app.viewDir, dataIn['map'])
 
@@ -319,3 +296,48 @@ def calcMain(dataIn, ctx):
     
     # Save the result in the job queue.
     return _postCalc(result, ctx)
+
+def _validateParms(data):
+    '''
+    Validate the query.
+    @param data: data received in the http post request
+    @return: nothing
+    '''
+    # Basic checks on required parameters
+    validate.map(data, True)
+    validate.layout(data, True)
+    if 'nodes' not in data:
+        raise ErrorResp('nodes parameter missing or malformed')
+    if not isinstance(data['nodes'], dict):
+        raise ErrorResp('nodes parameter should be a dictionary')
+    if len(data['nodes'].keys()) < 1:
+        raise ErrorResp('there are no nodes in the nodes dictionary')
+    
+    # Basic checks on optional parameters
+    validate.email(data)
+    validate.viewServer(data)
+    if 'neighborCount' in data and \
+        (not isinstance(data['neighborCount'], int) or \
+        data['neighborCount'] < 1):
+        raise ErrorResp('neighborCount parameter should be a positive integer')
+
+def preCalc(dataIn, ctx):
+    '''
+    The entry point from the www URL routing.
+    @param dataIn: data from the HTTP post request
+    @param ctx: global context
+    @return: result of calcComplete()
+    '''
+    _validateParms(dataIn)
+
+    if hasattr(ctx, 'overlayNodes'):
+
+        # Execute the job immediately when using the older API.
+        return calcMain(dataIn, ctx)
+
+    # Add the job to the job queue.
+    email = None
+    if 'email' in dataIn:
+        email = dataIn['email']
+    return job.add(email, 'placeNode', dataIn, ctx)
+

@@ -1203,7 +1203,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
         os.makedirs(options.directory)
 
     #Set stdout and stderr to a log file in the destination directory
-    log_file_name = options.directory + '/log'
+    log_file_name = os.path.join(options.directory, 'log')
     stdoutFd = sys.stdout
     sys.stdout = open(log_file_name, 'w')
     sys.stderr = sys.stdout
@@ -1808,9 +1808,6 @@ def makeMapUIfiles(options, cmd_line_list=None):
 def main(args):
     arg_obj = parse_args(args)
     return makeMapUIfiles(arg_obj, args)
-
-def fromNodejs(args):
-    return main(args)
 
 if __name__ == "__main__" :
     try:

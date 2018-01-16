@@ -1,6 +1,7 @@
 import os, json, requests, re
 import unittest
 import testUtil
+import testUtil as util
 import www
 
 class CreateMapTestCase(unittest.TestCase):
@@ -16,6 +17,8 @@ class CreateMapTestCase(unittest.TestCase):
     def tearDown(self):
         pass
     
+################ required parameter tests ######################
+
     def test_get_not_allowed(s):
         rv = s.app.get('/query/createMap')
         s.assertTrue(rv.status_code == 405)
@@ -78,10 +81,31 @@ class CreateMapTestCase(unittest.TestCase):
         except:
             s.assertTrue('', 'no json data in response')
         #print 'rv.status_code:', rv.status_code
-        s.assertTrue(rv.status_code == 400)
+        #print 'rv.data:', rv.data
         #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'layoutInputDataId parameter should only contain printable characters')
+
+    def test_bad_layoutInputDataId_filename(s):
+        rv = s.app.post('/query/createMap',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='someMap',
+                layoutInputDataId='x#x',
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print 'rv.status_code:', rv.status_code
+        #print 'rv.data:', rv.data
+        #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
+        msg = 'layoutInputDataId parameter may only contain the characters:' + \
+            ' a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)'
+        s.assertTrue(msg == data['error'])
 
     def test_bad_layoutInputName_string(s):
         rv = s.app.post('/query/createMap',
@@ -102,8 +126,8 @@ class CreateMapTestCase(unittest.TestCase):
         s.assertTrue(data['error'] ==
             'layoutInputName parameter should only contain printable characters')
 
-################  optional ######################
-
+################  optional parameters tests ######################
+    '''
     def test_bad_authGroup_string(s):
         rv = s.app.post('/query/createMap',
             content_type='application/json',
@@ -124,7 +148,7 @@ class CreateMapTestCase(unittest.TestCase):
         #print "data['error']", data['error']
         s.assertTrue(data['error'] ==
             'authGroup parameter should only contain printable characters')
-    
+    '''
     def test_neighborCount_not_integer(s):
         rv = s.app.post('/query/createMap',
             content_type='application/json',
@@ -141,8 +165,8 @@ class CreateMapTestCase(unittest.TestCase):
         except:
             s.assertTrue('', 'no json data in response')
         #print 'rv.status_code:', rv.status_code
-        s.assertTrue(rv.status_code == 400)
         #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'neighborCount parameter must be an integer')
 
@@ -182,11 +206,34 @@ class CreateMapTestCase(unittest.TestCase):
         except:
             s.assertTrue('', 'no json data in response')
         #print 'rv.status_code:', rv.status_code
-        s.assertTrue(rv.status_code == 400)
+        #print "data", str(data)
         #print "data['error']", data['error']
+        s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'colorAttributeDataId parameter should only contain printable characters')
 
+    def test_bad_colorAttributeDataId_filename(s):
+        rv = s.app.post('/query/createMap',
+            content_type='application/json',
+            data=json.dumps(dict(
+                map='someMap',
+                layoutInputDataId='x',
+                layoutInputName='x',
+                colorAttributeDataId='x#x',
+            ))
+        )
+        try:
+            data = json.loads(rv.data)
+        except:
+            s.assertTrue('', 'no json data in response')
+        #print 'rv.status_code:', rv.status_code
+        s.assertTrue(rv.status_code == 400)
+        #print "data['error']", data['error']
+        msg = 'colorAttributeDataId parameter may only contain the characters:' + \
+            ' a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)'
+        s.assertTrue(msg == data['error'])
+        
+    ''' later, not on UI yet
     def test_bad_colormapDataId_string(s):
         rv = s.app.post('/query/createMap',
             content_type='application/json',
@@ -206,7 +253,7 @@ class CreateMapTestCase(unittest.TestCase):
         #print "data['error']", data['error']
         s.assertTrue(data['error'] ==
             'colormapDataId parameter should only contain printable characters')
-
+    
     def test_bad_firstColorAttribute_string(s):
         rv = s.app.post('/query/createMap',
             content_type='application/json',
@@ -269,7 +316,7 @@ class CreateMapTestCase(unittest.TestCase):
         #print "data['error']", data['error']
         s.assertTrue(data['error'] ==
             'layoutIndependentStats parameter must be true or false')
-    
+    '''
     """
     # move to layout.py testing if we validate the colormap there.
     def test_good_colormap(s):
@@ -375,7 +422,7 @@ class CreateMapTestCase(unittest.TestCase):
         #print "data['error']", data['error']
         s.assertTrue(rv.status_code == 400 or rv.status_code == 500)
         s.assertTrue(data['error'] == 'Some error message or stack trace')
-
+    '''
     def test_view_server_connection(s):
         try:
             bResult = requests.post(
@@ -387,7 +434,7 @@ class CreateMapTestCase(unittest.TestCase):
         except:
             s.assertEqual('', 'Unable to connect to view server: ' +
                 s.viewServer + '. Is it up?')
-    '''
+
 
 if __name__ == '__main__':
     unittest.main()

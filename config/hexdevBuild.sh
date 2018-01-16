@@ -6,6 +6,7 @@ export CA=/data/certs/chain.crt
 export CERT=/data/certs/hexdev.crt
 export DATA_ROOT=/hive/groups/hexmap/dev/data
 export DEBUG=1
+export DEV=1
 export DRL_PATH=/cluster/home/swat/packages/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HUB_PATH=/hive/groups/hexmap/dev/compute

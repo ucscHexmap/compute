@@ -6,6 +6,7 @@ export BACK_OR_FOREGROUND=FORE
 #export CERT=/data/certs/hexdev.crt
 export DATA_ROOT=$HOME/data
 export DEBUG=1
+export DEV=1
 export DRL_PATH=$HOME/packages/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HUB_PATH=$HOME/dev/compute

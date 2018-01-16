@@ -17,6 +17,7 @@ appCtxDict = {
     'adminEmail': os.environ.get('ADMIN_EMAIL'),
     'dataRoot': 'in/dataRoot',
     'debug': os.environ.get('DEBUG', 0),
+    'dev': int(os.environ.get('DEV', 0)),
     'hubPath': os.environ.get('HUB_PATH'),
     'jobQueuePath': quePath,
     'jobStatusUrl': jobStatusUrl,
@@ -178,7 +179,7 @@ class Test_placeNode(unittest.TestCase):
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'map parameter may only contain the characters: ' + \
-            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)')
 
     def test_map_not_file_safe_major(s):
         rv = s.app.post('/query/overlayNodes',
@@ -196,7 +197,7 @@ class Test_placeNode(unittest.TestCase):
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'map parameter may only contain the characters: ' + \
-            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)')
 
     def test_map_not_file_safe_minor(s):
         rv = s.app.post('/query/overlayNodes',
@@ -214,7 +215,7 @@ class Test_placeNode(unittest.TestCase):
         s.assertTrue(rv.status_code == 400)
         s.assertTrue(data['error'] ==
             'map parameter may only contain the characters: ' + \
-            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), one slash (/)')
+            'a-z, A-Z, 0-9, dash (-), dot (.), underscore (_), slash (/)')
 
     def test_no_layout(s):
         rv = s.app.post('/query/overlayNodes',
@@ -421,8 +422,8 @@ class Test_placeNode(unittest.TestCase):
         task = job._packTask('placeNode', data, ctx1)
 
         # Execute the job.
-        jobProcess.main([quePath, str(jobId)])
-        
+        jobProcess.main([quePath, jobId])
+
         # Return the result of the job.
         return s.jobQueue.getStatus(1)
 
@@ -439,7 +440,7 @@ class Test_placeNode(unittest.TestCase):
         #print 'r:', r
         #print "r['result']['error']:@@" + r['result']['error'] + '@@'
         expectedResult = \
-            'Clustering data not found for layout: someLayout'
+            'Server error: Clustering data not found for layout: someLayout'
         s.assertEqual(expectedResult, r['result']['error'])
         s.assertTrue('stackTrace' in r['result'])
 
@@ -454,7 +455,7 @@ class Test_placeNode(unittest.TestCase):
         r = s.runJob(data)
         s.assertTrue(r['status'] == 'Error')
         expectedResult = \
-            'Clustering data not found for layout: someLayout'
+            'Server error: Clustering data not found for layout: someLayout'
         s.assertEqual(expectedResult, r['result']['error'])
         s.assertTrue('stackTrace' in r['result'])
 

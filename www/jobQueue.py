@@ -8,7 +8,7 @@ try:
 except ImportError:
     from dummy_thread import get_ident
 
-from util_web import ErrorResp
+from util_web import reportResult
 
 class JobQueue(object):
 
@@ -20,12 +20,13 @@ class JobQueue(object):
     
     # Column indices.
     idI = 0
-    statusI = 1
-    userI = 2
-    lastAccessI = 3
-    processIdI = 4
-    taskI = 5
-    resultI = 6
+    statusI = 1     # status of the job, one of the above
+    emailI = 2      # optional, send results here, and identifies UI user
+    doNotEmailI = 3  # optional, do not email any result, default = False
+    lastAccessI = 4 # the last time this job entry was accessed
+    processIdI = 5  # process ID of the independently running job
+    taskI = 6       # job execution info: operation, parms, context
+    resultI = 7     # result upon Success or Error
     
     # Sqlite database access.
     _dbCreate = (
@@ -33,7 +34,8 @@ class JobQueue(object):
         '('
         '  id INTEGER PRIMARY KEY AUTOINCREMENT,'
         '  status text,'
-        '  user text,'
+        '  email text,'
+        '  doNotEmail bool,'
         '  lastAccess text,'
         '  processId integer,'
         '  task text,'
@@ -41,7 +43,7 @@ class JobQueue(object):
         ')'
     )
     _dbPush = (
-        'INSERT INTO queue (status, user, lastAccess, task) '
+        'INSERT INTO queue (status, email, lastAccess, task) '
         'VALUES (?, ?, ?, ?)'
     )
     _dbGetById = (
@@ -139,10 +141,36 @@ class JobQueue(object):
         else:
             return { 'status': row[s.statusI] }
 
-    def setResult (s, id, status, jsonResult):
+    def setResult (s, id, status, result, ctx, operation):
+        jsonResult = None
+        if result != None:
+            jsonResult = json.dumps(result, sort_keys=True)
+        
         with s._getConn() as conn:
             conn.execute(s._dbSetResult, (status, jsonResult, s._today(), id,))
+            
+        # Report error results to the admin.
+        # Report any result if there is a job email and send email requested.
+        job = s._getOne(id)
+        
+        '''
+        # TODO debug doNotEmail flag
+        result['doNotEmail'] = str(job[s.doNotEmailI])
+        result['job'] = str(job)
+        '''
     
+        if status == 'Error' or \
+            (status == 'Success' and job[s.emailI] and not job[s.doNotEmailI]):
+            reportResult(
+                id,
+                operation,
+                status,
+                result,
+                job[s.emailI],
+                job[s.doNotEmailI],
+                ctx.app
+            )
+
     def getTask (s, id):
         job = s._getOne(id)
         if job == None:
@@ -155,10 +183,10 @@ class JobQueue(object):
         with s.getConnection() as conn:
             conn.execute(s._dbSetRunning, (s._today(), processId, id,))
 
-    def add (s, id, packedTask, user):
+    def add (s, id, packedTask, email):
     
         # Add a job to the job queue.
         with s._getConn() as conn:
             curs = conn.cursor()
-            curs.execute(s._dbPush, (s.inJobQueueSt, user, s._today(), packedTask,))
+            curs.execute(s._dbPush, (s.inJobQueueSt, email, s._today(), packedTask,))
             return curs.lastrowid
