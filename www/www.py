@@ -202,6 +202,7 @@ def getAllJobsRoute():
 # Handle jobStatus route
 @app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
 def jobStatusRoute(jobId):
+    logging.info('job status req')
     result = job.getStatus(jobId, appCtx.jobQueuePath)
     raise SuccessResp(result)
 
@@ -239,34 +240,39 @@ def getReflectMetaData(majorId, minorId):
     responseDict = reflect_web.getReflectionMetaData(majorId, minorId)
     raise SuccessResp(responseDict)
 
-# Handle reflect routes
 @app.route('/reflect', methods=['POST'])
 def reflectionRequest():
     """
     JSON post
         {
-        dataType : "str"
-        userId : "not Needed now"n
-        mapId : "SuchandSuch/SampleMap"
-        toMapId: ""
-        featOrSamp: "feature" anything else assumes samples
-        nodeIds: an array of nodeIds
-        rankCategories : boolean, if true returns ranked categories.
-        selectionName : used to create the new reflection Name.
+            "dataType": "mRNA",
+            "mapId": "Pancan12/SampleMap/",
+            "nodeIds": [
+                        "TCGA-DV-5567",
+                        "TCGA-BP-4769",
+                        "TCGA-DV-5576"
+                        ],
+            "rankCategories": false,
+            "selectionSelected": "S1",
+            "toMapId": "Pancan12/GeneMap",
+            "userId": "duncmc831@gmail.com"
         }
     JSON response:
-       {
-        url : /reflect/attrId/<string:fileId>,
-        haveData : 123
+        {
+            url : /reflect/attrId/<string:fileId>,
+            nNodes : 123
         }
     """
     logging.info('Reflection requested')
+
     parms = validatePost()
-    responseDict = reflect_web.calc(parms)
+    ctx = Context({'app': appCtx })
+
+    responseDict = reflect_web.preCalc(parms, ctx)
+    logging.info(responseDict)
 
     raise SuccessResp(responseDict)
 
-# Handle reflect/attrId routes
 @app.route('/reflect/attrId/<string:attrId>', methods=['GET'])
 def getRefAttr(attrId):
     """Returns reflection request JSON."""
