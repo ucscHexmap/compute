@@ -4,9 +4,14 @@ from util_web import getProjMajor, getProjMinor, mkTempFile, tmpDir
 import pickle
 import os
 import json
+import job
 
 
-def calc(parms):
+def preCalc(parms, ctx):
+    return job.add("dmccoll@ucsc.edu", "reflect", parms, ctx)
+
+
+def calcMain(parms, ctx):
     dataType = parms["dataType"]
     selectionName = parms["selectionSelected"]
 
@@ -23,10 +28,8 @@ def calc(parms):
     attrId = reflectionAttrId(tmpFilePath)
     pickle.dump(reflectionScores, open(tmpFilePath, "wb"))
 
-    return {
-        "url": getRetrievalUrl(attrId),
-        "nNodes": nNodes
-    }
+    retrievalUrl = getRetrievalUrl(attrId)
+    return "Success", {"url": retrievalUrl, "nNodes": nNodes}
 
 
 def getReflectionAttr(attrId):
