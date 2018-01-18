@@ -153,13 +153,13 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, appCtx):
 
         # Send the error to the admin.
         adminMsg = 'email: ' + str(email) + '\n' + msg
-        if 'stackTrace' in result:
+        if result and 'stackTrace' in result and result['stackTrace'] != None:
             adminMsg += '\n\n' + result['stackTrace']
-            '''
-            # debug doNotEmail flag
-            adminMsg += '\n\nDO NOT EMAIL:##' + result['doNotEmail'] + '##'
-            adminMsg += '\n\nJOB: ' +  result['job']
-            '''
+        '''
+        # debug doNotEmail flag
+        adminMsg += '\n\nDO NOT EMAIL:##' + result['doNotEmail'] + '##'
+        adminMsg += '\n\nJOB: ' +  result['job']
+        '''
         sendAdminEmail(subject, adminMsg, appCtx)
 
     elif email and not doNotEmail:
