@@ -188,49 +188,5 @@ class Test_job(unittest.TestCase):
         s.assertEqual(s.que.errorSt, r['status']);
         s.assertEqual(errorMsg1trace, r['result']);
 
-    def test_getAll(s):
-        job.add(user1, operation1, parms1, ctx1);
-        job.add(user2, operation2, parms2, ctx2);
-        job.add(user3, operation3, parms3, ctx3);
-        s.que.setResult(1, s.que.successSt, result1, ctx1, operation1)
-        s.que.setResult(2, s.que.errorSt, errorMsg1, ctx2, operation1)
-        rows = job.getAll(quePath)['jobs']
-        #print 'rows[0]:', rows[0]
-
-        # Verify all fields in job1.
-        s.assertEqual(1, rows[0][s.que.idI])
-        s.assertEqual(s.que.successSt, rows[0][s.que.statusI])
-        s.assertEqual(user1, rows[0][s.que.emailI])
-        s.assertEqual(today, rows[0][s.que.lastAccessI])
-        s.assertEqual(None, rows[0][s.que.processIdI])
-        #print '              task1:', task1
-        #print 'rows[0][s.que.taskI]:',rows[0][s.que.taskI]
-        resultUnjson = json.loads(rows[0][s.que.resultI])
-        s.assertEqual(task1, rows[0][s.que.taskI])
-        s.assertEqual(result1unicode, resultUnjson)
-
-        # Verify all fields in job2.
-        s.assertEqual(2, rows[1][s.que.idI])
-        s.assertEqual(s.que.errorSt, rows[1][s.que.statusI])
-        s.assertEqual(user2, rows[1][s.que.emailI])
-        s.assertEqual(today, rows[1][s.que.lastAccessI])
-        s.assertEqual(None, rows[1][s.que.processIdI])
-        s.assertEqual(task2, rows[1][s.que.taskI])
-        resultUnjson = json.loads(rows[1][s.que.resultI])
-        s.assertEqual(errorMsg1, resultUnjson)
-
-        # Verify all fields in job3.
-        s.assertEqual(3, rows[2][s.que.idI])
-        s.assertEqual(s.que.inJobQueueSt, rows[2][s.que.statusI])
-        s.assertEqual(user3, rows[2][s.que.emailI])
-        s.assertEqual(today, rows[2][s.que.lastAccessI])
-        s.assertEqual(None, rows[2][s.que.processIdI])
-        s.assertEqual(task3, rows[2][s.que.taskI])
-        s.assertEqual(None, rows[2][s.que.resultI])
-
-    def test_getAllWhenNone(s):
-        rows = job.getAll(quePath)
-        s.assertEqual({'jobs': []}, rows)
-
 if __name__ == '__main__':
     unittest.main()
