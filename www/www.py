@@ -20,18 +20,20 @@ app = Flask(__name__)
 
 # Set up the application context used by all threads.
 def contextInit ():
-    appCtxDict = {
-        'adminEmail': os.environ.get('ADMIN_EMAIL'),
-        'dataRoot': os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING'),
-        'debug': os.environ.get('DEBUG', 0),
-        'dev': int(os.environ.get('DEV', 0)),
-        'hubPath': os.environ.get('HUB_PATH'),
-        'unitTest': int(os.environ.get('UNIT_TEST', 0)),
-        'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
-    }
-    appCtx = Context(appCtxDict)
+    global appCtx
+    appCtx = Context({})
+    appCtx.adminEmail = os.environ.get('ADMIN_EMAIL')
+    appCtx.dataRoot = os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING')
+    appCtx.debug = os.environ.get('DEBUG', 0)
+    appCtx.dev = int(os.environ.get('DEV', 0))
+    appCtx.hubPath = os.environ.get('HUB_PATH')
+    appCtx.unitTest = int(os.environ.get('UNIT_TEST', 0))
+    appCtx.viewServer = os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu')
+
+    # Derived context.
+    appCtx.databasePath = os.environ.get('DATABASE_PATH', appCtx.hubPath + '/../computeDb')
     appCtx.jobQueuePath = os.path.abspath(
-        os.path.join(appCtx.hubPath, '../computeDb/jobQueue.db'))
+        os.path.join(appCtx.databasePath, 'jobQueue.db'))
     appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
     appCtx.viewDir = os.path.join(appCtx.dataRoot, 'view')
     jobStatusUrl = os.environ['WWW_SOCKET'] + '/jobStatus/jobId/'
@@ -60,6 +62,25 @@ def loggingInit ():
 
     logging.info('WWW server started with log level: ' + logLevel)
     logging.info('Allowable viewers: ' + str(allowableViewers))
+
+# Initialize the app.
+def initialize():
+
+    # Other local vars.
+    global allowableViewers
+    allowableViewers = os.environ.get('ALLOWABLE_VIEWERS').split(',')
+
+    # Make cross-origin AJAX possible
+    CORS(app)
+
+    contextInit()
+    loggingInit()
+
+    # Create the database path if it does not exist.
+    try:
+        os.makedirs(appCtx.databasePath)
+    except:
+        pass
 
 # Validate a post
 def validatePost():
@@ -285,12 +306,4 @@ def getRefAttr(attrId):
 def testRoute():
     raise SuccessResp('just testing data server')
 
-# Other local vars.
-allowableViewers = os.environ.get('ALLOWABLE_VIEWERS').split(',')
-
-# Make cross-origin AJAX possible
-CORS(app)
-
-appCtx = contextInit()
-loggingInit()
-
+initialize()

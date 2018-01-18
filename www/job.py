@@ -62,22 +62,16 @@ def add (email, operation, parms, ctx):
     #                      <operation>_www.py.calcMain()
     # @params         ctx: the job context holding information for the postCalc
     # @returns: (jobId, status)
-    queuePath = ctx.app.jobQueuePath
+    
+    # Extract any doNotEmail flag.
+    doNotEmail = parms.pop('doNotEmail', None)
+    
     packedTask = _packTask(operation, parms, ctx)
-    jobId = JobQueue(queuePath).add(id, packedTask, email)
+    queuePath = ctx.app.jobQueuePath
+    jobId = JobQueue(queuePath).add(id, packedTask, email, doNotEmail)
     
     # Get the status of the job just added to the queue.
     result = getStatus(jobId, queuePath)
-
-    '''
-    # TODO debug doNotEmail
-    from jobProcess import JobProcess
-    jp = JobProcess(queuePath)
-    unpackedTask = jp.unpackTask(packedTask)
-    print 'JOB.ADD:PARMS:', str(parms)
-    print 'JOB.ADD:PACKEDTASK:', str(packedTask)
-    print 'JOB.ADD:UNPACKEDTASK:', str(unpackedTask)
-    '''
 
     # Run the job now.
     if not ctx.app.unitTest:
