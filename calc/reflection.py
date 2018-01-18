@@ -9,14 +9,14 @@ def reflection(parm):
     :param parm: {
                   "datapath": relfection_data_file_name
                   "featOrSamp" : 'sample' or 'feature'
-                  "node_ids" : [ "id1",...,"idn" ]
+                  "nodeIds" : [ "id1",...,"idn" ]
                   "rankCategories" t/f for ordinal calculation.
                   "n" : number of "high" and "low" if ordinal calc.
                   ""dataType": one of 'mRNA', 'CNV', 'miRNA',
-                    'Methylation', 'RPPA'. Specifiest the type of score
+                    'Methylation', 'RPPA'. Determines type of score
                     calculation
                   }
-    :return: pandas Series, int.
+    :return: tuple ( pandas Series of Scores, int Number of nodes )
     '''
 
     fpath = str(parm['datapath'])
