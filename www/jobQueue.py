@@ -22,7 +22,7 @@ class JobQueue(object):
     idI = 0
     statusI = 1     # status of the job, one of the above
     emailI = 2      # optional, send results here, and identifies UI user
-    doNotEmailI = 3  # optional, do not email any result, default = False
+    doNotEmailI = 3 # optional, do not email the result, default = False
     lastAccessI = 4 # the last time this job entry was accessed
     processIdI = 5  # process ID of the independently running job
     taskI = 6       # job execution info: operation, parms, context
@@ -43,8 +43,8 @@ class JobQueue(object):
         ')'
     )
     _dbPush = (
-        'INSERT INTO queue (status, email, lastAccess, task) '
-        'VALUES (?, ?, ?, ?)'
+        'INSERT INTO queue (status, email, doNotEmail, lastAccess, task) '
+        'VALUES (?, ?, ?, ?, ?)'
     )
     _dbGetById = (
         'SELECT * FROM queue '
@@ -153,12 +153,6 @@ class JobQueue(object):
         # Report any result if there is a job email and send email requested.
         job = s._getOne(id)
         
-        '''
-        # TODO debug doNotEmail flag
-        result['doNotEmail'] = str(job[s.doNotEmailI])
-        result['job'] = str(job)
-        '''
-    
         if status == 'Error' or \
             (status == 'Success' and job[s.emailI] and not job[s.doNotEmailI]):
             reportResult(
@@ -183,10 +177,11 @@ class JobQueue(object):
         with s.getConnection() as conn:
             conn.execute(s._dbSetRunning, (s._today(), processId, id,))
 
-    def add (s, id, packedTask, email):
+    def add (s, id, packedTask, email, doNotEmail):
     
         # Add a job to the job queue.
         with s._getConn() as conn:
             curs = conn.cursor()
-            curs.execute(s._dbPush, (s.inJobQueueSt, email, s._today(), packedTask,))
+            curs.execute(s._dbPush,
+                (s.inJobQueueSt, email, doNotEmail, s._today(), packedTask,))
             return curs.lastrowid
