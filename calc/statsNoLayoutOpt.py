@@ -34,9 +34,7 @@ import pandas as pd
 import numpy as np
 import sklearn.metrics.pairwise as sklp
 from scipy import stats
-from utils import getAttributes
 from leesL import getLayerIndex
-from leesL import readLayers
 import statsmodels.sandbox.stats.multicomp as multicomp
 import math
 
@@ -119,10 +117,7 @@ def dropQuantiles(binx,conty):
 
     return binx,conty
 
-###############################################################################################3
-###################################DM122016####################################################3
-#these are the individual functions for calculating layout-independent statistics, i.e.
-# statistics for all pairwise associations of the meta data
+# Each individual test that is done for the data type combinations.
 def contingencyTable(x,y):
     '''
     :param x: discrete numpy array
@@ -160,7 +155,10 @@ def binBinTest(x,y):
     # statistics can not accurately be computed
     if table.shape != (2,2):
         return np.NAN
-    oddsratio, pValue = stats.fisher_exact(table)
+    try:
+        oddsratio, pValue = stats.fisher_exact(table)
+    except ValueError:
+        pValue = np.nan
 
     return pValue
 
@@ -171,13 +169,20 @@ def catBinOrCatCatTest(x,y):
     x,y = filterBinCat(x,y)
     #build contingency table
     table = contingencyTable(x,y)
-    chi2, pValue, dof, expectedFreq = stats.chi2_contingency(table)
+    try:
+        chi2, pValue, dof, expectedFreq = stats.chi2_contingency(table)
+    except ValueError:
+        pValue = np.nan
 
-    return(pValue)
+    return pValue
 
 def contContTest(x,y):
     x,y = filterCont(x,y)
-    correlation, pValue = stats.pearsonr(x,y)
+    try:
+        correlation, pValue = stats.pearsonr(x,y)
+    except ValueError:
+        pValue = np.nan
+
     return pValue
 
 def catContTest(catx,conty):
@@ -187,33 +192,43 @@ def catContTest(catx,conty):
     groups = pd.DataFrame([catx,conty]).transpose().groupby([0])
 
     samples = groups.aggregate(lambda x: list(x))[1].tolist()
-    stat, pValue = stats.mstats.kruskalwallis(*samples)
+    try:
+        stat, pValue = stats.mstats.kruskalwallis(*samples)
+    except ValueError:
+        pValue = np.nan
 
     return pValue
 
-def binContTest(binx,conty):
+def binContTest(binx, conty):
     '''
 
-    @param binx:
-    @param conty:
-    @return:
+    @param binx: series or np.array representing binary data
+    @param conty: series or np.array representing continuos data.
+    @return: a pvalue calculated from scipy.ranksums
     '''
     binx, conty = filterBinOrCatCont(binx, conty)
-    #binx, conty = dropQuantiles(binx, conty)
 
-    #drop quantiles can cause problems by excluding too many values.. need better comment
-    #separate into continuos values tagged with '1' and '0'
-    groups = pd.DataFrame([binx, conty]).transpose().groupby([0])
-    #make those groups into format expected by stats function
-    samples = groups.aggregate(lambda x: list(x))[1].tolist()
-    stat, pValue = stats.ranksums(*samples)
+    # Make groups according to binary stat test.
+    groupDF = pd.DataFrame([binx, conty])
+    groups = groupDF.transpose().groupby(groupDF.index[0])
+
+    # Manipulate to format expected by stats.ranksums().
+    two_samples = groups.aggregate(lambda x: list(x)).values
+
+    # Compute stats.
+    try:
+        stat, pValue = stats.ranksums(*two_samples)
+    except ValueError:
+        pValue = np.nan
 
     return pValue
-################################################################################################3
-################################################################################################3
+
+
+########################################################################
 def read_matrices(projectDir):
     '''
-    Puts the metadata matrices files in a list, to be used in layout.getAttributes()
+    Puts the metadata matrices files in a list, to be used in
+    utils.getAttributes()
      and is dependent upon the matrix file being in proper format.
     @param projectDir: the project directory
     @return: a list of the matrix file names
@@ -224,6 +239,7 @@ def read_matrices(projectDir):
         matlist.append(projectDir + '/' + line.strip())
 
     return matlist
+
 
 def read_data_types(projectDir):
     '''
@@ -246,7 +262,8 @@ def read_data_types(projectDir):
 
     return dataTypeDict
 
-def stitchTogether(biXbi,caXbi,biXco,coXco,caXco,caXca):
+
+def stitchTogether(biXbi, caXbi, biXco, coXco, caXco, caXca):
     '''
     this function takes the results from each of the pairwise
     computations and stiches them together into one data frame so they
@@ -266,7 +283,8 @@ def stitchTogether(biXbi,caXbi,biXco,coXco,caXco,caXca):
 
     return pd.concat([bins,conts,cats],axis=1)
 
-def allbyallStatsNoLayout(attrDF,datatypeDict,n_jobs=12):
+
+def allbyallStatsNoLayout(attrDF, datatypeDict, n_jobs=12):
     '''
     @param projectDir:
     @param attrDF:
@@ -282,7 +300,7 @@ def allbyallStatsNoLayout(attrDF,datatypeDict,n_jobs=12):
     @return:
     '''
 
-    #separate the metadata out into the perspective data types
+    # Separate attributes into data types.
     binAtts = attrDF[datatypeDict['bin']]
     binAtts = binAtts.fillna(BINCATNAN)
 
@@ -292,39 +310,29 @@ def allbyallStatsNoLayout(attrDF,datatypeDict,n_jobs=12):
     contAtts = attrDF[datatypeDict['cont']]
     contAtts = contAtts.fillna(FLOATNAN)
 
-    #binAtts = binAtts[binAtts.columns[-3:-1]]
-
-    #conty= contAtts['Random']
-    #binx= binAtts['TP63_expression altered']
-
-    #Do all by alls and convert to pandas dataframe
-    # naming scheme:
-    #bi == binary , co == continuous , ca == categorical
-    #xxXyy == xx in the rows, yy are the columns
+    # Each pair of data combos is done separately.
     biXbi = sklp.pairwise_distances(binAtts.transpose(),metric=binBinTest,n_jobs=n_jobs)
     biXbi = pd.DataFrame(biXbi,columns=datatypeDict['bin'],index=datatypeDict['bin'] )
-    #
+
     coXco = sklp.pairwise_distances(contAtts.transpose(),metric=contContTest,n_jobs=n_jobs)
     coXco = pd.DataFrame(coXco,columns=datatypeDict['cont'],index=datatypeDict['cont'] )
-    #
+
     caXca = sklp.pairwise_distances(catAtts.transpose(),metric=catBinOrCatCatTest,n_jobs=n_jobs)
     caXca = pd.DataFrame(caXca,columns=datatypeDict['cat'],index=datatypeDict['cat'] )
-    #
+
     caXbi = sklp.pairwise_distances(catAtts.transpose(),binAtts.transpose(),metric=catBinOrCatCatTest,n_jobs=n_jobs)
     caXbi = pd.DataFrame(caXbi,columns=datatypeDict['bin'],index=datatypeDict['cat'] )
     #
     caXco = sklp.pairwise_distances(catAtts.transpose(),contAtts.transpose(),metric=catContTest,n_jobs=n_jobs)
     caXco = pd.DataFrame(caXco,columns=datatypeDict['cont'],index=datatypeDict['cat'] )
-    #
+
     biXco = sklp.pairwise_distances(binAtts.transpose(),contAtts.transpose(),metric=binContTest,n_jobs=n_jobs)
     biXco = pd.DataFrame(biXco,columns=datatypeDict['cont'],index=datatypeDict['bin'] )
 
-    '''
-    all_ = stitchTogether(biXbi,caXbi,biXco,coXco,caXco,caXca)
-    '''
-    return stitchTogether(biXbi,caXbi,biXco,coXco,caXco,caXca)
+    return stitchTogether(biXbi, caXbi, biXco, coXco, caXco, caXca)
 
-def writeToDirectoryStats(dirName,allbyall,layers):
+
+def writeToDirectoryStats(dirName, allbyall, layers):
 
 
     assert(dirName[-1] == '/')
@@ -347,13 +355,106 @@ def writeToDirectoryStats(dirName,allbyall,layers):
 
         statsO.to_csv(dirName+filename,sep='\t',header=None)
 
-#these need to happen for comparable output
-#all_ = all_.fillna(1)
-#all_ = all_.apply(lambda x: x.apply(sigDigs))
-#layersfile = '/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/statsExp/layers.tab'
-#writeToDirectoryStats('/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/statsFromOpt/',all_,readLayers(layersfile))
 
-def runAllbyAllForUI(dir,layers,attrDF,dataTypeDict):
+def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
+    """
+    attrDF = pd.read_table("/home/duncan/hex/compute/tests/out/stats/allAttributes.tab", index_col=0)
+    datatypeDict = read_data_types("/home/duncan/hex/compute/tests/out/stats/")
+    newAttr = attrDF[attrDF.columns[1]]
+    newAttrDataType = "bin"
+    :param attrDF: pandas dataframe, all attributes for a particular
+    map.
+    :param dataTypeDict: Datatype keys pointing to array of attrNames.
+    :param newLayer: Must be parallel to attrDF,
+    :param newLayerDataType:
+    :return:
+    """
+    # Filter down to only nodes that the new attr has.
+    attrDF = attrDF.loc[newAttr.index]
+    # Separate the attributes out into data types.
+    binAtts = attrDF[datatypeDict['bin']]
+    binAtts = binAtts.fillna(BINCATNAN)
+
+    catAtts = attrDF[datatypeDict['cat']]
+    catAtts = catAtts.fillna(BINCATNAN)
+
+    contAtts = attrDF[datatypeDict['cont']]
+    contAtts = contAtts.fillna(FLOATNAN)
+
+    # Depending on the data type execute each appropriate
+    # statistical test.
+    if newAttrDataType == "cat":
+        binPvals = binAtts.apply(
+            lambda x: catBinOrCatCatTest(newAttr, x),
+            axis=0
+        )
+        catPvals = catAtts.apply(
+            lambda x: catBinOrCatCatTest(newAttr, x),
+            axis=0
+        )
+        contPvals = contAtts.apply(
+            lambda x: catContTest(newAttr, x),
+            axis=0
+        )
+
+    elif newAttrDataType == "bin":
+        binPvals = binAtts.apply(
+            lambda x: binBinTest(newAttr, x),
+            axis=0
+        )
+        catPvals = catAtts.apply(
+            lambda x: catBinOrCatCatTest(x, newAttr),
+            axis=0
+        )
+        contPvals = contAtts.apply(
+            lambda x: binContTest(newAttr, x),
+            axis=0
+        )
+
+    elif newAttrDataType == "cont":
+        binPvals = binAtts.apply(
+            lambda x: catBinOrCatCatTest(newAttr, x),
+            axis=0
+        )
+        catPvals = catAtts.apply(
+            lambda x: catBinOrCatCatTest(newAttr, x),
+            axis=0
+        )
+        contPvals = contAtts.apply(
+            lambda x: catContTest(newAttr, x),
+            axis=0
+        )
+
+    else:
+        raise ValueError(" Invalid datatype: " + newAttrDataType)
+
+    pvalues = []
+    pvalues.extend(binPvals)
+    pvalues.extend(catPvals)
+    pvalues.extend(contPvals)
+
+    layerNames = []
+    layerNames.extend(binAtts.columns)
+    layerNames.extend(catAtts.columns)
+    layerNames.extend(contAtts.columns)
+
+    # Run the adjustments.
+    reject, FdrBHs, alphacSidak, alphacBonf = \
+        multicomp.multipletests(pvalues, alpha=0.05, method='fdr_bh')
+    reject, bonferonnis, alphacSidak, alphacBonf = \
+        multicomp.multipletests(pvalues, alpha=0.05,
+                                method='bonferroni')
+    colnames = ["single test pvalue",
+                "FDRBH",
+                "bonferonnis"]
+    pValueDF = pd.DataFrame(dict(zip(colnames, [pvalues, FdrBHs,
+                                         bonferonnis])),
+                 columns=colnames, index=layerNames)
+
+    return pValueDF
+
+
+def runAllbyAllForUI(dir, layers, attrDF, dataTypeDict):
     '''
     @param dir:
     @param layers:
@@ -361,6 +462,10 @@ def runAllbyAllForUI(dir,layers,attrDF,dataTypeDict):
     @param dataTypeDict:
     @return:
     '''
-    writeToDirectoryStats(dir,allbyallStatsNoLayout(attrDF,dataTypeDict),layers)
+    writeToDirectoryStats(
+        dir,
+        allbyallStatsNoLayout(attrDF, dataTypeDict),
+        layers
+    )
 
     return None
