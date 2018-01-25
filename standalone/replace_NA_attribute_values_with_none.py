@@ -1,8 +1,8 @@
 #!/usr/bin/env python2.7
 """
-replace_NA_attribute_values_with_null.py
+replace_NA_attribute_values_with_none.py
 
-Example: replace_NA_attribute_values_with_null.py meta.cleaned.tab meta_no_NA.tab
+Example: replace_NA_attribute_values_with_none.py meta.cleaned.tab meta_no_NA.tab
 
 In an attribute file, replace all NA with None.
 """
@@ -17,21 +17,6 @@ def parse_args(args):
     parser.add_argument("output_file", type=str, help="output file")
     a = parser.parse_args(args)
     return a
-
-def get_xlate(row):
-    i = 1
-    code = 0
-    xlate = []
-    while True:
-        try:
-            j = int(row[i])
-            str = row[i+1]
-            xlate.insert(j, str)
-            i += 3
-        except:
-            break;
-
-    return xlate
 
 def main(opt):
 
