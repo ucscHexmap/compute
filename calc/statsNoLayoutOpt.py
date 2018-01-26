@@ -37,87 +37,17 @@ from scipy import stats
 from leesL import getLayerIndex
 import statsmodels.sandbox.stats.multicomp as multicomp
 import math
-
+import multiprocessing
 #globals numbers used to represent NA values
 FLOATNAN  = np.finfo(np.float64).max
 BINCATNAN = -1
 
-def sigDigs(x, sig=7):
-
-    if sig < 1:
-        raise ValueError("number of significant digits must be >= 1")
-
-    if math.isnan(x):
-        return 1
-
-    # Use %e format to get the n most significant digits, as a string.
-    format = "%." + str(sig-1) + "e"
-    return float(format % x)
-
-def filterBinCat(x,y):
-    '''
-    filters bin-bin bin-cat combos
-    @param x:
-    @param y:
-    @return:
-    '''
-    eitherNan = np.logical_or(x==BINCATNAN,y==BINCATNAN)
+def filterNan(x,y):
+    eitherNan = np.logical_or(np.isnan(x),np.isnan(y))
     x=x[~eitherNan]
     y=y[~eitherNan]
     return x,y
 
-def filterBinOrCatCont(bincatX,contY):
-    '''
-    note that the variables have ot be in the correct order for this to work.
-    @param bincatX:
-    @param contY:
-    @return:
-    '''
-    eitherNan = np.logical_or(bincatX==BINCATNAN,contY==FLOATNAN)
-    bincatX=bincatX[~eitherNan]
-    contY=contY[~eitherNan]
-    return bincatX,contY
-
-def filterCont(x,y):
-    '''
-    both x and y are continuos
-    @param x:
-    @param y:
-    @return:
-    '''
-    eitherNan = np.logical_or(x==FLOATNAN,y==FLOATNAN)
-    x=x[~eitherNan]
-    y=y[~eitherNan]
-    return x,y
-
-def dropQuantiles(binx,conty):
-    '''
-
-    @param x:
-    @param y:
-    @return:
-    '''
-
-    QUANTILE_DIVISOR = 100
-    #taken/modified out of statsLayer
-    length = len(conty)
-    quantile = int(round(float(length) / QUANTILE_DIVISOR))
-
-    if quantile == 0:
-        return binx,conty
-
-    hexKeyValsSorted = np.sort(conty)
-    lower = hexKeyValsSorted[quantile]
-    upper = hexKeyValsSorted[length - quantile]
-
-    maskit = np.logical_and(conty >= lower, conty <= upper)
-    #maskit.sum()
-    binx = binx[maskit]
-    conty = conty[maskit]
-
-    return binx,conty
-
-# Each individual test that is done for the data type combinations.
 def contingencyTable(x,y):
     '''
     :param x: discrete numpy array
@@ -146,7 +76,7 @@ def contingencyTable(x,y):
 
 def binBinTest(x,y):
     #filter out bad values
-    x,y = filterBinCat(x,y)
+    x,y = filterNan(x,y)
     #build contingency table
     table = contingencyTable(x,y)
     #if contingency table for binaries doesn't have this shape,
@@ -166,7 +96,7 @@ def catBinOrCatCatTest(x,y):
     '''
     handles binary and categical or categorical ccategorical
     '''
-    x,y = filterBinCat(x,y)
+    x,y = filterNan(x,y)
     #build contingency table
     table = contingencyTable(x,y)
     try:
@@ -177,7 +107,7 @@ def catBinOrCatCatTest(x,y):
     return pValue
 
 def contContTest(x,y):
-    x,y = filterCont(x,y)
+    x,y = filterNan(x,y)
     try:
         correlation, pValue = stats.pearsonr(x,y)
     except ValueError:
@@ -185,9 +115,9 @@ def contContTest(x,y):
 
     return pValue
 
-def catContTest(catx,conty):
+def catContTest(catx, conty):
 
-    catx, conty = filterBinOrCatCont(catx,conty)
+    catx, conty = filterNan(catx,conty)
 
     groups = pd.DataFrame([catx,conty]).transpose().groupby([0])
 
@@ -206,7 +136,7 @@ def binContTest(binx, conty):
     @param conty: series or np.array representing continuos data.
     @return: a pvalue calculated from scipy.ranksums
     '''
-    binx, conty = filterBinOrCatCont(binx, conty)
+    binx, conty = filterNan(binx, conty)
 
     # Make groups according to binary stat test.
     groupDF = pd.DataFrame([binx, conty])
@@ -220,11 +150,12 @@ def binContTest(binx, conty):
         stat, pValue = stats.ranksums(*two_samples)
     except ValueError:
         pValue = np.nan
+    except TypeError:
+        # Happens when there are not two groups formed.
+        pValue = np.nan
 
     return pValue
 
-
-########################################################################
 def read_matrices(projectDir):
     '''
     Puts the metadata matrices files in a list, to be used in
@@ -356,8 +287,22 @@ def writeToDirectoryStats(dirName, allbyall, layers):
         statsO.to_csv(dirName+filename,sep='\t',header=None)
 
 
+def callFunc(triplet):
+    f= triplet[0]
+    x =triplet[1]
+    y =triplet[2]
+    return f(x,y)
+
+
+def enoughForParallelComp(N):
+    ENOUGH = 500
+    return N >= ENOUGH
+
+
 def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
     """
+    import pandas as pd
+    import numpy as np
     attrDF = pd.read_table("/home/duncan/hex/compute/tests/out/stats/allAttributes.tab", index_col=0)
     datatypeDict = read_data_types("/home/duncan/hex/compute/tests/out/stats/")
     newAttr = attrDF[attrDF.columns[1]]
@@ -371,85 +316,103 @@ def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
     """
     # Filter down to only nodes that the new attr has.
     attrDF = attrDF.loc[newAttr.index]
+
+    # Gather attribute names.
+    # This var contains the ordering that needs to be maintained
+    # in the processing pool.
+    attrNames = []
+    attrNames.extend(attrDF[datatypeDict['bin']].columns)
+    attrNames.extend(attrDF[datatypeDict['cat']].columns)
+    attrNames.extend(attrDF[datatypeDict['cont']].columns)
+    attrNames = pd.Series(attrNames)
+
     # Separate the attributes out into data types.
     binAtts = attrDF[datatypeDict['bin']]
-    binAtts = binAtts.fillna(BINCATNAN)
-
     catAtts = attrDF[datatypeDict['cat']]
-    catAtts = catAtts.fillna(BINCATNAN)
-
     contAtts = attrDF[datatypeDict['cont']]
-    contAtts = contAtts.fillna(FLOATNAN)
 
-    # Depending on the data type execute each appropriate
-    # statistical test.
-    if newAttrDataType == "cat":
-        binPvals = binAtts.apply(
-            lambda x: catBinOrCatCatTest(newAttr, x),
-            axis=0
-        )
-        catPvals = catAtts.apply(
-            lambda x: catBinOrCatCatTest(newAttr, x),
-            axis=0
-        )
-        contPvals = contAtts.apply(
-            lambda x: catContTest(newAttr, x),
-            axis=0
-        )
+    # Fill with the Nan code (change this if you can!!!!!!!!!!!)
+    #binAtts = binAtts.fillna(BINCATNAN)
+    #catAtts = catAtts.fillna(BINCATNAN)
+    #contAtts = contAtts.fillna(FLOATNAN)
 
-    elif newAttrDataType == "bin":
-        binPvals = binAtts.apply(
-            lambda x: binBinTest(newAttr, x),
-            axis=0
-        )
-        catPvals = catAtts.apply(
-            lambda x: catBinOrCatCatTest(x, newAttr),
-            axis=0
-        )
-        contPvals = contAtts.apply(
-            lambda x: binContTest(newAttr, x),
-            axis=0
-        )
+    # Format DFs to create the pool for processing.
+    binAtts = binAtts.transpose().as_matrix()
+    catAtts = catAtts.transpose().as_matrix()
+    contAtts = contAtts.transpose().as_matrix()
+    attr = newAttr.as_matrix()
+
+    # Make the pool of operations for the new attribute depending on
+    # the dataType. The idea here is create a pool of triplets.
+    # We map a wrapper function through this pool that calls the
+    # function (first triplet) with the two args (2nd and 3rd triplet).
+    # Again, the ordering of the pool needs to be kept the same as the
+    # columnNames var, namely bin-cat-cont.
+    if newAttrDataType == "bin":
+        opPool = [(binBinTest, attr, np.array(x)) for x in binAtts]
+        opPool.extend([(catBinOrCatCatTest, x, attr) for x in catAtts])
+        opPool.extend([(binContTest, attr, x) for x in contAtts])
+
+    elif newAttrDataType == "cat":
+        opPool = [(catBinOrCatCatTest, attr, x) for x in binAtts]
+        opPool.extend([(catBinOrCatCatTest, attr, x) for x in catAtts])
+        opPool.extend([(catContTest, attr, x) for x in contAtts])
 
     elif newAttrDataType == "cont":
-        binPvals = binAtts.apply(
-            lambda x: catBinOrCatCatTest(newAttr, x),
-            axis=0
-        )
-        catPvals = catAtts.apply(
-            lambda x: catBinOrCatCatTest(newAttr, x),
-            axis=0
-        )
-        contPvals = contAtts.apply(
-            lambda x: catContTest(newAttr, x),
-            axis=0
-        )
+        opPool = [(binContTest, x, attr) for x in binAtts]
+        opPool.extend([(catContTest, x, attr) for x in catAtts])
+        opPool.extend([(contContTest, x, attr) for x in contAtts])
 
     else:
-        raise ValueError(" Invalid datatype: " + newAttrDataType)
+        raise ValueError("Invalid datatype: " + newAttrDataType)
 
-    pvalues = []
-    pvalues.extend(binPvals)
-    pvalues.extend(catPvals)
-    pvalues.extend(contPvals)
+    # Execute computations. Go parallel if there are many attributes
+    # to process.
+    if enoughForParallelComp(len(attrNames)):
+        pool = multiprocessing.Pool(processes=5)
+        pvalues = pd.Series(pool.map(callFunc, opPool))
+        pool.close()
+        pool.join()
+    else:
+        pvalues = pd.Series(map(callFunc, opPool))
 
-    layerNames = []
-    layerNames.extend(binAtts.columns)
-    layerNames.extend(catAtts.columns)
-    layerNames.extend(contAtts.columns)
+    # Filter out pvalues with NaN because they futz with the
+    # pvalue adjustments.
+    validIndecies = np.isfinite(pvalues).values
+    filteredps = pvalues[validIndecies].as_matrix()
+    filteredNames = attrNames[validIndecies]
 
     # Run the adjustments.
-    reject, FdrBHs, alphacSidak, alphacBonf = \
-        multicomp.multipletests(pvalues, alpha=0.05, method='fdr_bh')
-    reject, bonferonnis, alphacSidak, alphacBonf = \
-        multicomp.multipletests(pvalues, alpha=0.05,
-                                method='bonferroni')
-    colnames = ["single test pvalue",
-                "FDRBH",
-                "bonferonnis"]
-    pValueDF = pd.DataFrame(dict(zip(colnames, [pvalues, FdrBHs,
-                                         bonferonnis])),
-                 columns=colnames, index=layerNames)
+    FdrBHs = multicomp.multipletests(
+        filteredps,
+        alpha=0.05,
+        method='fdr_bh'
+    )[1]
+    bonferonnis = multicomp.multipletests(
+        filteredps,
+        alpha=0.05,
+        method='bonferroni'
+    )[1]
+
+    # Construct DataFrame and return.
+    colnames = [
+        "single test pvalue",
+        "FDRBH",
+        "bonferonnis"
+    ]
+
+    dfDict = dict(
+        zip(
+            colnames,
+            [filteredps, FdrBHs, bonferonnis],
+        )
+    )
+
+    pValueDF = pd.DataFrame(
+        dfDict,
+        index=filteredNames,
+        columns=colnames
+    )
 
     return pValueDF
 
