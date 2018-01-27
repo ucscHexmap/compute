@@ -43,11 +43,6 @@ def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
     catAtts = attrDF[datatypeDict['cat']]
     contAtts = attrDF[datatypeDict['cont']]
 
-    # Fill with the Nan code (change this if you can!!!!!!!!!!!)
-    #binAtts = binAtts.fillna(BINCATNAN)
-    #catAtts = catAtts.fillna(BINCATNAN)
-    #contAtts = contAtts.fillna(FLOATNAN)
-
     # Format DFs to create the pool for processing.
     binAtts = binAtts.transpose().as_matrix()
     catAtts = catAtts.transpose().as_matrix()
