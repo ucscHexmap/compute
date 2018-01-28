@@ -11,6 +11,8 @@ import job
 import jobTestHelper_web
 import placeNode_web
 import reflect_web
+import statsNoLayout_web
+
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
     reportRouteError
 import validate_web as validate
@@ -251,6 +253,42 @@ def queryOverlayNodesRoute():
 def queryPlaceNodeRoute():
     result = placeNode_web.preCalc(validatePost(), Context({'app': appCtx}))
     raise SuccessResp(result)
+
+@app.route('/oneByAll/statCalculation', methods=['POST'])
+def onByAllStatRequest():
+    """
+    Post example:
+    {
+        mapName : "PancanAtlas/SampleMap",
+        focusAttr: opts.dynamicData,
+        focusAttrDatatype : dType,
+        mail : Meteor.user().username,
+    };
+    focusAttr is in this form:
+        {"attrName" : { "sampleId" : value}, ... }
+    focus attribute datatype is one of:
+        ["bin", "cat", "cont"]
+
+    JSON response on Success from job queue:
+        {result:
+            [
+                [ attributeId, single-test pvalue, BHFDR, bonefonni],
+                ...,
+                ...
+            ]
+        }
+        For all attributes on the requested map.
+    """
+    logging.info('One By All Stat requested')
+
+    parms = validatePost()
+    ctx = Context({'app': appCtx})
+
+    responseDict = statsNoLayout_web.preCalc(parms, ctx)
+    logging.info(responseDict)
+
+    raise SuccessResp(responseDict)
+
 
 # Handle reflect/metadata routes
 @app.route(
