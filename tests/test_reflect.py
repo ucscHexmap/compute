@@ -38,7 +38,7 @@ class Test_reflect(unittest.TestCase):
 
         parms = {
                 "datapath": dataHdfFile,
-                "dataType": "mRNA",
+                "calcType" : "ttest",
                 "nodeIds" : dataDF.index[1:10],
                 "featOrSamp" : "feature",
                 "rankCategories" : True,
@@ -59,7 +59,7 @@ class Test_reflect(unittest.TestCase):
 
         parms = {
                 "datapath": dataHdfFile,
-                "dataType": "Methylation",
+                "calcType" : "average",
                 "nodeIds" : dataDF.columns[1:10],
                 "featOrSamp" : "sample",
                 "rankCategories" : True,
@@ -79,7 +79,7 @@ class Test_reflect(unittest.TestCase):
 
         parms = {
                 "datapath": dataHdfFile,
-                "dataType": "CNV",
+                "calcType" : "average",
                 "nodeIds" : dataDF.columns[1:10],
                 "featOrSamp" : "sample",
                 "rankCategories" : True,

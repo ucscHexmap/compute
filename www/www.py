@@ -264,30 +264,27 @@ def getReflectMetaData(majorId, minorId):
 @app.route('/reflect', methods=['POST'])
 def reflectionRequest():
     """
-    JSON post
-        {
-            "dataType": "mRNA",
-            "mapId": "Pancan12/SampleMap/",
-            "nodeIds": [
-                        "TCGA-DV-5567",
-                        "TCGA-BP-4769",
-                        "TCGA-DV-5576"
-                        ],
-            "rankCategories": false,
-            "selectionSelected": "S1",
-            "toMapId": "Pancan12/GeneMap",
-            "userId": "duncmc831@gmail.com"
-        }
-    JSON response:
+    JSON post example
+    {
+        dataType : "dataTypePointsToAFileInReflectionConfig"
+        toMapId : "Pancan12/GeneMap",
+        mapId : "Pancan12/SampleMap",
+        nodeIds : [id, id, ...],
+        rankCategories: True/False,
+        dynamicAttrName : "Kindey Isle"
+        email: dmccoll@ucsc.edu
+    };
+    JSON response on Success from job queue:
         {
             url : /reflect/attrId/<string:fileId>,
             nNodes : 123
         }
+        url is an enpoint to download the calculated file.
     """
     logging.info('Reflection requested')
 
     parms = validatePost()
-    ctx = Context({'app': appCtx })
+    ctx = Context({'app': appCtx})
 
     responseDict = reflect_web.preCalc(parms, ctx)
     logging.info(responseDict)
