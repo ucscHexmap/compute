@@ -117,47 +117,33 @@ def _firstLineArray(filename):
             return line.strip().split("\t")
 
 
-def getAttributes(fileNameList,dir='',debug=False):
+def getAttributes(fileNameList,dir=''):
     '''
-    creates a single attribute/metadata dataframe (pandas) from a list of filenames
-     expects rows to be similar (describing nodes in tumor map format) and
-     columns to describe each attribute or unit of metadata
-
-    NOte: adds a '/' to the end of dir if not there
+    Creates a single attribute/metadata dataframe (pandas) from a list
+    of tab delimeted files.
+    Rows in each file should overlap with other files in the list.
+    Columns describe an attribute or unit of metadata.
+    All columns are converted to float unless an error is thrown.
 
     :param fileNameList: this is a list of attribute matrices
     :param dir: this is the name of the directory that attributes are in
     :return: a pandas dataframe with all the attributes for a given map
     '''
-    if debug:
-        print 'getAttributes() called with'
-        print fileNameList
 
-    # TODO: the standard way to handle this is always use os.path.join() to
-    # join any sort of paths.
-    if (len(dir) > 0 and dir[-1]!= '/'):
-        dir+='/'
-
-    dfs = [] #list to hold individual dfs
+    dfs = []
     for filename in fileNameList:
-        #try except allows filname to be a str buffer
-        try:
-            filename = dir + filename
-        except TypeError:
-            pass
+        filename = os.path.join(dir, filename)
 
-        #assume first column is row name and do below to get rid of duplicates
-        df = pd.read_csv(filename,sep='\t',dtype='str')#,index_col=0)
+        df = pd.read_csv(filename, sep='\t', dtype='str')
 
-        if debug:
-            print "column names for attr file: " + str(df.columns)
+        df = df.drop_duplicates(subset=df.columns[0], keep='last')
+        df = df.set_index(df.columns[0])
+        dfs.append(df)
 
-        dfs.append(df.drop_duplicates(subset=df.columns[0], keep='last').set_index(df.columns[0]))
+    # Make one dataframe out of the many.
+    allAtts = pd.concat(dfs, axis=1)
 
-    #stich all attributes together
-    allAtts = pd.concat(dfs,axis=1)
-
-    #turn what attributes that don't throw an error into a float
+    # Float conversion.
     for colname in allAtts.columns:
         try:
             allAtts[colname] = allAtts[colname].astype(np.float)
@@ -210,6 +196,5 @@ def truncate(f, n):
     i, p, d = s.partition('.')
     return '.'.join([i, (d+'0'*n)[:n]])
 
-#this makes the function truncate easily/efficiently applyable to every cell in an  numpy array
-#http://stackoverflow.com/questions/7701429/efficient-evaluation-of-a-function-at-every-cell-of-a-numpy-array
+# Make the truncate function able to apply to an numpy array.
 truncateNP = np.vectorize(truncate,otypes=[np.float])
