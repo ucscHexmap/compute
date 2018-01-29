@@ -325,9 +325,9 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs,
         # the rank. That functionality is both unexpected and undesirable.
         # If NaNs are present in the data then raise an exception.
         if numpy.isnan(dt).sum() or numpy.isnan(dt2).sum():
-            raise ValueError("Na's where found one of the data"
+            raise ValueError("NaN's where found in one of the data "
                              "matrices. Similarity cannot be "
-                             "calculated when NAN's are present")
+                             "calculated when NaN's are present")
         if not(log == None):
             print >> log, 'rank transform for spearman being computed'
         #column wise rank transform
