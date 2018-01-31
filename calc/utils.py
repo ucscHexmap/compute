@@ -117,7 +117,7 @@ def _firstLineArray(filename):
             return line.strip().split("\t")
 
 
-def getAttributes(fileNameList,dir=''):
+def tabFilesToDF(fileNameList, dir=''):
     '''
     Creates a single attribute/metadata dataframe (pandas) from a list
     of tab delimeted files.

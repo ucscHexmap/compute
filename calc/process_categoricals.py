@@ -43,7 +43,7 @@ from colormath.color_diff import delta_e_cmc
 from colormath.color_objects import LabColor, sRGBColor
 from colormath.color_conversions import convert_color
 import traceback
-from utils import getAttributes
+from utils import tabFilesToDF
 
 #find a good place to set the seed... this isn't it
 np.random.seed(1)
@@ -505,7 +505,7 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
         print colormaps
 
     #load metadata from different files and concat
-    attributes = getAttributes(in_attributes)
+    attributes = tabFilesToDF(in_attributes)
     #attributes is a pandas dataframe
 
     if debug:

@@ -1,11 +1,10 @@
 """Web utility for calculating statistical associations of a user
 generated attribute to all other attributes on a map."""
 
-import pandas as pd
 import job
-import os
 import pairwiseAttrStats as stats
-from utils import getAttributes
+from typeTransforms import dictToPandasSeries
+from mapData import getDataTypeDict, getAllAttributes
 
 def preCalc(parms, ctx):
     userEmail = parms['email']
@@ -73,41 +72,3 @@ def formatForWeb(pvalueDF):
     return rowlist
 
 
-def getDataTypeDict(mapName):
-    """
-    Returns { "bin": [attrName,...], "cat": [...], "cont":[...]}
-      which gives the data type distinctions for all attributes in a
-       map.
-    """
-    projectDir = os.path.join(
-        os.environ.get("DATA_ROOT"),
-        "view",
-        mapName,
-    )
-    return stats.read_data_types(projectDir)
-
-
-def getAllAttributes(mapName):
-    """Returns a pandas dataframe of all attributes on a map."""
-    projectDir = os.path.join(
-        os.environ.get("DATA_ROOT"),
-        "view",
-        mapName
-    )
-    attrFile = os.path.join(projectDir, "allAttributes.tab")
-
-    try:
-        attrDF = pd.read_table(attrFile, index_col=0)
-
-    except IOError:
-        # Try and read the files an older way.
-        matrix_files = stats.read_matrices(projectDir)
-        attrDF = getAttributes(matrix_files, projectDir)
-
-    return attrDF
-
-
-def dictToPandasSeries(focusAttr):
-    attrName = focusAttr.keys()[0]
-    pandasSeries = pd.DataFrame(focusAttr)[attrName]
-    return pandasSeries

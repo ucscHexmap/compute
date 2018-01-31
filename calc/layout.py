@@ -46,7 +46,7 @@ from compute_sparse_matrix import compute_similarities
 from compute_sparse_matrix import extract_similarities
 import compute_sparse_matrix
 import StringIO
-from utils import getAttributes
+from utils import tabFilesToDF
 import leesL
 import sklearn.metrics
 import sklearn.metrics.pairwise as sklp
@@ -55,6 +55,7 @@ from process_categoricals import create_colormaps_file
 import utils
 import formatCheck
 import sys
+import mapOutput, mapData
 
 validReflectionMapTypes = \
     ['geneMatrix']
@@ -1619,9 +1620,9 @@ def makeMapUIfiles(options, cmd_line_list=None):
     nlayouts = len(nodes_multiple)
     # Determine Data Type
     if len(layer_names) > 0:
-        attrDF = getAttributes(options.scores)
+        attrDF = tabFilesToDF(options.scores)
         datatypeDict = getDataTypes(attrDF,options.directory + '/colormaps.tab')
-        leesL.writeDummyLayersTab(layer_files,layers,
+        mapOutput.writeDummyLayersTab(layer_files,layers,
                                   attrDF, datatypeDict,
                                   nlayouts, options.directory
                                   )
@@ -1640,7 +1641,14 @@ def makeMapUIfiles(options, cmd_line_list=None):
                 index)+'.tab')
             densityArray.append(leesL.densityOpt(attrDF,datatypeDict,xys,debug=True))
 
-        leesL.writeLayersTab(attrDF,layers,layer_files,densityArray,datatypeDict,options)
+        mapOutput.writeLayersTab(
+            attrDF,
+            layers,
+            layer_files,
+            densityArray,
+            datatypeDict,
+            options
+        )
         ###########################################################################3
     else:
         #We aren't doing any stats.
@@ -1735,7 +1743,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
         binAttrDF= attrDF[datatypeDict['bin']]
 
         #need to get layers file to know the indecies used for the outputted filenames
-        layers = leesL.readLayers(options.directory + '/layers.tab')
+        layers = mapData.readLayers(options.directory + '/layers.tab')
 
         for index in range(len(nodes_multiple)):
             xys = utils.readXYs(options.directory + '/xyPreSquiggle_' + str(
@@ -1748,7 +1756,8 @@ def makeMapUIfiles(options, cmd_line_list=None):
             #take all pairwise correlations of Binaries to display along with Lees L
             corMat=1-sklp.pairwise_distances(attrOnMap.transpose(),metric='correlation',n_jobs=8)
 
-            leesL.writeToDirectoryLee(options.directory + '/',leeMatrix,corMat,attrOnMap.columns.tolist(),layers,index)
+            mapOutput.writeToDirectoryLee(options.directory + '/',leeMatrix,
+                                  corMat,attrOnMap.columns.tolist(),layers,index)
 
     # Find the top neighbors of each node.
     # TODO This is only running to produce the directed graph data,
