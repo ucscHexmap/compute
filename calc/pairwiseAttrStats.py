@@ -4,27 +4,20 @@ Functions for the pairwise attribute stat tests done by tumormap.
 """
 import pandas as pd
 import numpy as np
-import sklearn.metrics.pairwise as sklp
 from scipy import stats
-from leesL import getLayerIndex
 import statsmodels.sandbox.stats.multicomp as multicomp
-import math
 import multiprocessing
 
 def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
     """
-    import pandas as pd
-    import numpy as np
-    attrDF = pd.read_table("/home/duncan/hex/compute/tests/out/stats/allAttributes.tab", index_col=0)
-    datatypeDict = read_data_types("/home/duncan/hex/compute/tests/out/stats/")
-    newAttr = attrDF[attrDF.columns[1]]
-    newAttrDataType = "bin"
+    Performs one by all stats on newAttr to attrDF.
     :param attrDF: pandas dataframe, all attributes for a particular
     map.
     :param dataTypeDict: Datatype keys pointing to array of attrNames.
-    :param newLayer: Must be parallel to attrDF,
-    :param newLayerDataType:
-    :return:
+    :param newAttr: Pandas series
+    :param newAttrDataType: One of ["bin", "cat", "cont"]
+    :return: DataFrame with Single test pvalue BHFDR and bonferonni
+    columns.
     """
     # Filter down to only nodes that the new attr has.
     attrDF = attrDF.loc[newAttr.index]
@@ -76,7 +69,7 @@ def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
     # Execute computations. Go parallel if there are many attributes
     # to process.
     if enoughForParallelComp(len(attrNames)):
-        pool = multiprocessing.Pool(processes=5)
+        pool = multiprocessing.Pool(processes=10)
         pvalues = pd.Series(pool.map(callFunc, opPool))
         pool.close()
         pool.join()
@@ -124,44 +117,6 @@ def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
     return pValueDF
 
 
-def read_matrices(projectDir):
-    '''
-    Puts the metadata matrices files in a list, to be used in
-    utils.getAttributes()
-     and is dependent upon the matrix file being in proper format.
-    @param projectDir: the project directory
-    @return: a list of the matrix file names
-    '''
-    matlist = []
-    #grab each name
-    for line in open(projectDir + '/matrices.tab'):
-        matlist.append(projectDir + '/' + line.strip())
-
-    return matlist
-
-
-def read_data_types(projectDir):
-    '''
-
-    @param projectDir:
-    @return:
-    '''
-    #mapping from what is in the file to abbreviations used in dataTypeDict
-    dtypemap = {"Continuous":"cont","Binary":"bin","Categorical":"cat"}
-    dtfin = open(projectDir + '/Layer_Data_Types.tab')
-    dataTypeDict = {}
-    for line in dtfin:
-        line = line.strip().split('\t')
-        #if we recognize the category
-        if line[0] in dtypemap:
-            try:
-                dataTypeDict[dtypemap[line[0]]] = line[1:]
-            except IndexError:
-                dataTypeDict[dtypemap[line[0]]] = []
-
-    return dataTypeDict
-
-
 def enoughForParallelComp(N):
     ENOUGH = 500
     return N >= ENOUGH
@@ -172,7 +127,7 @@ def binBinTest(x,y):
     table = contingencyTable(x,y)
 
     # Make sure there are enough values in each slot of table.
-    if table.shape != (2,2):
+    if table.shape != (2, 2):
         return np.NAN
     try:
         oddsratio, pValue = stats.fisher_exact(table)
@@ -205,9 +160,9 @@ def contContTest(x,y):
 
 def catContTest(catx, conty):
 
-    catx, conty = filterNan(catx,conty)
+    catx, conty = filterNan(catx, conty)
 
-    groups = pd.DataFrame([catx,conty]).transpose().groupby([0])
+    groups = pd.DataFrame([catx, conty]).transpose().groupby([0])
 
     samples = groups.aggregate(lambda x: list(x))[1].tolist()
     try:
@@ -227,10 +182,12 @@ def binContTest(binx, conty):
 
     # Manipulate to format expected by stats.ranksums().
     two_samples = groups.aggregate(lambda x: list(x)).values
+    sample1 = two_samples[0][0]
+    sample2 = two_samples[1][0]
 
     # Compute stats.
     try:
-        stat, pValue = stats.ranksums(*two_samples)
+        stat, pValue = stats.ranksums(sample1, sample2)
     except ValueError:
         pValue = np.nan
     except TypeError:
@@ -249,7 +206,8 @@ def contingencyTable(x,y):
     """
     x_n = len(set(x))
     y_n = len(set(y))
-
+    x = stats.rankdata(x, "dense")
+    y = stats.rankdata(y, "dense")
     # Variable combinations pointing to indecies where they occur.
     groupDict = pd.DataFrame([x,y],index=[0,1]).transpose().groupby([0,1]).groups
 
@@ -267,14 +225,16 @@ def contingencyTable(x,y):
 
 
 def filterNan(x,y):
+    """Indecies where either x or y are NA
+    are removed. x , y must be same length."""
     eitherNan = np.logical_or(np.isnan(x),np.isnan(y))
-    x=x[~eitherNan]
-    y=y[~eitherNan]
-    return x,y
+    x = x[~eitherNan]
+    y = y[~eitherNan]
+    return x, y
 
 
 def callFunc(triplet):
-    f= triplet[0]
-    x =triplet[1]
-    y =triplet[2]
-    return f(x,y)
+    f = triplet[0]
+    x = triplet[1]
+    y = triplet[2]
+    return f(x, y)
