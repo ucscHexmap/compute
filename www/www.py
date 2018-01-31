@@ -12,6 +12,7 @@ import jobTestHelper_web
 import placeNode_web
 import reflect_web
 import statsNoLayout_web
+import statsLayout_web
 
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
     reportRouteError
@@ -289,6 +290,38 @@ def onByAllStatRequest():
 
     raise SuccessResp(responseDict)
 
+@app.route('/oneByAll/leesLCalculation', methods=['POST'])
+def onByAllLeesLRequest():
+    """
+    Post example:
+    {
+        mapName : "PancanAtlas/SampleMap",
+        focusAttr: opts.dynamicData,
+        layoutIndex : 1,
+        mail : Meteor.user().username,
+    };
+    focusAttr is in this form:
+        {"attrName" : { "sampleId" : value}, ... }
+
+    JSON response on Success from job queue:
+        {result:
+            [
+                [ attributeId, leesL, Rank, Pearson],
+                ...,
+                ...
+            ]
+        }
+        For all attributes on the requested map.
+    """
+    logging.info('One By All LeesL requested')
+
+    parms = validatePost()
+    ctx = Context({'app': appCtx})
+
+    responseDict = statsLayout_web.preCalc(parms, ctx)
+    logging.info(responseDict)
+
+    raise SuccessResp(responseDict)
 
 # Handle reflect/metadata routes
 @app.route(
@@ -340,5 +373,156 @@ def getRefAttr(attrId):
 @app.route('/test', methods=['POST', 'GET'])
 def testRoute():
     raise SuccessResp('just testing data server')
+
+@app.route('/allpointclouds', methods=['GET'])
+def getAllPointCloud():
+    """
+    """
+    import pandas as pd
+
+    xypath = "/home/duncan/data/view/PancanAtlas/SampleMap/xyPreSquiggle_0.tab"
+    dpath = "./patlas.dbscan.all.tab"
+    xys = pd.read_table(xypath, index_col=0)
+    df = pd.read_table(dpath, index_col=0)
+    pointSamples=[]
+    urls=[]
+    nSamples=[]
+    cs = 0
+
+    for col in df.columns:
+        cs+=1
+
+        if not(cs == 0 or cs == 0):
+            logging.info("#################" + str(len(urls)))
+
+        layer = df[df[col] != "Outlier"][col]
+        for uniqueVal in layer.unique():
+            valueCountsDF = layer.value_counts()
+            subset = layer[layer == uniqueVal]
+            nSamples.append(len(subset))
+            if valueCountsDF[uniqueVal] > 2000:
+                sampleList = subset.sample(2000).index
+            else:
+                sampleList = subset.index
+
+            pointSamples.append(
+                xys.loc[sampleList.tolist()].as_matrix().tolist()
+            )
+            urls.append('http://localhost:5000/nextpointclouds/' + col)
+
+    means = xys.mean().tolist()
+
+    responseDict = {
+        "pointClouds": pointSamples,
+        "urlIds": urls,
+        "means": means,
+        'nSamples': nSamples
+    }
+
+    logging.info("#################" + str(len(urls)))
+
+    raise SuccessResp(responseDict)
+
+
+@app.route('/pointclouds', methods=['GET'])
+def getPointCloud():
+    """
+    """
+    import pandas as pd
+    from sklearn.cluster import DBSCAN
+    import numpy as np
+
+    xypath = "/home/duncan/data/view/PancanAtlas/SampleMap/xyPreSquiggle_0.tab"
+    dpath = "/home/duncan/data/view/PancanAtlas/SampleMap/hdbscanPAtalasHomeMin5"
+    xys = pd.read_table(xypath, index_col=0)
+
+    clusterer = DBSCAN(min_samples=4, eps=5)
+    cluster_labels = clusterer.fit_predict(xys)
+    name = "hdbscan"
+    output = pd.DataFrame(map(lambda x: name + '_' + str(x) ,
+                              cluster_labels), index=xys.index,
+                          columns=[name])
+    output.iloc[np.array(output[name] == name+ '_-1')] = 'Outlier'
+    output.index.rename('nodes',inplace=True)
+    df = output
+    logging.info('pointcloud request: ' + str((df.hdbscan ==
+                                               "Outlier").sum()))
+    df = df[df.hdbscan != "Outlier"]
+
+    pointSamples=[]
+    valueCountsDF = df.hdbscan.value_counts()
+    uniqueVals = df.hdbscan.unique()
+    for uniqueVal in df.hdbscan.unique():
+        subset = df[df.hdbscan == uniqueVal]
+        if valueCountsDF[uniqueVal] > 2000:
+           sampleList = subset.sample(2000).index
+        else:
+            sampleList = subset.index
+
+        pointSamples.append(
+            xys.loc[sampleList.tolist()].as_matrix().tolist()
+        )
+    means = xys.mean().tolist()
+
+    responseDict = {
+        "pointClouds" : pointSamples,
+        "means" : means
+    }
+    raise SuccessResp(responseDict)
+
+@app.route('/nextpointclouds/<string:nextId>', methods=['GET'])
+def nextPointCloud(nextId):
+    import pandas as pd
+    from sklearn.cluster import DBSCAN
+    import numpy as np
+    xypath = "/home/duncan/data/view/PancanAtlas/SampleMap/xyPreSquiggle_0.tab"
+    dpath = "/home/duncan/data/view/PancanAtlas/SampleMap/hdbscanPAtalasHomeMin5"
+
+    df = pd.read_pickle(dpath)
+    df = df[df.hdbscan != "Outlier"]
+
+    xys = pd.read_table(xypath, index_col=0)
+
+    sampInCluster = df[df.hdbscan == nextId].index
+    clusterer = DBSCAN(min_samples=4, eps=3)
+    logging.info('pointcloud request with: ' + nextId + str(len(
+        sampInCluster)))
+    xys = xys.loc[sampInCluster]
+    cluster_labels = clusterer.fit_predict(xys)
+
+    name = nextId
+    output = pd.DataFrame(map(lambda x: name + '_' + str(x) , cluster_labels),index=xys.index,columns=[name])
+    output.iloc[np.array(output[name] == name+ '_-1')] = 'Outlier'
+    output.index.rename('nodes',inplace=True)
+    df = output
+
+    logging.info('pointcloud request: ' + str((df[name] ==
+                                               "Outlier").sum()))
+    df = df[df[name] != "Outlier"]
+
+    pointSamples=[]
+    valueCountsDF = df[name].value_counts()
+    for uniqueVal in df[name].unique():
+        subset = df[df[name] == uniqueVal]
+        if valueCountsDF[uniqueVal] > 2000:
+           sampleList = subset.sample(2000).index
+        else:
+            sampleList = subset.index
+
+        pointSamples.append(
+            xys.loc[sampleList.tolist()].as_matrix().tolist()
+        )
+    means = xys.mean().tolist()
+    #urls = map( lambda x: 'http://localhost:5000/nextpointclouds/' +
+    #
+    #                       x, uniqueVals)
+
+    responseDict = {
+        "pointClouds" : pointSamples,
+        "urlIds" : means
+    }
+
+    raise SuccessResp(responseDict)
+
 
 initialize()

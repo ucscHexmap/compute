@@ -34,7 +34,7 @@ DEPRECATED=( \
 )
 
 # Small amount of most recent tests (erase/replace at will)
-next=(test_reflect)
+next=(test_pairwiseAttrStats)
 
 # The rest of the tests.
 docker_safe=( \

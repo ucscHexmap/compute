@@ -10,10 +10,6 @@ import sklearn.metrics.pairwise as sklp
 from scipy import stats
 import numpy as np
 import scipy.spatial.distance as dist
-from utils import sigDigs
-from utils import truncateNP
-from utils import readXYs
-from utils import getAttributes
 
 # The unit tests get confused when running parallel jobs via sklearn.
 # We need the try because the viewer calls this and does not have this defined.
@@ -25,234 +21,49 @@ try:
 except:
     n_jobs = 8
 
-#input/output helpers
-def readLayers(layerFile):
-    return pd.read_csv(layerFile,sep='\t',index_col=0,header=None)
+def oneByAll(allBinAttrDF, focusAttr, xys):
 
-def getLayerIndex(layerName,layers):
-    filename = layers[1].loc[layerName]
-    return filename[filename.index('_')+1:filename.index('.')]
+    allBinAttrDF = attrPreProcessing4Lee(allBinAttrDF, xys)
+    focusAttr = attrPreProcessing4Lee(focusAttr, xys)
 
-def trimLayerFiles(layer_files):
-    '''
-    :param layer_files: dict { layer_name -> layer path, ... , ... }
-    :return: a similar dict with the layer paths trimmed to only by the file name
-    this is needed for writing out the layers.tab file...
-    '''
-    for attr in layer_files.keys():
-        layer_files[attr] = layer_files[attr].split('/')[-1]
-    return layer_files
+    # Pearson correlation of all attributes is calculated for comparison
+    pearsonD = sklp.pairwise_distances(
+        focusAttr.reshape(1, -1),
+        allBinAttrDF.transpose(),
+        metric='correlation',
+        n_jobs=n_jobs
+    )[0,:]
 
-def writeDummyLayersTab(layer_files,layers,
-                        attributeDF, datatypes,
-                        nlayouts, directory):
-    """
-    Writes out an empty layers.tab to the directory so the UI
-     will work while density is being calculated
-    @param layer_files:
-    @param layers:
-    @param attributeDF:
-    @param datatypes:
-    @param nlayouts:
-    @return:
-    """
-    layer_files = trimLayerFiles(layer_files)
+    pearsonSim = 1 - pearsonD
 
-    layersTab = pd.DataFrame(index=layer_files.keys())
+    # Lees L vector
+    leesLV = singleLeesL(
+        spatialWieghtMatrix(xys),
+        focusAttr,
+        allBinAttrDF
+    )
 
-    #second column is the name of the layer files
-    layersTab[0] = pd.Series(layer_files)
+    ranks = stats.rankdata(np.abs(leesLV), method='average')
+    normalizedRank = 1 - (ranks / len(leesLV))
 
-    #third column is count of non-Na's
-    layersTab[1] = attributeDF[layer_files.keys()].count()
+    columnNames = ["leesL", "Ranks", "Pearson"]
 
-    #forth column is the count of 1's if the layer is binary, Na if not
-    layersTab[2] = np.repeat(np.NAN,len(layers.keys()))
+    dataDict = dict(
+        zip(columnNames, [leesLV, normalizedRank, pearsonSim])
+    )
 
-    layersTab.loc[datatypes['bin'],2] = attributeDF[datatypes['bin']].sum(axis=0)
+    outDF = pd.DataFrame(
+        dataDict,
+        index=allBinAttrDF.columns,
+    )
 
-    for ind in range(nlayouts):
-        layersTab[3+ind] = np.repeat(np.nan, layersTab.shape[0])
+    # Make ordering correct.
+    outDF = outDF[columnNames]
 
-    layersTab.to_csv(directory + '/layers.tab',sep='\t',header=None)
+    return outDF
 
 
-def writeLayersTab(attributeDF,layers,layer_files,densityArray,
-                   datatypes,options):
-    '''
-    :param attributeDF: the pandas data frame holding attribute values
-    :param densityArray: an array of series, each of which are returned by
-                         densityOpt()
-    :param layer_files: layer_files are the names of each layer
-                        produced when they are written one by one to the given
-                        directory
-    :return: Layers.tab is a file used to build the UI,
-             the format is tab delimited: layout_name, layout_file, number we
-             have data for, (if binary how many 1's, else NA)
-             and then each density
-    '''
-
-    #have a dict of attribute names pointing to their layer_x.tab file
-    layer_files = trimLayerFiles(layer_files)
-    #making an empty data frame and then filling each one of the columns
-    layersTab = pd.DataFrame(index=layer_files.keys())
-
-    #second column is the name of the layer files
-    layersTab[0] = pd.Series(layer_files)
-
-    #third column is count of non-Na's
-    layersTab[1] = attributeDF[layer_files.keys()].count()
-
-    #forth column is the count of 1's if the layer is binary, Na if not
-    layersTab[2] = np.repeat(np.NAN,len(layers.keys()))
-
-    layersTab.loc[datatypes['bin'],2] = attributeDF[datatypes['bin']].sum(axis=0)
-
-    #the rest of the columns are the density for each layout (in order)
-    for it, series_ in enumerate(densityArray):
-        #fill all density with NAN in case we don't have some in the density array
-        layersTab[3+it] = np.repeat(np.NAN,len(layers.keys()))
-        #put the density in the dataframe
-        layersTab[3+it] = series_.apply(sigDigs)
-
-    layersTab.to_csv(options.directory + '/layers.tab',sep='\t',header=None)
-
-def writeToFileLee(fout,leeLV,simV,colNames):
-    '''
-    write a single lees L to file, for use with singleLeesL function
-    @param fout:
-    @param leeLV:
-    @param simV:
-    @param colNames:
-    @return:
-    '''
-    #truncate as an attempt to be reproducible on different machines.
-    # also needed to properly determine ranks are equal when vectors have
-    #  -1 correlation
-    # ( so the leeL values are -.xxxxxxxxx3 and .xxxxxxxxx4, and should have
-    # been determined
-    # .xxxxxxxxx35 and .xxxxxxxxx35 )
-    leeLV = truncateNP(leeLV,11)
-    #ranks is how the UI knows the order in which to display
-    ranks =  1- (stats.rankdata(np.abs(leeLV),method='average') / len(leeLV))
-    outDF = pd.DataFrame({0:leeLV,1:ranks,2:simV},index=colNames)
-    #apply significant digit cutoff of 7 to all the numbers in table
-    outDF = outDF.apply(lambda x: x.apply(sigDigs))
-
-    outDF.to_csv(fout,sep='\t',header=None)
-
-def writeToDirectoryLee(dirName,leeMatrix,simMatrix,colNameList,layers,index=0):
-    '''
-    this function writes the computed similarities, i.e. lees L, to a directory
-    if we wanted to do p-values or something else computations for corrections
-    would be done here
-
-    The way this works is that the sign of the correlation informs the
-    positive-negative selection
-    and they are ranked by closness to zero of the pvalue
-    :param dirName: ends in '/'
-    :param colNameList: needs to be in the same order as the leeMatrix names
-    :param layers is a dataframe, read in from layers.tab
-    :return: writes files in the proper format to the directory dirName
-
-    dirName = '/home/duncan/trash/statsL'
-    '''
-
-    assert(dirName[-1] == '/')
-    for i,column in enumerate(colNameList):
-        #print getLayerIndex(column,layers)
-        statsO = pd.DataFrame(index= colNameList)
-        statsO[0] = leeMatrix[i,]
-        #truncate as an attempt to be reproducible on different machines.
-        statsO[0] = truncateNP(statsO[0],11)
-
-        #place holder for rank, need because of use of parallel structures
-        # simMat and leeMat
-        statsO[1] = np.repeat(np.NAN,statsO.shape[0])
-
-        statsO[2] = simMatrix[i,]
-
-        statsO = statsO.iloc[statsO.index!=column] #get rid of identity
-
-        # second column is how the UI ranks, it uses that column and the sign
-        # of leesL
-        # to determine order
-        statsO[1] = 1- (stats.rankdata(np.abs(statsO[0]),method='average') / (statsO.shape[0]))
-
-        filename = 'statsL_'+ getLayerIndex(column,layers)+ '_' + str(index) + '.tab'
-
-        statsO = statsO.apply(lambda x: x.apply(sigDigs))
-        statsO.to_csv(dirName+filename,sep='\t',header=None)
-
-def read_matrices(projectDir):
-    '''
-    Puts the metadata matrices files in a list, to be used in layout.getAttributes()
-     and is dependent upon the matrix file being in proper format.
-    @param projectDir: the project directory
-    @return: a list of the matrix file names
-    '''
-    matlist = []
-    #grab each name
-    for line in open(projectDir + '/matrices.tab'):
-        matlist.append(projectDir + '/' + line.strip())
-
-    return matlist
-
-def read_data_types(projectDir):
-    '''
-
-    @param projectDir:
-    @return:
-    '''
-    #mapping from what is in the file to abbreviations used in dataTypeDict
-    dtypemap = {"Continuous":"cont","Binary":"bin","Categorical":"cat"}
-    dtfin = open(projectDir + '/Layer_Data_Types.tab')
-    dataTypeDict = {}
-    for line in dtfin:
-        line = line.strip().split('\t')
-        #if we recognize the category
-        if line[0] in dtypemap:
-            try:
-                dataTypeDict[dtypemap[line[0]]] = line[1:]
-            except IndexError:
-                dataTypeDict[dtypemap[line[0]]] = []
-
-    return dataTypeDict
-#
-
-#Math helpers
-def ztransDF(df):
-    '''
-    :param df: pandas structure, series or data frame
-    :return: z-score normalized version of df.
-    '''
-    return ((df - df.mean()) / df.std())
-
-def inverseEucDistance(xys):
-
-    distmat = dist.squareform(dist.pdist(xys,'euclidean'))
-    return 1 / (1 + distmat)
-
-def spatialWieghtMatrix(xys,nearest=False,n=None):
-    '''
-    :param xys: x-y positions for nodes on the map
-    :return: used to generate the spatial weight matrix
-    '''
-    if nearest:
-        invDist =XmedianNearestEucDistance(xys,n)
-    else:
-        invDist = inverseEucDistance(xys)
-
-    #fill self compairsons to 0 so we can replace by the maxium closness for all nodes,
-    np.fill_diagonal(invDist,0)
-    notZd = pd.DataFrame(invDist,index=xys.index,columns=xys.index)
-
-    #set the diagonal, or self comparison equal to the maxium value, so we don't inflate too much
-    #notZd.values[[np.arange(notZd.shape[1])]*2] = notZd.apply(np.max,axis=1)
-
-    return (notZd/notZd.sum(axis=1))
-
-def attrPreProcessing4Lee(attrDF,xys):
+def attrPreProcessing4Lee(attrDF, xys):
     '''
     preproccesssing pipeline for doing leesL bivariate association
     @param attrDF:  metadata matrix, rows sample names
@@ -266,10 +77,9 @@ def attrPreProcessing4Lee(attrDF,xys):
     attrOnMap = ztransDF(attrOnMap)
     attrOnMap.fillna(0,inplace=True)
     return attrOnMap
-#
 
-#main utility
-def leesL(spW,Ztrans_attrDF):
+
+def leesL(spW, Ztrans_attrDF):
     '''
     Excessive detail: https://www.researchgate.net/publication/220449126
     :param spW: spatial weight matrix
@@ -277,9 +87,19 @@ def leesL(spW,Ztrans_attrDF):
     :return: a leesL matrix, where the off diagonal elements are the bivariate lees L and the on diagonal are the
              spatial smoothing scalar
     '''
-    return (np.dot(np.dot(Ztrans_attrDF.transpose(),np.dot(spW.transpose(),spW)),Ztrans_attrDF)) / np.dot(spW.transpose(),spW).sum().sum()
+    V = spW
+    VT = spW.transpose()
+    Z = Ztrans_attrDF
+    ZT = Ztrans_attrDF.transpose()
 
-def singleLeesL(spW,ztrans_attr,ztrans_attrDF):
+    VTV = np.dot(VT, V)
+    oneTVTVone = VTV.sum().sum()
+    ZTVTVZ = np.dot(np.dot(ZT,  VTV), Z)
+
+    # (np.dot(np.dot(Ztrans_attrDF.transpose(),np.dot(spW.transpose(),spW)),Ztrans_attrDF)) / np.dot(spW.transpose(),spW).sum().sum()
+    return ZTVTVZ / oneTVTVone
+
+def singleLeesL(spW, ztrans_attr, ztrans_attrDF):
     '''
     spW and attributes should already have matching indecies
     Excessive detail: https://www.researchgate.net/publication/220449126
@@ -289,9 +109,13 @@ def singleLeesL(spW,ztrans_attr,ztrans_attrDF):
     @return: returns a vector of the the length of columns in ztrans_attrDF
              giving the leesL association of the vector with each of the columns
     '''
-    return (np.dot(np.dot(ztrans_attr.transpose(),np.dot(spW.transpose(),spW)),ztrans_attrDF)) / np.dot(spW.transpose(),spW).sum().sum()
+    spWspWT = np.dot(spW.transpose(), spW)
+    normalizer = spWspWT.sum().sum()
+    newAttrWithspWspWT = np.dot(ztrans_attr.transpose(), spWspWT)
+    return (np.dot(newAttrWithspWspWT, ztrans_attrDF)) / normalizer
 
-def densityOpt(allAtts,datatypes,xys,debug=False):
+
+def densityOpt(allAtts, datatypes, xys, debug=False):
     '''
     An optimized version of Density calculation.
      An attribute's density is only based on the values it has data for, so A
@@ -412,6 +236,7 @@ def densityOpt(allAtts,datatypes,xys,debug=False):
 
     return pd.Series(densities,index=attrNames)
 
+
 def catSSS(catLee):
     '''
     :param catLee: the LeesL matrix from a single categorical variable that has been expanded
@@ -434,53 +259,110 @@ def catSSS(catLee):
     #         average of on_diagonal                           average of off diagonal
     return (catLee.trace() / catLee.shape[0]) - ((catLee.sum() - catLee.trace())/ (catLee.shape[1]**2 - catLee.shape[1]))
 
-def dynamicCallLeesL(parm):
+
+def ztransDF(df):
     '''
-    making dynamic function that will call everything.
-    We need to figue out how we interface with
-    @param parm:
-       dictionary with three keys:
-          directory: "the/full/path/to/server/dir"
-          layout   : int (the index of the layout in the project dir"
-          layerA : layerName (str) of dynamic attr of interest
-          dynamicData : {layerName -> (sample: value}, }
-          tempFile : "the/output/file/path"
-    @return: writes
+    :param df: pandas structure, series or data frame
+    :return: z-score normalized version of df.
     '''
+    return ((df - df.mean()) / df.std())
 
-    #make the path of the file containing x-y placements
-    preSquiggleFile = os.path.join(parm['directory'], 'xyPreSquiggle_' + str(parm['layout']) +'.tab')
 
-    #get the x-y placements for the map layout of interest
-    xys = readXYs(preSquiggleFile)
+def inverseEucDistance(xys):
 
-    #get all the attribute data
-    attrDF = getAttributes(read_matrices(parm['directory']))
+    distmat = dist.squareform(dist.pdist(xys,'euclidean'))
+    return 1 / (1 + distmat)
 
-    #get the datatypes from the project directory
-    datatypeDict = read_data_types(parm['directory'])
+def rowNormalize(spatialWeightMatrix):
+    return spatialWeightMatrix / spatialWeightMatrix.sum(axis=1)
 
-    #subset down to only binary attributes.
-    attrDF = attrDF[datatypeDict['bin']]
+def spatialWieghtMatrix(xys):
+    '''
+    :param xys: x-y positions for nodes on the map
+    :return: col X col inverse euclidean distance matrix,
+    row normalized to sum to 1.
+    '''
+    invDist = inverseEucDistance(xys)
 
-    #get pearson correlations for output
-    #do the appropriate preprocessing for each of your data
-    dynamicAttr = attrPreProcessing4Lee(pd.Series(parm['dynamicData'][parm['layerA']]),xys)
-    attrDF      = attrPreProcessing4Lee(attrDF,xys)
+    # Self comparisons to 0
+    notZd = pd.DataFrame(invDist,index=xys.index,columns=xys.index)
 
-    #if the dynamic attribute is already in the data then we want to remove
-    # it so there is no self comparison.
-    try:
-        attrDF.drop(parm['layerA'],axis=1,inplace=True)
-    except ValueError:
-        '''do nothing'''
+    return (notZd / notZd.sum(axis=1))
 
-    #get pearson correlation of all attributes
-    simV= 1-(sklp.pairwise_distances(dynamicAttr.reshape(1,-1),attrDF.transpose(),metric='correlation',n_jobs=n_jobs)[0,:])
 
-    leeslV = singleLeesL(spatialWieghtMatrix(xys),dynamicAttr,attrDF)
 
-    writeToFileLee(parm['tempFile'],leeslV,simV,attrDF.columns)
+def L(Z, V):
+    """See equation (18) from paper."""
+    # (V^T V)
+    VTV = np.dot(V.transpose(), V)
+    # Z^T (V^T V)
+    ZTVTV = np.dot(Z.transpose(), VTV)
+    # Z^T (V^T V) Z
+    ZTVTVZ = np.dot(ZTVTV, Z)
 
-    #return the output file for dynamic stats
-    return parm['tempFile']
+    # 1^T (V^T V) 1
+    oneTVTVone = VTV.sum().sum()
+
+    return ZTVTVZ / oneTVTVone
+
+
+def spatial_lag(x, w):
+    """Produces a spatial lag matrix. See equation (4) in paper."""
+    x_squig = np.dot(w, x)
+    return x_squig
+
+
+def spatial_smoothing_scalar(spatial_lag_matrix):
+    return spatial_lag_matrix.var(axis=0)
+
+squareGrid = [
+    range(4),
+    range(4),
+    range(4),
+    range(4)
+]
+
+sqSim = {}
+
+def back_one(row_n, col_n):
+    return row_n + 1, col_n
+
+
+def forward_one(row_n, col_n):
+    return row_n - 1, col_n,
+
+
+def right_one(row_n, col_n):
+    return row_n, col_n+1 ,
+
+
+def left_one(row_n, col_n):
+    return row_n, col_n-1
+
+fs = [back_one, forward_one, right_one, left_one]
+for row_n, row in enumerate(squareGrid):
+    neigh = []
+    for col_n in row:
+        for f in fs:
+            try:
+                n_row_n, n_col_n = f(row_n, col_n)
+                if n_row_n < 0 or n_col_n < 0:
+                    raise IndexError
+                neigh.append((n_row_n, n_col_n))
+            except IndexError:
+                pass
+
+        sqSim[(row_n, col_n)] = neigh
+
+df = pd.DataFrame(
+        np.reshape(np.repeat(0, 16*16), (16, 16)),
+        index=sqSim.keys(),
+        columns=sqSim.keys()
+    )
+
+for node in sqSim.keys():
+    edges = sqSim[node]
+    for edge in edges:
+        df.loc[node, edge] = 1
+
+df = df.loc[sorted(df.columns),sorted(df.columns)]
