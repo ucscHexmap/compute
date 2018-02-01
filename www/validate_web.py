@@ -2,6 +2,9 @@
 import os, json, types, re
 from util_web import SuccessResp, ErrorResp
 
+fileRegEx = r'[^A-Za-z0-9_\-\.].*'
+fileSlashRegEx = r'[^A-Za-z0-9_\-\.\//].*'
+
 def _validateFileName (dirty, name, allowSlash=False):
     '''
     check to be sure this is a file-safe name without any problem characters
@@ -16,10 +19,10 @@ def _validateFileName (dirty, name, allowSlash=False):
     msg = name + ' parameter may only contain the characters:' + \
             ' a-z, A-Z, 0-9, dash (-), dot (.), underscore (_)'
     if allowSlash:
-        regex = r'[^A-Za-z0-9_\-\.\//].*'
+        regex = fileSlashRegEx
         msg += ', slash (/)'
     else:
-        regex = r'[^A-Za-z0-9_\-\.].*'
+        regex = fileRegEx
 
     search = re.search(regex, dirty)
     if not search == None:
@@ -27,6 +30,26 @@ def _validateFileName (dirty, name, allowSlash=False):
 
 def _validatePathName (dirty, name):
     _validateFileName (dirty, name, allowSlash=True)
+
+def cleanFileName (dirty):
+
+    # Make a directory or file name out of some string
+    # Valid characters:
+    #     a-z, A-Z, 0-9, dash (-), dot (.), underscore (_)
+    # All other characters are replaced with underscores.
+
+    if not dirty:
+        return None
+    
+    clean = ''
+    if not re.search(fileRegEx, dirty) == None:
+        for i in range(0, len(dirty)):
+            if re.search(fileRegEx, dirty[i]) == None:
+                clean += dirty[i]
+            else:
+                clean += '_'
+
+    return clean
 
 def _validateStringChars(val, name):
     '''

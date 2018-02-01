@@ -26,6 +26,7 @@ web=( \
     test_overlayNode_web \
     test_placeNode_web \
     test_placeNode2_web \
+    test_projectList \
 )
 
 # Deprecated with hexagram server code moving to the compute server
@@ -67,6 +68,7 @@ mac=( \
     test_placeNode_web \
     test_placeNode2_web \
     test_process_categoricals \
+    test_projectList \
     test_similarity \
 )
 
