@@ -2,7 +2,7 @@
 generated attribute to all other attributes on a map."""
 
 import job
-import leesL
+import spatial
 import mapData
 from typeTransforms import dictToPandasSeries
 
@@ -22,7 +22,7 @@ def calcMain(parms, ctx):
     xys = mapData.getXYs(mapName, layoutIndex)
 
     # Do calculation.
-    leesLDF = leesL.oneByAll(
+    leesLDF = spatial.oneByAll(
         allBinAttrDF,
         focusAttr,
         xys

@@ -6,7 +6,7 @@ to dynamic and pre-computed stats: statsSortLayer.
 """
 
 import sys, os, json, copy, csv, math, traceback, pprint
-import leesL
+import spatial
 from statsLayer import ForEachLayer
 
 def dynamicLayoutAwareStats(parm):
@@ -56,7 +56,7 @@ def dynamicStats(parm):
     # This handles dynamic stats initiated by the client
 
     if 'layout' in parm:
-        resultFile = leesL.dynamicCallLeesL(parm)
+        resultFile = spatial.dynamicCallLeesL(parm)
         return resultFile
 
     # Populate the layer to file names dict by pulling the

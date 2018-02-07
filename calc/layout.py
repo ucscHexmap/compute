@@ -47,7 +47,7 @@ from compute_sparse_matrix import extract_similarities
 import compute_sparse_matrix
 import StringIO
 from utils import tabFilesToDF
-import leesL
+import spatial
 import sklearn.metrics
 import sklearn.metrics.pairwise as sklp
 import numpy as np
@@ -1639,7 +1639,14 @@ def makeMapUIfiles(options, cmd_line_list=None):
             print 'calculating density for layer ' + str(index)
             xys = utils.readXYs(options.directory + '/xyPreSquiggle_' + str(
                 index)+'.tab')
-            densityArray.append(leesL.densityOpt(attrDF,datatypeDict,xys,debug=True))
+            densityArray.append(
+                spatial.density(
+                    attrDF,
+                    datatypeDict,
+                    xys,
+                    n_jobs=8
+                )
+            )
 
         mapOutput.writeLayersTab(
             attrDF,
@@ -1739,25 +1746,36 @@ def makeMapUIfiles(options, cmd_line_list=None):
     if (options.mutualinfo and len(layer_names) > 1):
         print 'LeesL layout aware stats being calculated'
 
-        #subset down  to binary attributes
+        # Binary attributes.
         binAttrDF= attrDF[datatypeDict['bin']]
 
-        #need to get layers file to know the indecies used for the outputted filenames
+        # layers.tab file has the attribute->file mapping.
         layers = mapData.readLayers(options.directory + '/layers.tab')
 
         for index in range(len(nodes_multiple)):
             xys = utils.readXYs(options.directory + '/xyPreSquiggle_' + str(
                 index)+'.tab')
 
-            #filter and preprocess the binary attributes on the map
-            attrOnMap = leesL.attrPreProcessing4Lee(binAttrDF,xys)
             # attributes ar e
-            leeMatrix = leesL.leesL(leesL.spatialWieghtMatrix(xys),attrOnMap)
-            #take all pairwise correlations of Binaries to display along with Lees L
-            corMat=1-sklp.pairwise_distances(attrOnMap.transpose(),metric='correlation',n_jobs=8)
+            leeMatrix = spatial.pairwiseAssociations(
+                xys,
+                binAttrDF
+            )
+            #Correlations are displayed along with Lees L
+            corMat= 1 - sklp.pairwise_distances(
+                spatial.attrPreProcessing(xys, binAttrDF).transpose(),
+                metric='correlation',
+                n_jobs=8
+            )
 
-            mapOutput.writeToDirectoryLee(options.directory + '/',leeMatrix,
-                                  corMat,attrOnMap.columns.tolist(),layers,index)
+            mapOutput.writeToDirectoryLee(
+                options.directory + '/',
+                leeMatrix,
+                corMat,
+                binAttrDF.columns.tolist(),
+                layers,
+                index
+            )
 
     # Find the top neighbors of each node.
     # TODO This is only running to produce the directed graph data,
