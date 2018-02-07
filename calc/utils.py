@@ -132,7 +132,11 @@ def tabFilesToDF(fileNameList, dir=''):
 
     dfs = []
     for filename in fileNameList:
-        filename = os.path.join(dir, filename)
+        # Allow the filename to be a stringIO buffer.
+        try:
+            filename = os.path.join(dir, filename)
+        except AttributeError:
+            pass
 
         df = pd.read_csv(filename, sep='\t', dtype='str')
 
