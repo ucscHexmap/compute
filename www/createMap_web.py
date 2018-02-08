@@ -64,9 +64,8 @@ def calcMain(parms, ctx):
     #                   {'error': <message>, 'stackTrace': <trace>}
 
     # Fix up relative paths and map any newer parm names to old parm names
-    # that are expected by the calc function.
-    # TODO These adjustments to the parms are only for UI caller.
-    # These need to change to make the createMap API public.
+    # that are expected by the calc function. If we want this to become a public
+    # API, we need to accept the new names only.
     opts = Namespace()
     opts.layoutInputFile = \
         [path.join(ctx.app.dataRoot, parms['layoutInputDataId'])]
