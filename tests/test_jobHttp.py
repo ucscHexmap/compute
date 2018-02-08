@@ -34,7 +34,7 @@ errorMsg1 = {"error": "some error"}
 errorMsg1trace = {"error": "some error", "stackTrace": "some stackTrace"}
 
 # Seconds to wait for test job to complete
-wait = 0.1
+wait = 0.2
 
 retryLimit = 10
 
