@@ -46,6 +46,7 @@ docker_safe=( \
     test_layoutMetaData \
     test_layoutZeroReplace \
     test_leesl \
+    test_pairwiseAttrStats \
     test_process_categoricals \
     test_reflect \
     test_sim6Layout \
