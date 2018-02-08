@@ -2,7 +2,7 @@
 generated attribute to all other attributes on a map."""
 
 import job
-import pairwiseAttrStats as stats
+import pairwiseStats as stats
 from typeTransforms import dictToPandasSeries
 from mapData import getDataTypeDict, getAllAttributes
 
