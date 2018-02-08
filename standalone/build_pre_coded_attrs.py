@@ -6,7 +6,7 @@
 '''
 
 from process_categoricals import *
-from utils import getAttributes
+from utils import tabFilesToDF
 
 def parse_args(args):
 
@@ -44,7 +44,7 @@ def main(args):
     print 'converting these files: ' + str(in_attributes)
 
     #get all the attributes into one place
-    codedattrs    = getAttributes(in_attributes)
+    codedattrs    = tabFilesToDF(in_attributes)
     #get colormaps into a list of lists
     colormaps     = read_colormaps(colormaps)
     #maps the attributes to a index in the colormap

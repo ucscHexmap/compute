@@ -80,7 +80,7 @@ def average(df, nodeIds):
 
 def tStatCalc(df, nodeIds):
     rowmu = df.mean(axis=1)
-    rowstd = df.std(axis=1)
+    rowstd = df.std(axis=1, ddof=0)
     tStats = ((df[nodeIds].mean(axis=1) - rowmu) / rowstd)
     return tStats
 

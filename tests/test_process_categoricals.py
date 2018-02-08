@@ -18,7 +18,7 @@ class Test_colormapGeneration(unittest.TestCase):
         @return:
         '''
         #make random boolean data
-        df = tu.getdf(type_='random',nrows=20,ncols=2)
+        df = tu.getdf(type_='random', nrows=20, ncols=2)
         df[0] = df[0] > 0
         df[1] = df[1] < 0
 
@@ -27,8 +27,7 @@ class Test_colormapGeneration(unittest.TestCase):
         passed = True
         e = None
         try:
-            pc.create_colormaps_file([df],out)
-
+            pc.create_colormaps_file([df], out)
         except Exception as e:
             passed = False
 
@@ -62,10 +61,6 @@ class Test_colormapGeneration(unittest.TestCase):
                 ' colormap vars')
 
     def test_many_categories(s):
-        '''
-
-        @return:
-        '''
         #length of categorical descriptors
         lenStr=3
         #generate categorical vectors of varying length and make colormaps
@@ -76,7 +71,7 @@ class Test_colormapGeneration(unittest.TestCase):
             df = tu.dataFrameToStrBuf(df)
             out = StringIO.StringIO()
             try:
-                pc.create_colormaps_file([df],out)
+                pc.create_colormaps_file([df], out)
             except Exception as e:
                 s.assertTrue(False,'exception thrown when doing cat vector of '
                                    'size ' + str(i) + ' with exception '

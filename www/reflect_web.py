@@ -42,7 +42,7 @@ def getReflectionAttr(attrId):
     return reflectDict
 
 
-def getReflectionMetaData(majorId, minorId):
+def getReflectionMetadata(majorId, minorId):
     dataTypes = getDataTypes(majorId)
     toMapIds = getToMapIds(majorId, minorId)
     metadata = {

@@ -13,6 +13,7 @@ import placeNode_web
 import projectList
 import reflect_web
 import statsNoLayout_web
+import statsLayout_web
 
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
     reportRouteError
@@ -308,14 +309,56 @@ def onByAllStatRequest():
 
     raise SuccessResp(responseDict)
 
+@app.route('/oneByAll/leesLCalculation', methods=['POST'])
+def onByAllLeesLRequest():
+    """
+    Post example:
+    {
+        mapName : "PancanAtlas/SampleMap",
+        focusAttr: opts.dynamicData,
+        layoutIndex : 1,
+        mail : Meteor.user().username,
+    };
+    focusAttr is in this form:
+        {"attrName" : { "sampleId" : value}, ... }
+
+    JSON response on Success from job queue:
+        {result:
+            [
+                [ attributeId, leesL, Rank, Pearson],
+                ...,
+                ...
+            ]
+        }
+        For all attributes on the requested map.
+    """
+    logging.info('One By All LeesL requested')
+
+    parms = validatePost()
+    ctx = Context({'app': appCtx})
+
+    responseDict = statsLayout_web.preCalc(parms, ctx)
+    logging.info(responseDict)
+
+    raise SuccessResp(responseDict)
 
 # Handle reflect/metadata routes
 @app.route(
 '/reflect/metaData/majorId/<string:majorId>/minorId/<string:minorId>',
     methods=['GET']
 )
-def getReflectMetaData(majorId, minorId):
-    responseDict = reflect_web.getReflectionMetaData(majorId, minorId)
+def getReflectMetadata(majorId, minorId):
+    """
+
+    :param majorId:
+    :param minorId:
+    :return:
+     {
+        toMapIds : []
+        dataType : []
+    }
+    """
+    responseDict = reflect_web.getReflectionMetadata(majorId, minorId)
     raise SuccessResp(responseDict)
 
 @app.route('/reflect', methods=['POST'])
@@ -350,7 +393,9 @@ def reflectionRequest():
 
 @app.route('/reflect/attrId/<string:attrId>', methods=['GET'])
 def getRefAttr(attrId):
-    """Returns reflection request JSON."""
+    """Returns reflection request JSON.
+    define return schema
+    """
     logging.info('Reflection get request, attrid: ' + attrId)
     responseDict = reflect_web.getReflectionAttr(attrId)
     raise SuccessResp(responseDict)

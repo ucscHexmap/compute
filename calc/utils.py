@@ -117,7 +117,7 @@ def _firstLineArray(filename):
             return line.strip().split("\t")
 
 
-def getAttributes(fileNameList,dir=''):
+def tabFilesToDF(fileNameList, dir=''):
     '''
     Creates a single attribute/metadata dataframe (pandas) from a list
     of tab delimeted files.
@@ -132,7 +132,11 @@ def getAttributes(fileNameList,dir=''):
 
     dfs = []
     for filename in fileNameList:
-        filename = os.path.join(dir, filename)
+        # Allow the filename to be a stringIO buffer.
+        try:
+            filename = os.path.join(dir, filename)
+        except AttributeError:
+            pass
 
         df = pd.read_csv(filename, sep='\t', dtype='str')
 
