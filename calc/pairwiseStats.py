@@ -70,11 +70,11 @@ def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
     # to process.
     if enoughForParallelComp(len(attrNames)):
         pool = multiprocessing.Pool(processes=10)
-        pvalues = pd.Series(pool.map(callFunc, opPool))
+        pvalues = pd.Series(pool.map(callFunction, opPool))
         pool.close()
         pool.join()
     else:
-        pvalues = pd.Series(map(callFunc, opPool))
+        pvalues = pd.Series(map(callFunction, opPool))
 
     # Filter out pvalues with NaN because they futz with the
     # pvalue adjustments.
@@ -100,14 +100,12 @@ def oneByAllStats(attrDF, datatypeDict, newAttr, newAttrDataType):
         "FDRBH",
         "bonferonnis"
     ]
-
     dfDict = dict(
         zip(
             colnames,
             [filteredps, FdrBHs, bonferonnis],
         )
     )
-
     pValueDF = pd.DataFrame(
         dfDict,
         index=filteredNames,
@@ -123,13 +121,14 @@ def enoughForParallelComp(N):
 
 
 def binBinTest(x,y):
-    x,y = filterNan(x,y)
-    table = contingencyTable(x,y)
-
-    # Make sure there are enough values in each slot of table.
-    if table.shape != (2, 2):
-        return np.NAN
     try:
+        x,y = filterNan(x,y)
+        table = contingencyTable(x,y)
+        if table.shape != (2, 2):
+            # Can't compute pvalue without the correct number of
+            # categories.
+            raise ValueError
+
         oddsratio, pValue = stats.fisher_exact(table)
     except ValueError:
         pValue = np.nan
@@ -138,9 +137,9 @@ def binBinTest(x,y):
 
 
 def catBinOrCatCatTest(x,y):
-    x,y = filterNan(x,y)
-    table = contingencyTable(x,y)
     try:
+        x,y = filterNan(x,y)
+        table = contingencyTable(x,y)
         chi2, pValue, dof, expectedFreq = stats.chi2_contingency(table)
     except ValueError:
         pValue = np.nan
@@ -149,9 +148,10 @@ def catBinOrCatCatTest(x,y):
 
 
 def contContTest(x,y):
-    x,y = filterNan(x,y)
     try:
-        correlation, pValue = stats.pearsonr(x,y)
+        x,y = filterNan(x, y)
+        correlation, pValue = stats.pearsonr(x, y)
+
     except ValueError:
         pValue = np.nan
 
@@ -159,14 +159,15 @@ def contContTest(x,y):
 
 
 def catContTest(catx, conty):
-
-    catx, conty = filterNan(catx, conty)
-
-    groups = pd.DataFrame([catx, conty]).transpose().groupby([0])
-
-    samples = groups.aggregate(lambda x: list(x))[1].tolist()
     try:
+        catx, conty = filterNan(catx, conty)
+
+        groups = pd.DataFrame([catx, conty]).transpose().groupby([0])
+
+        samples = groups.aggregate(lambda x: list(x))[1].tolist()
+
         stat, pValue = stats.mstats.kruskalwallis(*samples)
+
     except ValueError:
         pValue = np.nan
 
@@ -174,24 +175,25 @@ def catContTest(catx, conty):
 
 
 def binContTest(binx, conty):
-    binx, conty = filterNan(binx, conty)
-
-    # Make groups according to binary stat test.
-    groupDF = pd.DataFrame([binx, conty])
-    groups = groupDF.transpose().groupby(groupDF.index[0])
-
-    # Manipulate to format expected by stats.ranksums().
-    two_samples = groups.aggregate(lambda x: list(x)).values
-    sample1 = two_samples[0][0]
-    sample2 = two_samples[1][0]
-
-    # Compute stats.
     try:
+        binx, conty = filterNan(binx, conty)
+
+        # Make groups according to binary stat test.
+        groupDF = pd.DataFrame([binx, conty])
+        groups = groupDF.transpose().groupby(groupDF.index[0])
+
+        # Make sure there are 2 groups from the binary variable.
+        if len(groups) != 2:
+            raise ValueError
+
+        # Manipulate to format expected of scipy.stats.ranksums().
+        two_samples = groups.aggregate(lambda x: list(x)).values
+        sample1 = two_samples[0][0]
+        sample2 = two_samples[1][0]
+
         stat, pValue = stats.ranksums(sample1, sample2)
+
     except ValueError:
-        pValue = np.nan
-    except TypeError:
-        # Happens when there are not two groups formed.
         pValue = np.nan
 
     return pValue
@@ -230,10 +232,13 @@ def filterNan(x,y):
     eitherNan = np.logical_or(np.isnan(x),np.isnan(y))
     x = x[~eitherNan]
     y = y[~eitherNan]
+    if len(x) == 0:
+        raise ValueError("No matching values were found.")
+
     return x, y
 
 
-def callFunc(triplet):
+def callFunction(triplet):
     f = triplet[0]
     x = triplet[1]
     y = triplet[2]
