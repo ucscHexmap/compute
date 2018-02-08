@@ -14,7 +14,7 @@ def preCalc(parms, ctx):
 
 def calcMain(parms, ctx):
     dataType = parms["dataType"]
-    selectionName = parms["selectionSelected"]
+    selectionName = parms["dynamicAttrName"]
 
     reflectionParms = getReflectParmameters(parms)
 
