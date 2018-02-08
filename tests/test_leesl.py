@@ -141,35 +141,5 @@ class Test_leesl(unittest.TestCase):
 
         return simdf
 
-    def test_L_numpy(self):
-        spatial_weight_matrix = self.checkerboard_similarity()
-        attrs = self.known_attrs
-        answers = self.known_answers
-
-
-        z_attrs = (attrs.values - attrs.values.mean(axis=0)) / \
-                 attrs.values.std(axis=0,ddof=0)
-
-        passes = np.allclose(
-            answers,
-            leesl.L(z_attrs, spatial_weight_matrix)
-        )
-        self.assertTrue(passes)
-
-    def test_L_pandas(self):
-        spatial_weight_matrix = self.checkerboard_similarity()
-        attrs = self.known_attrs
-        answers = self.known_answers
-
-
-        z_attrs = (attrs - attrs.mean(axis=0)) / \
-                 attrs.std(axis=0, ddof=0)
-
-        passes = np.allclose(
-            answers,
-            leesl.L(z_attrs, spatial_weight_matrix)
-        )
-        self.assertTrue(passes)
-
 if __name__ == '__main__':
     unittest.main()
