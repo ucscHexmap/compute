@@ -149,11 +149,23 @@ class JobQueue(object):
         with s._getConn() as conn:
             conn.execute(s._dbSetResult, (status, jsonResult, s._today(), id,))
             
-        # Report error results to the admin.
         # Report any result if there is a job email and send email requested.
         job = s._getOne(id)
         
-        if status == 'Error' or \
+        if job == None:
+        
+            # We could get here if the job was removed while it was running.
+            reportResult(
+                id,
+                operation,
+                'Error',
+                'Unable to find this job Id when reporting result of: ' + \
+                    str(result),
+                None,
+                None,
+                ctx.app
+            )
+        elif status == 'Error' or \
             (status == 'Success' and job[s.emailI] and not job[s.doNotEmailI]):
             reportResult(
                 id,

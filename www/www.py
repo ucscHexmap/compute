@@ -10,6 +10,7 @@ import createMap_web
 import job
 import jobTestHelper_web
 import placeNode_web
+import projectList
 import reflect_web
 import statsNoLayout_web
 import statsLayout_web
@@ -39,11 +40,12 @@ def contextInit ():
         os.path.join(appCtx.databasePath, 'jobQueue.db'))
     appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
     appCtx.viewDir = os.path.join(appCtx.dataRoot, 'view')
-    jobStatusUrl = os.environ['WWW_SOCKET'] + '/jobStatus/jobId/'
+    url = os.environ['WWW_SOCKET']
     if os.environ['USE_HTTPS'] == '1':
-        appCtx.jobStatusUrl = 'https://' + jobStatusUrl
+        appCtx.dataServer = 'https://' + url
     else:
-        appCtx.jobStatusUrl = 'http://' + jobStatusUrl
+        appCtx.dataServer = 'http://' + url
+    appCtx.jobStatusUrl = appCtx.dataServer + '/jobStatus/jobId/'
     return appCtx
 
 # Set up logging
@@ -98,6 +100,13 @@ def validatePost():
     validate.email(dataIn)
 
     return dataIn
+
+# Convert a string with '+' as delimters into a list.
+def _urlParmToList (value):
+    if type(value) == list:
+        return value
+    else:
+        return value.split('+')
 
 # Register the success handler to convert to json
 @app.errorhandler(SuccessResp)
@@ -223,6 +232,16 @@ def getAllJobsRoute():
     result = job.getAll(appCtx.jobQueuePath)
     raise SuccessResp(result)
 
+# Handle get projects list route
+@app.route('/projectList', methods=['GET'])
+@app.route('/projectList/email', methods=['GET'])
+@app.route('/projectList/email/<string:userEmail>', methods=['GET'])
+@app.route('/projectList/email/<string:userEmail>/roles', methods=['GET'])
+@app.route('/projectList/email/<string:userEmail>/roles/<string:userRole>', methods=['GET'])
+def getProjectListRoute(userEmail=None, userRole=[]):
+    result = projectList.get(userEmail, _urlParmToList(userRole), appCtx.viewDir)
+    raise SuccessResp(result)
+    
 # Handle jobStatus route
 @app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
 def jobStatusRoute(jobId):

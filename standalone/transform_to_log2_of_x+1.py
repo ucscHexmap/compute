@@ -1,9 +1,9 @@
 #!/usr/bin/env python2.7
 """
-transform_to_log2(x+1).py
+transform_to_log2_of_x+1.py
 
 Example:
-transform_to_log2(x+1).py expression.tab expressionLog2(x+1).tab
+transform_to_log2_of_x+1.py expression.tab expressionLog2(x+1).tab
 
 In a matrix file, replace all numeric values with log2(x+1). This assumes the
 first row and first column contain labels.

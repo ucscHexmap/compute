@@ -412,8 +412,10 @@ class Test_overlayNode(unittest.TestCase):
         #print "data['error']", data['error']
         expectedResult = \
             'Clustering data not found for layout: someLayout'
-        s.assertTrue(rv.status_code == 500)
-        s.assertTrue(data['error'] == 'Server uncaught exception: Clustering data not found for layout: someLayout')
+        s.assertTrue(rv.status_code == 500, 'rv.status_code:' + str(rv.status_code))
+        s.assertTrue(data['error'] == \
+            'Server uncaught exception: Clustering data not found for layout: someLayout', \
+            'data:' + str(data))
 
     def test_create_bookmark(s):
         #resData = '{"TESTpythonCallStub":"success"}\n';
