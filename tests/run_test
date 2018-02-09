@@ -34,6 +34,9 @@ DEPRECATED=( \
     test_http \
 )
 
+# Small amount of most recent tests (erase/replace at will)
+next=(test_pairwiseAttrStats)
+
 # The rest of the tests.
 docker_safe=( \
     test_dynLayoutAware \
@@ -43,7 +46,10 @@ docker_safe=( \
     test_layoutBasicMakeUIInferFormat \
     test_layoutMetaData \
     test_layoutZeroReplace \
+    test_leesl \
+    test_pairwiseAttrStats \
     test_process_categoricals \
+    test_reflect \
     test_sim6Layout \
     test_similarity \
     test_stats \
@@ -83,6 +89,8 @@ elif [ $TO_RUN == 'web' ]
     then RUN_THIS="${web[@]}"
 elif [ $TO_RUN == 'mac' ]
     then RUN_THIS="${mac[@]}"
+elif [ $TO_RUN == 'next' ]
+    then RUN_THIS="${next[@]}"
 else
     RUN_THIS=$TO_RUN
 fi

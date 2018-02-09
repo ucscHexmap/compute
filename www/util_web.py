@@ -196,5 +196,13 @@ def mkTempFile ():
     return filepath
 
 def tmpDir():
-    return os.path.join(
-        os.environ.get("HUB_PATH", "/home/duncan/hex/compute"), "tmp")
+    tmpDirName = os.path.join(
+        os.environ.get("HUB_PATH"),
+        "../computeDb",
+        "tmp"
+    )
+    tmpDirNotThere = (not os.path.isdir(tmpDirName))
+    if tmpDirNotThere:
+        os.makedirs(tmpDirName)
+
+    return tmpDirName

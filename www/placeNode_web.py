@@ -281,6 +281,7 @@ def calcMain(dataIn, ctx):
                                                   num_jobs=1)
 
     except ValueError as error:
+        # Make useful error message if we recognize the error.
         _checkDuplicateRowError(error)
 
     #format into python struct

@@ -17,6 +17,7 @@ import os, argparse, sys, numpy, multiprocessing, time,traceback
 import sklearn.metrics.pairwise as sklp
 import scipy.stats
 import pandas as pd
+import numpy as np
 from utils import truncateNP
 from utils import duplicates_check
 from utils import readPandas
@@ -69,9 +70,16 @@ def replaceNAsWZero(df):
     return df.fillna(0)
 
 
-def dropStdIs0Cols(df):
-    cols_std_0 = df.columns[df.std() == 0]
-    return df.drop(labels=cols_std_0, axis=1)
+def complainAboutStd0(df):
+    def raiseIfStdIs0(col):
+        allAreSameValue = np.all(col == col[1])
+        if allAreSameValue:
+            raise ValueError(
+                "Column with standard deviation of 0 encountered: " +
+                str(col.name)
+            )
+
+    df.apply(raiseIfStdIs0, axis=0)
 
 
 def hasStrings(df):
@@ -105,6 +113,7 @@ def processInputData(df, numeric_flag, replaceNA):
                              'first occurence is:'
                              + firstOccurenceOfString(df))
 
+    complainAboutStd0(df)
 
     return df
 

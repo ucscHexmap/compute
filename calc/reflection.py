@@ -9,20 +9,18 @@ def reflection(parm):
     :param parm: {
                   "datapath": relfection_data_file_name
                   "featOrSamp" : 'sample' or 'feature'
-                  "node_ids" : [ "id1",...,"idn" ]
+                  "nodeIds" : [ "id1",...,"idn" ]
                   "rankCategories" t/f for ordinal calculation.
                   "n" : number of "high" and "low" if ordinal calc.
-                  ""dataType": one of 'mRNA', 'CNV', 'miRNA',
-                    'Methylation', 'RPPA'. Specifiest the type of score
-                    calculation
+                  ""calcType": one of 'ttest', 'average'
                   }
-    :return: pandas Series, int.
+    :return: tuple ( pandas Series of Scores, int Number of nodes )
     '''
 
     fpath = str(parm['datapath'])
     nodeIds = parm['nodeIds']
     startingFromRows = parm["featOrSamp"] == "feature"
-    dataType = parm["dataType"]
+    calcType = parm["calcType"]
     ordinalRequested = parm["rankCategories"]
 
     if not os.path.isfile(fpath):
@@ -38,7 +36,7 @@ def reflection(parm):
     nodeIds = filterNodeIds(nodeIds, reflectionDF.columns)
     nNodesReflected = len(nodeIds)
 
-    scoreCalculator = getScoreCalculator(dataType)
+    scoreCalculator = getScoreCalculator(calcType)
 
     reflectionScores = scoreCalculator(reflectionDF, nodeIds)
 
@@ -54,11 +52,8 @@ def reflection(parm):
 
 def getScoreCalculator(dataType):
     return {
-        'mRNA': tStatCalc,
-        'CNV' : average,
-        'miRNA': tStatCalc,
-        'RPPA': tStatCalc,
-        'Methylation': tStatCalc
+        'ttest': tStatCalc,
+        'average': average,
     }[dataType]
 
 
@@ -85,7 +80,7 @@ def average(df, nodeIds):
 
 def tStatCalc(df, nodeIds):
     rowmu = df.mean(axis=1)
-    rowstd = df.std(axis=1)
+    rowstd = df.std(axis=1, ddof=0)
     tStats = ((df[nodeIds].mean(axis=1) - rowmu) / rowstd)
     return tStats
 
@@ -95,5 +90,6 @@ def filterNodeIds(nodeIds, nodesInReflection):
         set(nodeIds).intersection(set(nodesInReflection)))
     empty = (len(filteredNodes) == 0)
     if (empty):
-        raise ValueError("None of the nodes were in the data matrix.")
+        raise ValueError("Reflection failed because none of the "
+                         "requested nodes were in the data matrix.")
     return filteredNodes

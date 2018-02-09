@@ -12,6 +12,9 @@ import jobTestHelper_web
 import placeNode_web
 import projectList
 import reflect_web
+import statsNoLayout_web
+import statsLayout_web
+
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
     reportRouteError
 import validate_web as validate
@@ -270,46 +273,128 @@ def queryPlaceNodeRoute():
     result = placeNode_web.preCalc(validatePost(), Context({'app': appCtx}))
     raise SuccessResp(result)
 
+@app.route('/oneByAll/statCalculation', methods=['POST'])
+def onByAllStatRequest():
+    """
+    Post example:
+    {
+        mapName : "PancanAtlas/SampleMap",
+        focusAttr: opts.dynamicData,
+        focusAttrDatatype : dType,
+        mail : Meteor.user().username,
+    };
+    focusAttr is in this form:
+        {"attrName" : { "sampleId" : value}, ... }
+    focus attribute datatype is one of:
+        ["bin", "cat", "cont"]
+
+    JSON response on Success from job queue:
+        {result:
+            [
+                [ attributeId, single-test pvalue, BHFDR, bonefonni],
+                ...,
+                ...
+            ]
+        }
+        For all attributes on the requested map.
+    """
+    logging.info('One By All Stat requested')
+
+    parms = validatePost()
+    ctx = Context({'app': appCtx})
+
+    responseDict = statsNoLayout_web.preCalc(parms, ctx)
+    logging.info(responseDict)
+
+    raise SuccessResp(responseDict)
+
+@app.route('/oneByAll/leesLCalculation', methods=['POST'])
+def onByAllLeesLRequest():
+    """
+    Post example:
+    {
+        mapName : "PancanAtlas/SampleMap",
+        focusAttr: opts.dynamicData,
+        layoutIndex : 1,
+        mail : Meteor.user().username,
+    };
+    focusAttr is in this form:
+        {"attrName" : { "sampleId" : value}, ... }
+
+    JSON response on Success from job queue:
+        {result:
+            [
+                [ attributeId, leesL, Rank, Pearson],
+                ...,
+                ...
+            ]
+        }
+        For all attributes on the requested map.
+    """
+    logging.info('One By All LeesL requested')
+
+    parms = validatePost()
+    ctx = Context({'app': appCtx})
+
+    responseDict = statsLayout_web.preCalc(parms, ctx)
+    logging.info(responseDict)
+
+    raise SuccessResp(responseDict)
+
 # Handle reflect/metadata routes
 @app.route(
 '/reflect/metaData/majorId/<string:majorId>/minorId/<string:minorId>',
     methods=['GET']
 )
-def getReflectMetaData(majorId, minorId):
-    responseDict = reflect_web.getReflectionMetaData(majorId, minorId)
+def getReflectMetadata(majorId, minorId):
+    """
+
+    :param majorId:
+    :param minorId:
+    :return:
+     {
+        toMapIds : []
+        dataType : []
+    }
+    """
+    responseDict = reflect_web.getReflectionMetadata(majorId, minorId)
     raise SuccessResp(responseDict)
 
-# Handle reflect routes
 @app.route('/reflect', methods=['POST'])
 def reflectionRequest():
     """
-    JSON post
+    JSON post example
+    {
+        dataType : "dataTypePointsToAFileInReflectionConfig"
+        toMapId : "Pancan12/GeneMap",
+        mapId : "Pancan12/SampleMap",
+        nodeIds : [id, id, ...],
+        rankCategories: True/False,
+        dynamicAttrName : "Kindey Isle"
+        email: dmccoll@ucsc.edu
+    };
+    JSON response on Success from job queue:
         {
-        dataType : "str"
-        userId : "not Needed now"n
-        mapId : "SuchandSuch/SampleMap"
-        toMapId: ""
-        featOrSamp: "feature" anything else assumes samples
-        nodeIds: an array of nodeIds
-        rankCategories : boolean, if true returns ranked categories.
-        selectionName : used to create the new reflection Name.
+            url : /reflect/attrId/<string:fileId>,
+            nNodes : 123
         }
-    JSON response:
-       {
-        url : /reflect/attrId/<string:fileId>,
-        haveData : 123
-        }
+        url is an enpoint to download the calculated file.
     """
     logging.info('Reflection requested')
+
     parms = validatePost()
-    responseDict = reflect_web.calc(parms)
+    ctx = Context({'app': appCtx})
+
+    responseDict = reflect_web.preCalc(parms, ctx)
+    logging.info(responseDict)
 
     raise SuccessResp(responseDict)
 
-# Handle reflect/attrId routes
 @app.route('/reflect/attrId/<string:attrId>', methods=['GET'])
 def getRefAttr(attrId):
-    """Returns reflection request JSON."""
+    """Returns reflection request JSON.
+    define return schema
+    """
     logging.info('Reflection get request, attrid: ' + attrId)
     responseDict = reflect_web.getReflectionAttr(attrId)
     raise SuccessResp(responseDict)

@@ -4,11 +4,17 @@ from util_web import getProjMajor, getProjMinor, mkTempFile, tmpDir
 import pickle
 import os
 import json
+import job
 
 
-def calc(parms):
+def preCalc(parms, ctx):
+    userEmail = parms['email']
+    return job.add(userEmail, "reflect", parms, ctx)
+
+
+def calcMain(parms, ctx):
     dataType = parms["dataType"]
-    selectionName = parms["selectionSelected"]
+    selectionName = parms["dynamicAttrName"]
 
     reflectionParms = getReflectParmameters(parms)
 
@@ -23,10 +29,8 @@ def calc(parms):
     attrId = reflectionAttrId(tmpFilePath)
     pickle.dump(reflectionScores, open(tmpFilePath, "wb"))
 
-    return {
-        "url": getRetrievalUrl(attrId),
-        "nNodes": nNodes
-    }
+    retrievalUrl = getRetrievalUrl(attrId)
+    return "Success", {"url": retrievalUrl, "nNodes": nNodes}
 
 
 def getReflectionAttr(attrId):
@@ -38,14 +42,14 @@ def getReflectionAttr(attrId):
     return reflectDict
 
 
-def getReflectionMetaData(majorId, minorId):
+def getReflectionMetadata(majorId, minorId):
     dataTypes = getDataTypes(majorId)
     toMapIds = getToMapIds(majorId, minorId)
     metadata = {
-        "dataTypes" : dataTypes,
-        "toMapIds" : toMapIds
+        "dataTypes": dataTypes,
+        "toMapIds": toMapIds
     }
-    return  metadata
+    return metadata
 
 
 def formatForWeb(reflectionScores, attrName):
@@ -61,7 +65,8 @@ def getReflectParmameters(parms):
     mapId = parms["mapId"]
     projMajor = getProjMajor(mapId)
     projMinor = getProjMinor(mapId)
-    # Build file path to get to reflection data.
+
+    parms["calcType"] = getCalcType(projMajor, dataType)
     parms["datapath"]  = getDataFilePath(projMajor, dataType)
     parms["featOrSamp"] = getFeatOrSamp(projMajor, projMinor)
     parms["n"] = getTopBinSize(projMajor, projMinor)
@@ -94,7 +99,7 @@ def getToMapIds(majorId, minorId):
 
 def getDataTypes(majorId):
     reflectJson = getReflectJson()
-    return reflectJson[majorId]["dataTypes"]
+    return reflectJson[majorId]["dataTypesToCalcType"].keys()
 
 
 def getFeatOrSamp(majorId, minorId):
@@ -115,17 +120,28 @@ def getTopBinSize(majorId, minorId):
 
 
 def getReflectJson():
-    hubPath = os.environ.get("HUB_PATH", "/home/duncan/hex/compute")
-    reflectDbPath = os.path.join(
-        hubPath,
-        "db/reflection.json"
-    )
-    reflectJson = json.load(open(reflectDbPath, "r"))
+    try:
+        hubPath = os.environ.get("HUB_PATH")
+        reflectDbPath = os.path.join(
+            hubPath,
+            "..",
+            "computeDb/reflection.json"
+        )
+        reflectJson = json.load(open(reflectDbPath, "r"))
+    except IOError:
+        raise IOError(str(reflectDbPath))
+
     return reflectJson
+
+
+def getCalcType(projMajor, dataType):
+    config = getReflectJson()
+    return config[projMajor]["dataTypesToCalcType"][dataType]
 
 
 def getDataFilePath(projMajor, dataType):
     dataRoot = os.environ.get('DATA_ROOT')
+    config = getReflectJson()
 
     filepath = \
         os.path.join(
@@ -133,7 +149,7 @@ def getDataFilePath(projMajor, dataType):
             "featureSpace",
             projMajor,
             "reflection",
-            dataType + ".hdf"
+            config[projMajor]["dataTypesToFileName"][dataType]
         )
 
     return filepath

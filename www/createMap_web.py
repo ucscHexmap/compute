@@ -6,12 +6,9 @@
 #   - http response and code
 #   - completion callback to check log for success
 
-import os, json, types, requests, traceback, csv, logging, datetime
 from os import path
 from argparse import Namespace
 import validate_web as validate
-import util_web
-from util_web import SuccessResp, ErrorResp, getMapMetaData
 import layout
 import job
 

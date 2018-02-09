@@ -11,7 +11,7 @@ import argparse
 import sys
 from utils import readPandas
 from utils import duplicate_columns_check
-import leesL
+import spatial
 import pandas as pd
 
 
@@ -48,7 +48,7 @@ def main():
         df = df.transpose()
 
     row_names = df.index
-    full_sim = leesL.inverseEucDistance(df)
+    full_sim = spatial.inverseEucDistance(df)
     full_sim = pd.DataFrame(full_sim, index=row_names, columns=row_names)
 
     full_sim.to_csv(out_file, sep="\t")
