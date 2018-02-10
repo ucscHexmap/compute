@@ -45,7 +45,7 @@ ctx3 = Context(ctxdict)
 ctx3.prop3 = 3
 
 # Tasks to execute as stored in the queue.
-task1 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
+task1 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":' + str(appCtx.dev) + ',"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
 task2 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop2":2},"operation":"operation2","parms":"parms2"}'
 task3 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop3":3},"operation":"operation3","parms":"parms3"}'
 
@@ -90,6 +90,8 @@ class Test_job(unittest.TestCase):
 
     def test_packTask(s):
         packed = job._packTask(operation1, parms1, ctx1);
+        #print ' task1:', task1
+        #print 'packed:', packed
         s.assertEqual(task1, packed)
     
     def test_unpackTask(s):

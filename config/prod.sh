@@ -9,10 +9,10 @@ export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu:8222,
 export BACK_OR_FOREGROUND=BACK
 
 # https certificate authority chain
-export CA=/cluster/home/swat/kolossus_certs/chain.crt
+export CA=/data/certs/chain.crt
 
 # https public certificate
-export CERT=/cluster/home/swat/kolossus_certs/server.crt
+export CERT=/data/certs/server.crt
 
 # Points to the map data that will be served.
 export DATA_ROOT=/hive/groups/hexmap/prod/data
@@ -21,41 +21,41 @@ export DATA_ROOT=/hive/groups/hexmap/prod/data
 export DEBUG=0
 
 # Add DRL to the path.
-export DRL_PATH=/cluster/home/swat/packages/drl-graph-layout/bin
+export DRL_PATH=/cluster/home/swat/packagesHexcalc/drl-graph-layout/bin
 
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
 
 # Path to the "compute" directory
-export HUB_PATH=/hive/groups/hexmap/prod/compute
+export HUB_PATH=/data/compute
 
 # https private key
-export KEY=/cluster/home/swat/kolossus_certs/server.key
+export KEY=/data/certs/server.key
 
 # Only needed for some centos. Centos complains about missing a shared
 # library when calling uwsgi. The solution is to provide sym lynks
 # to make the file names conform. 
-export LD_LIBRARY_PATH=$HUB_PATH/libPatchKolossus:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=$HUB_PATH/libPatchKolossus:$LD_LIBRARY_PATH
 
 # This path has to be above/equal to your 'compute' dir in the
 # file hierarchy.
-export PYENV=/hive/groups/hexmap/prod/envKolossus
-#export PYENV=/cluster/home/dmccoll/compute-env
+export PYENV=$HUB_PATH/../env
 
 # Path to the test data root. 
-export TEST_DATA_ROOT=/cluster/home/dmccoll/compute-server/tests/in/dataRoot
+export TEST_DATA_ROOT=$HUB_PATH/tests/in/dataRoot
 
 # Define path to tete executable
-export TETE_PATH=/cluster/home/swat/tete_copy/tete
+#export TETE_PATH=/cluster/home/swat/tete_copy/tete
 
 # HTTPS=1 if https is desired. Otherwise server boots to HTTP.
 export USE_HTTPS=1 
 
-# Some of the tests ping the server.
+# Bookmarks are created on the view server from this server.
+#export VIEWER_URL=https://hexdev.sdsc.edu:8222
 export VIEWER_URL=https://tumormap.ucsc.edu
 
 # Communication port
-export WWW_SOCKET=kolossus.sdsc.edu:8332
+export WWW_SOCKET=hexcalc.ucsc.edu:8332
 
 
 # If the python environment is present then open it up.

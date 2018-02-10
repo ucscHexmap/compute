@@ -9,14 +9,13 @@ export DEBUG=1
 export DEV=1
 export DRL_PATH=/cluster/home/swat/packagesHexcalc/drl-graph-layout/bin
 export FLASK_DEBUG=1
-export HUB_PATH=/hive/groups/hexmap/dev/compute
+export HUB_PATH=/cluster/home/swat/dev/compute
 export KEY=/cluster/home/swat/certs/hexcalc/server.key
-export LD_LIBRARY_PATH=$HUB_PATH/libPatchKolossus:$LD_LIBRARY_PATH
 export PYENV=$HUB_PATH/../envHexcalc
 export TEST_DATA_ROOT=$HUB_PATH/tests/in/dataRoot
 export USE_HTTPS=1
 export VIEWER_URL=https://hexdev.sdsc.edu:8222
-export WWW_SOCKET=kolossus.sdsc.edu:8442
+export WWW_SOCKET=hexcalc.ucsc.edu:8442
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then
