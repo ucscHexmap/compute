@@ -35,7 +35,8 @@ def contextInit ():
     appCtx.viewServer = os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu')
 
     # Derived context.
-    appCtx.databasePath = os.environ.get('DATABASE_PATH', appCtx.hubPath + '/../computeDb')
+    appCtx.databasePath = \
+        os.environ.get('DATABASE_PATH', appCtx.hubPath + '/../computeDb')
     appCtx.jobQueuePath = os.path.abspath(
         os.path.join(appCtx.databasePath, 'jobQueue.db'))
     appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
@@ -232,14 +233,31 @@ def getAllJobsRoute():
     result = job.getAll(appCtx.jobQueuePath)
     raise SuccessResp(result)
 
-# Handle get projects list route
+# Handle project authorization routes
+@app.route('/projectAuth/projectId/<path:projectId>', methods=['GET'])
+@app.route('/projectAuth/projectId/<path:projectId>/email', methods=['GET'])
+@app.route('/projectAuth/projectId/<path:projectId>/email/<string:userEmail>', \
+    methods=['GET'])
+@app.route('/projectAuth/projectId/<path:projectId>' + \
+    '/email/<string:userEmail>/roles', methods=['GET'])
+@app.route('/projectAuth/projectId/<path:projectId>' + \
+    '/email/<string:userEmail>/roles/<string:userRoles>', methods=['GET'])
+def projectAuthRoute(projectId, userEmail=None, userRoles=[]):
+    #print 'projectAuthRoute(projectId, userEmail=None, userRoles=[]):', \
+    #    projectId, userEmail, userRoles
+    result = projectList.authorize(projectId, userEmail,
+        _urlParmToList(userRoles), appCtx.viewDir)
+    raise SuccessResp(result)
+
+# Handle get projects list routes
 @app.route('/projectList', methods=['GET'])
 @app.route('/projectList/email', methods=['GET'])
 @app.route('/projectList/email/<string:userEmail>', methods=['GET'])
 @app.route('/projectList/email/<string:userEmail>/roles', methods=['GET'])
-@app.route('/projectList/email/<string:userEmail>/roles/<string:userRole>', methods=['GET'])
-def getProjectListRoute(userEmail=None, userRole=[]):
-    result = projectList.get(userEmail, _urlParmToList(userRole), appCtx.viewDir)
+@app.route('/projectList/email/<string:userEmail>/roles/<string:userRoles>',
+    methods=['GET'])
+def getProjectListRoute(userEmail=None, userRoles=[]):
+    result = projectList.get(userEmail, _urlParmToList(userRoles), appCtx.viewDir)
     raise SuccessResp(result)
     
 # Handle jobStatus route

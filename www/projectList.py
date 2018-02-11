@@ -1,5 +1,5 @@
 
-# Retrieve projects names by authorization roles.
+# Handle the project list and authorization.
 
 import os, traceback, json, logging
 from util_web import ErrorResp
@@ -115,11 +115,33 @@ def _removeNonAuthdDirs (majors, userEmail, userRoles, viewDir):
 
     return goodDirs
 
+def authorize (project, email, userRole, viewDir):
+
+    # Authorize a project based on userRoles.
+    # @param project: the project to authorize.
+    # @param email: user's email or None
+    # @param userRole: a list of roles or None
+    # @param viewDir: the data view directory root
+    # @returns: True or False in the form:
+    #   {
+    #       'authorized': True
+    #   }
+    major = project.split('/')[0]
+    return {
+        'authorized':
+            _isUserAuthorized (
+                email,
+                userRole,
+                major,
+                projRole=_getProjectRoles(major, viewDir)
+            )
+    }
+
 def get (userEmail, userRoles, viewDir):
 
     # Retrieve projects names.
-    # @param email: the username/email or None
-    # @param roles: a list of roles or None
+    # @param userEmail: the username/email or None
+    # @param userRoles: a list of roles or None
     # @param viewDir: the data view directory root
     # @returns: two-tiered list of projects in the form:
     #   {
