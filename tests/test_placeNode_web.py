@@ -394,8 +394,8 @@ class Test_placeNode(unittest.TestCase):
                 nodes = dict(
                     someNode='someValue',
                 ),
-                email=['someone@somewhere'],
-                viewServer='https:tumormap.ucsc.edu',
+                email = ['someone@somewhere'],
+                viewServer = s.viewServer,
                 neighborCount='a',
             ))
         )

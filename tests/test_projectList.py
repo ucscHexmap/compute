@@ -286,38 +286,10 @@ class Test_projectList(unittest.TestCase):
         #print 'dataDict:', dataDict
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
     
-    def test_auth_route_noUserRoles (s):
-        www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, 'viewBasic')
-        try:
-            r = s.app.get('/projectAuth/projectId/major1/major1a/email/user@ucsc.edu/roles')
-        except:
-            s.assertEqual('', 'Unable to connect to unit test data server: ' +
-                appCtx.dataServer)
-        #print 'r.status_code:', str(r.status_code)
-        s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = { 'authorized': True }
-        dataDict = json.loads(r.data)
-        #print 'dataDict:', dataDict
-        s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
-    
     def test_auth_route_noUserRolesNorKeyword (s):
         www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, 'viewBasic')
         try:
             r = s.app.get('/projectAuth/projectId/major1/major1a/email/user@ucsc.edu')
-        except:
-            s.assertEqual('', 'Unable to connect to unit test data server: ' +
-                appCtx.dataServer)
-        #print 'r.status_code:', str(r.status_code)
-        s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = { 'authorized': True }
-        dataDict = json.loads(r.data)
-        #print 'dataDict:', dataDict
-        s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
-    
-    def test_auth_route_noEmail (s):
-        www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, 'viewBasic')
-        try:
-            r = s.app.get('/projectAuth/projectId/major1/major1a/email')
         except:
             s.assertEqual('', 'Unable to connect to unit test data server: ' +
                 appCtx.dataServer)
@@ -400,21 +372,6 @@ class Test_projectList(unittest.TestCase):
         dataDict = json.loads(r.data)
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
 
-    def test_route_noRoles (s):
-        www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, 'viewBasic')
-        try:
-            r = s.app.get('/projectList/email/user@ucsc.edu/roles')
-        except:
-            s.assertEqual('', 'Unable to connect to unit test data server: ' +
-                appCtx.dataServer)
-        s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = {
-            'major1': ['major1a', 'major1b'],
-            'user_ucsc.edu': []
-        }
-        dataDict = json.loads(r.data)
-        s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
-
     def test_route_noRolesNorKeyword (s):
         www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, 'viewBasic')
         try:
@@ -426,20 +383,6 @@ class Test_projectList(unittest.TestCase):
         expected = {
             'major1': ['major1a', 'major1b'],
             'user_ucsc.edu': []
-        }
-        dataDict = json.loads(r.data)
-        s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
-
-    def test_route_noEmail (s):
-        www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, 'viewBasic')
-        try:
-            r = s.app.get('/projectList/email')
-        except:
-            s.assertEqual('', 'Unable to connect to unit test data server: ' +
-                appCtx.dataServer)
-        s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = {
-            'major1': ['major1a', 'major1b']
         }
         dataDict = json.loads(r.data)
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))

@@ -32,7 +32,7 @@ def contextInit ():
     appCtx.dev = int(os.environ.get('DEV', 0))
     appCtx.hubPath = os.environ.get('HUB_PATH')
     appCtx.unitTest = int(os.environ.get('UNIT_TEST', 0))
-    appCtx.viewServer = os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu')
+    appCtx.viewServer = os.environ.get('VIEWER_URL', 'https://tumormap.ucsc.edu')
 
     # Derived context.
     appCtx.databasePath = \
@@ -235,11 +235,8 @@ def getAllJobsRoute():
 
 # Handle project authorization routes
 @app.route('/projectAuth/projectId/<path:projectId>', methods=['GET'])
-@app.route('/projectAuth/projectId/<path:projectId>/email', methods=['GET'])
 @app.route('/projectAuth/projectId/<path:projectId>/email/<string:userEmail>', \
     methods=['GET'])
-@app.route('/projectAuth/projectId/<path:projectId>' + \
-    '/email/<string:userEmail>/roles', methods=['GET'])
 @app.route('/projectAuth/projectId/<path:projectId>' + \
     '/email/<string:userEmail>/roles/<string:userRoles>', methods=['GET'])
 def projectAuthRoute(projectId, userEmail=None, userRoles=[]):
@@ -251,9 +248,7 @@ def projectAuthRoute(projectId, userEmail=None, userRoles=[]):
 
 # Handle get projects list routes
 @app.route('/projectList', methods=['GET'])
-@app.route('/projectList/email', methods=['GET'])
 @app.route('/projectList/email/<string:userEmail>', methods=['GET'])
-@app.route('/projectList/email/<string:userEmail>/roles', methods=['GET'])
 @app.route('/projectList/email/<string:userEmail>/roles/<string:userRoles>',
     methods=['GET'])
 def getProjectListRoute(userEmail=None, userRoles=[]):
