@@ -51,7 +51,6 @@ export TEST_DATA_ROOT=$HUB_PATH/tests/in/dataRoot
 export USE_HTTPS=1 
 
 # Bookmarks are created on the view server from this server.
-#export VIEWER_URL=https://hexdev.sdsc.edu:8222
 export VIEWER_URL=https://tumormap.ucsc.edu
 
 # Communication port

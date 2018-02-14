@@ -233,26 +233,24 @@ def getAllJobsRoute():
     result = job.getAll(appCtx.jobQueuePath)
     raise SuccessResp(result)
 
-# Handle project authorization routes
-@app.route('/projectAuth/projectId/<path:projectId>', methods=['GET'])
-@app.route('/projectAuth/projectId/<path:projectId>/email/<string:userEmail>', \
+# Handle map authorization routes
+@app.route('/mapAuth/mapId/<path:mapId>', methods=['GET'])
+@app.route('/mapAuth/mapId/<path:mapId>/email/<string:userEmail>', \
     methods=['GET'])
-@app.route('/projectAuth/projectId/<path:projectId>' + \
-    '/email/<string:userEmail>/roles/<string:userRoles>', methods=['GET'])
-def projectAuthRoute(projectId, userEmail=None, userRoles=[]):
-    #print 'projectAuthRoute(projectId, userEmail=None, userRoles=[]):', \
-    #    projectId, userEmail, userRoles
-    result = projectList.authorize(projectId, userEmail,
-        _urlParmToList(userRoles), appCtx.viewDir)
+@app.route('/mapAuth/mapId/<path:mapId>' + \
+    '/email/<string:userEmail>/role/<string:userRole>', methods=['GET'])
+def mapAuthRoute(mapId, userEmail=None, userRole=[]):
+    result = projectList.authorize(mapId, userEmail,
+        _urlParmToList(userRole), appCtx.viewDir)
     raise SuccessResp(result)
 
-# Handle get projects list routes
-@app.route('/projectList', methods=['GET'])
-@app.route('/projectList/email/<string:userEmail>', methods=['GET'])
-@app.route('/projectList/email/<string:userEmail>/roles/<string:userRoles>',
+# Handle get project list routes
+@app.route('/mapList', methods=['GET'])
+@app.route('/mapList/email/<string:userEmail>', methods=['GET'])
+@app.route('/mapList/email/<string:userEmail>/role/<string:userRole>',
     methods=['GET'])
-def getProjectListRoute(userEmail=None, userRoles=[]):
-    result = projectList.get(userEmail, _urlParmToList(userRoles), appCtx.viewDir)
+def getMaoListRoute(userEmail=None, userRole=[]):
+    result = projectList.get(userEmail, _urlParmToList(userRole), appCtx.viewDir)
     raise SuccessResp(result)
     
 # Handle jobStatus route
