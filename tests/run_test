@@ -20,7 +20,7 @@ fi
 # Attempt to use default configuration if the argument has not been supplied
 if [ -z "$CONFIG_FILE" ] && [ -f "$(pwd)/../config/setup" ]; then
     CONFIG_FILE=$(pwd)/../config/setup
-else
+elif [ -z "$CONFIG_FILE" ]; then
     echo "Path to configuration file as first arg necessary."
     exit 1
 fi
