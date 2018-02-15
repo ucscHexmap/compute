@@ -76,7 +76,7 @@ class Test_leesl(unittest.TestCase):
 
         passes = np.allclose(
             answers,
-            leesl.stats_matrix(attrs, spatial_weight_matrix)
+            leesl.statistic_matrix(attrs, spatial_weight_matrix)
         )
         self.assertTrue(passes)
 
@@ -87,7 +87,7 @@ class Test_leesl(unittest.TestCase):
 
         passes = np.allclose(
             answers,
-            leesl.stats_matrix(attrs, spatial_weight_matrix)
+            leesl.statistic_matrix(attrs, spatial_weight_matrix)
         )
         self.assertTrue(passes)
 

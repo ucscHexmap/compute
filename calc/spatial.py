@@ -150,14 +150,24 @@ def pairwiseAssociations(xys, binAttrDF):
 
 
 def oneByAll(allBinAttrDF, focusAttr, xys, n_jobs=1):
+    """
+    Perform 1 by all spatial association.
+    :param allBinAttrDF: pandas dataframe of binary attributes
+    :param focusAttr: pandas series of single binary attribute
+    :param n_jobs: Number of jobs used in parallel processing of
+    pearson correlations.
+    :return: pandas dataframe with 3 columns, [leesL, Ranks, Pearson]
+      and rows with the binary attributes in allBinAttrDF.
+    """
+    allBinAttrDF = attrPreProcessing(xys, allBinAttrDF)
+    focusAttr = attrPreProcessing(xys, focusAttr)
 
-    allBinAttrDF = attrPreProcessing4Lee(allBinAttrDF, xys)
-    focusAttr = attrPreProcessing4Lee(focusAttr, xys)
-
+    inCommon = set(focusAttr.index).intersection(allBinAttrDF.index)
     # Pearson correlation of all attributes is calculated for comparison
+
     pearsonD = sklp.pairwise_distances(
-        focusAttr.reshape(1, -1),
-        allBinAttrDF.transpose(),
+        focusAttr.loc[inCommon].reshape(-1, 1).transpose(),
+        allBinAttrDF.loc[inCommon].transpose(),
         metric='correlation',
         n_jobs=n_jobs
     )[0,:]
@@ -165,7 +175,7 @@ def oneByAll(allBinAttrDF, focusAttr, xys, n_jobs=1):
     pearsonSim = 1 - pearsonD
 
     # Lees L vector
-    leesLV = leesl.stats_matrix(
+    leesLV = leesl.statistic_matrix(
         focusAttr,
         spatialWieghtMatrix(xys),
         allBinAttrDF
@@ -203,7 +213,7 @@ def attrPreProcessing(xys, attrDF):
 
     #we treat missing data by first z scoring, then setting NA's to 0, order here matters
     attrOnMap = ztransDF(attrOnMap)
-    attrOnMap.fillna(0,inplace=True)
+    attrOnMap.fillna(0, inplace=True)
     return attrOnMap
 
 
