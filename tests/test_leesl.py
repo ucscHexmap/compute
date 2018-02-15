@@ -1,13 +1,13 @@
 import unittest
 import pandas as pd
 import numpy as np
-import leesl
+import leesL
 from itertools import product
 
-class Test_leesl(unittest.TestCase):
+class Test_leesL(unittest.TestCase):
 
     # Correct values came from the R implementation of
-    # leesl in the package spdep Version 0.6-15.
+    # leesL in the package spdep Version 0.6-15.
     known_answers = np.array(
         [
             [.358653846, 0, 0, -0.044989875,  0.184495192],
@@ -69,25 +69,25 @@ class Test_leesl(unittest.TestCase):
          "E": E.flatten()}
     )
 
-    def test_leesl_pandas(self):
+    def test_leesL_pandas(self):
         spatial_weight_matrix = self.checkerboard_similarity()
         attrs = self.known_attrs
         answers = self.known_answers
 
         passes = np.allclose(
             answers,
-            leesl.statistic_matrix(attrs, spatial_weight_matrix)
+            leesL.statistic_matrix(attrs, spatial_weight_matrix)
         )
         self.assertTrue(passes)
 
-    def test_leesl_numpy(self):
+    def test_leesL_numpy(self):
         spatial_weight_matrix = self.checkerboard_similarity().values
         attrs = self.known_attrs.values
         answers = self.known_answers
 
         passes = np.allclose(
             answers,
-            leesl.statistic_matrix(attrs, spatial_weight_matrix)
+            leesL.statistic_matrix(attrs, spatial_weight_matrix)
         )
         self.assertTrue(passes)
 
