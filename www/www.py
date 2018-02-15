@@ -32,10 +32,11 @@ def contextInit ():
     appCtx.dev = int(os.environ.get('DEV', 0))
     appCtx.hubPath = os.environ.get('HUB_PATH')
     appCtx.unitTest = int(os.environ.get('UNIT_TEST', 0))
-    appCtx.viewServer = os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu')
+    appCtx.viewServer = os.environ.get('VIEWER_URL', 'https://tumormap.ucsc.edu')
 
     # Derived context.
-    appCtx.databasePath = os.environ.get('DATABASE_PATH', appCtx.hubPath + '/../computeDb')
+    appCtx.databasePath = \
+        os.environ.get('DATABASE_PATH', appCtx.hubPath + '/../computeDb')
     appCtx.jobQueuePath = os.path.abspath(
         os.path.join(appCtx.databasePath, 'jobQueue.db'))
     appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
@@ -232,20 +233,29 @@ def getAllJobsRoute():
     result = job.getAll(appCtx.jobQueuePath)
     raise SuccessResp(result)
 
-# Handle get projects list route
-@app.route('/projectList', methods=['GET'])
-@app.route('/projectList/email', methods=['GET'])
-@app.route('/projectList/email/<string:userEmail>', methods=['GET'])
-@app.route('/projectList/email/<string:userEmail>/roles', methods=['GET'])
-@app.route('/projectList/email/<string:userEmail>/roles/<string:userRole>', methods=['GET'])
-def getProjectListRoute(userEmail=None, userRole=[]):
+# Handle map authorization routes
+@app.route('/mapAuth/mapId/<path:mapId>', methods=['GET'])
+@app.route('/mapAuth/mapId/<path:mapId>/email/<string:userEmail>', \
+    methods=['GET'])
+@app.route('/mapAuth/mapId/<path:mapId>' + \
+    '/email/<string:userEmail>/role/<string:userRole>', methods=['GET'])
+def mapAuthRoute(mapId, userEmail=None, userRole=[]):
+    result = projectList.authorize(mapId, userEmail,
+        _urlParmToList(userRole), appCtx.viewDir)
+    raise SuccessResp(result)
+
+# Handle get project list routes
+@app.route('/mapList', methods=['GET'])
+@app.route('/mapList/email/<string:userEmail>', methods=['GET'])
+@app.route('/mapList/email/<string:userEmail>/role/<string:userRole>',
+    methods=['GET'])
+def getMaoListRoute(userEmail=None, userRole=[]):
     result = projectList.get(userEmail, _urlParmToList(userRole), appCtx.viewDir)
     raise SuccessResp(result)
     
 # Handle jobStatus route
 @app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
 def jobStatusRoute(jobId):
-    logging.info('job status req')
     result = job.getStatus(jobId, appCtx.jobQueuePath)
     raise SuccessResp(result)
 

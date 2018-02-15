@@ -8,5 +8,5 @@ tar cf install.tar \
     standalone \
     tests \
     www
-scp install.tar kolossus:/hive/groups/hexmap/dev/compute
+scp install.tar kolossus:/cluster/home/swat/dev/compute
 

@@ -4,9 +4,9 @@
 # Don't allow install on anything other than production or dev.
 PWD=$(pwd)
 
-if [ $PWD == '/hive/groups/hexmap/prod/compute' ] || \
-    [ $PWD == '/hive/groups/hexmap/dev/compute' ] || \
-    [ $PWD == 'dmccolldev?' ]; then
+if [ $PWD == '/data/compute' ] || \
+    [ $PWD == '/cluster/home/swat/dev/compute' ] || \
+    [ $PWD == 'dmccolldev' ]; then
 
     mv bin/run binRun
     mv tests/run testsRun
@@ -17,7 +17,7 @@ if [ $PWD == '/hive/groups/hexmap/prod/compute' ] || \
         standalone \
         tests \
         www
-    tar -xf /hive/groups/hexmap/dev/compute/install.tar
+    tar -xf /cluster/home/swat/dev/compute/install.tar
     mv binRun bin/run
     mv testsRun tests/run
 

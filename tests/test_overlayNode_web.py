@@ -360,7 +360,7 @@ class Test_overlayNode(unittest.TestCase):
                     someNode='someValue',
                 ),
                 email=['someone@somewhere'],
-                viewServer='https:tumormap.ucsc.edu',
+                viewServer=s.viewServer,
                 neighborCount='a',
             ))
         )
