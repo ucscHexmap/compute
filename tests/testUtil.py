@@ -14,6 +14,10 @@ import string, random
 
 testDir = os.getcwd()
 
+def message(actual, expected):
+    msg = str(actual) + " | didn't match | " + str(expected)
+    return msg
+
 def findCurlStatusCode(verbose):
     i = verbose.find('< HTTP/1.1')
     return verbose[i+11:i+14]
