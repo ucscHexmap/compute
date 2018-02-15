@@ -10,12 +10,11 @@ from argparse import Namespace
 from flask import request
 import validate_web as validate
 import util_web
-from util_web import SuccessResp, ErrorResp, getMapMetaData, createBookmark
+from util_web import ErrorResp, getMapMetaData, createBookmark
 import placeNode
 import compute_sparse_matrix
 import utils
 import pandas as pd
-import StringIO
 import numpy as np
 
 import job
@@ -123,15 +122,15 @@ def _postCalc(result, ctx):
         
         # Add the values to the new layers
         for neighbor in nData['neighbors']:
-            state['dynamic_attrs'][attr]['data'][neighbor] = 1;
+            state['dynamic_attrs'][attr]['data'][neighbor] = 1
             state['dynamic_attrs'][attrV]['data'][neighbor] = \
-                nData['neighbors'][neighbor];
+                nData['neighbors'][neighbor]
 
         # Set the number of values in the state for each attribute
         state['dynamic_attrs'][attr]['n'] = \
-            len(state['dynamic_attrs'][attr]['data']);
+            len(state['dynamic_attrs'][attr]['data'])
         state['dynamic_attrs'][attrV]['n'] = \
-            len(state['dynamic_attrs'][attrV]['data']);
+            len(state['dynamic_attrs'][attrV]['data'])
 
         # If individual Urls were requested, create a bookmark for this node
         if 'individualUrls' in dataIn and dataIn['individualUrls']:

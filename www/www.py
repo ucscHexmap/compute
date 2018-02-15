@@ -320,7 +320,7 @@ def onByAllStatRequest():
     raise SuccessResp(responseDict)
 
 @app.route('/oneByAll/leesLCalculation', methods=['POST'])
-def onByAllLeesLRequest():
+def oneByAllLeesLRequest():
     """
     Post example:
     {
