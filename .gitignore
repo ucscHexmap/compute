@@ -10,3 +10,4 @@ www.log*
 www.pid
 nohup.out
 tmp/*
+config/setup

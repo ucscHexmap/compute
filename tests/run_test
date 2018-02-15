@@ -1,14 +1,31 @@
 #!/bin/bash
 # Run a test after setting the path
-# $1: config file in compute/config
+# $1: config file in compute/config, if left out will attempt to use
+# "$(pwd)/../config/setup"
 # $2: optional name of test(s) to run, defaults to 'all', one of:
 #     / all / docker_safe / web / <specific-test(s)> /
 #     where <specific-test(s)> may be one of:
 #       base file name, i.e.: test_layoutBasic
 #       a single test, i.e.: test_layoutBasic.Test_layoutBasic.test_full
 
-source $1
+CONFIG_FILE=$1
 TO_RUN=$2
+
+# If there is only on arg then we assume its the subset to run
+if [ "$#" -eq 1 ]; then
+    CONFIG_FILE=""
+    TO_RUN=$1
+fi
+
+# Attempt to use default configuration if the argument has not been supplied
+if [ -z "$CONFIG_FILE" ] && [ -f "$(pwd)/../config/setup" ]; then
+    CONFIG_FILE=$(pwd)/../config/setup
+else
+    echo "Path to configuration file as first arg necessary."
+    exit 1
+fi
+echo $CONFIG_FILE
+source $CONFIG_FILE
 
 export DATA_ROOT=$TEST_DATA_ROOT
 if [ -z ${TO_RUN} ]; then
