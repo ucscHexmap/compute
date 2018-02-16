@@ -1,24 +1,16 @@
 #!/usr/bin/env python2.7
 
-# This tests python, using python's easier calls to shell commands
-# from here than from mocha
-
-import sys, os, glob, filecmp, subprocess, json, tempfile, pprint, shutil
-from os import path
-import string
+import os
 import unittest
-import testUtil as util
 
 testDir = os.getcwd()
-outDir = os.path.join(testDir,'out/') # The actual output data
+outDir = os.path.join(testDir, 'out/')  # Path to output data.
 
 import testUtil as tu
 from reflection import reflection
 
 class Test_reflect(unittest.TestCase):
-    """
-    Test the reflection function returns the expected output.
-    """
+
     def makeDF(self):
         #make some random data for testing
         ncols=50
@@ -91,6 +83,7 @@ class Test_reflect(unittest.TestCase):
 
         self.assertTrue(passed,'reflection call with parms' + str(
             parms) + "\n wasnt the correct length")
+
 
 if __name__ == '__main__':
     unittest.main()
