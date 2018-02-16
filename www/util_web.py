@@ -86,7 +86,7 @@ def createBookmark (state, viewServer, ctx):
         bResult = requests.post(
             viewServer + '/query/createBookmark',
             #cert=(ctx.app.sslCert, ctx.app.sslKey),
-            verify=False,
+            verify=True,
             headers = { 'Content-type': 'application/json' },
             data = json.dumps(state)
         )

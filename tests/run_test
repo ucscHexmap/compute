@@ -39,18 +39,15 @@ export DEBUG=1
 web=( \
     test_basic_web \
     test_createMap_web \
+    test_http \
     test_job \
+    test_jobHttp \
     test_overlayNode_web \
     test_placeNode_web \
     test_placeNode2_web \
     test_projectList \
     test_reflect_web \
     test_webUtil \
-)
-
-# Deprecated with hexagram server code moving to the compute server
-DEPRECATED=( \
-    test_http \
 )
 
 # Small amount of most recent tests (erase/replace at will)

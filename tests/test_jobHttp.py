@@ -51,7 +51,7 @@ class Test_jobHttp(unittest.TestCase):
         return requests.post(
             serverRoot + '/query/' + operation,
             data = json.dumps(data),
-            verify = False,
+            verify = True,
             #cert = (appCtx.sslCert, appCtx.sslKey),
             headers = { 'Content-type': 'application/json' }
             #headers = { 'Content-type': 'application/json',  'retryLimit': str(retryLimit) }

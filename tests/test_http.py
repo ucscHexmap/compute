@@ -21,7 +21,7 @@ class Test_http(unittest.TestCase):
             bResult = requests.post(
                 s.viewServer + '/test',
                 #cert=(ctx['sslCert'], ctx['sslKey']),
-                verify=False,
+                verify=True,
                 headers = { 'Content-type': 'application/json' },
             )
         except:
