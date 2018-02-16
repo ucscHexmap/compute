@@ -184,13 +184,22 @@ def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):
         subject = 'DEV: ' + subject
     sendAdminEmail(subject, msg, appCtx)
 
-def getProjMajor (mapId):
-    return mapId.split("/")[0]
+def getProjMajor(mapId):
+    try:
+        majorId = mapId.split("/")[0]
+    except IndexError:
+        majorId = None
+    return majorId
 
-def getProjMinor (mapId):
-    return mapId.split("/")[1]
+def getProjMinor(mapId):
+    try:
+        minorId = mapId.split("/")[1]
+    except IndexError:
+        minorId = None
+    return minorId
 
-def mkTempFile ():
+
+def mkTempFile():
     tempDir = tmpDir()
     des, filepath = tempfile.mkstemp(dir=tempDir)
     return filepath

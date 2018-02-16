@@ -353,22 +353,16 @@ def oneByAllLeesLRequest():
     raise SuccessResp(responseDict)
 
 # Handle reflect/metadata routes
-@app.route(
-'/reflect/metaData/majorId/<string:majorId>/minorId/<string:minorId>',
-    methods=['GET']
-)
-def getReflectMetadata(majorId, minorId):
+@app.route('/reflect/metaData/mapId/<path:mapId>', methods=['GET'])
+def getReflectMetadata(mapId):
     """
-
-    :param majorId:
-    :param minorId:
-    :return:
+    :returns:
      {
         toMapIds : []
         dataType : []
     }
     """
-    responseDict = reflect_web.getReflectionMetadata(majorId, minorId)
+    responseDict = reflect_web.getReflectionMetadata(mapId)
     raise SuccessResp(responseDict)
 
 @app.route('/reflect', methods=['POST'])

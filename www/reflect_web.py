@@ -1,6 +1,8 @@
 
 from reflection import reflection
 from util_web import getProjMajor, getProjMinor, mkTempFile, tmpDir
+from util_web import ErrorResp
+
 import pickle
 import os
 import json
@@ -42,13 +44,23 @@ def getReflectionAttr(attrId):
     return reflectDict
 
 
-def getReflectionMetadata(majorId, minorId):
-    dataTypes = getDataTypes(majorId)
-    toMapIds = getToMapIds(majorId, minorId)
+def getReflectionMetadata(mapId):
+    """Get data needed for client have reflection available."""
+    majorId, minorId = getProjMajor(mapId), getProjMinor(mapId)
+    reflectJson = getReflectJson()
+    dataTypes = getDataTypes(majorId, reflectJson)
+
+    toMapIds = getToMapIds(mapId, reflectJson)
     metadata = {
         "dataTypes": dataTypes,
         "toMapIds": toMapIds
     }
+    if toMapIds is None and dataTypes is None:
+        raise ErrorResp(
+            "Reflection meta data for this map is not found.",
+            204
+        )
+
     return metadata
 
 
@@ -61,15 +73,20 @@ def formatForWeb(reflectionScores, attrName):
 
 def getReflectParmameters(parms):
     """Make the parameter dict ready for reflection function."""
+    reflectJson = getReflectJson()
     dataType = parms["dataType"]
     mapId = parms["mapId"]
-    projMajor = getProjMajor(mapId)
-    projMinor = getProjMinor(mapId)
+    projMajor, projMinor = getProjMajor(mapId), getProjMinor(mapId)
 
-    parms["calcType"] = getCalcType(projMajor, dataType)
-    parms["datapath"]  = getDataFilePath(projMajor, dataType)
-    parms["featOrSamp"] = getFeatOrSamp(projMajor, projMinor)
-    parms["n"] = getTopBinSize(projMajor, projMinor)
+    # Set parameter dictionary with other needed variables.
+    parms["calcType"] = getCalcType(projMajor, dataType, reflectJson)
+    parms["featOrSamp"] = getFeatOrSamp(mapId, reflectJson)
+    parms["n"] = getTopBinSize(mapId, reflectJson)
+    parms["datapath"] = getDataFilePath(
+        projMajor,
+        dataType,
+        reflectJson
+    )
 
     return parms
 
@@ -92,23 +109,30 @@ def reflectionAttrId(filepath):
     return filepath.split("/")[-1]
 
 
-def getToMapIds(majorId, minorId):
-    reflectJson = getReflectJson()
-    return reflectJson[majorId][minorId]["toMapIds"]
+def getToMapIds(mapId, reflectJson):
+    majorId, minorId = getProjMajor(mapId), getProjMinor(mapId)
+    try:
+        toMapIds = reflectJson[majorId][minorId]["toMapIds"]
+    except KeyError:
+        toMapIds = None
+    return toMapIds
 
 
-def getDataTypes(majorId):
-    reflectJson = getReflectJson()
-    return reflectJson[majorId]["dataTypesToCalcType"].keys()
+def getDataTypes(majorId, reflectJson):
+    try:
+        datatypes = reflectJson[majorId]["dataTypesToCalcType"].keys()
+    except KeyError:
+        datatypes = None
+    return datatypes
 
 
-def getFeatOrSamp(majorId, minorId):
-    reflectJson = getReflectJson()
+def getFeatOrSamp(mapId, reflectJson):
+    majorId, minorId = getProjMajor(mapId), getProjMinor(mapId)
     return reflectJson[majorId][minorId]["featOrSamp"]
 
 
-def getTopBinSize(majorId, minorId):
-    reflectJson = getReflectJson()
+def getTopBinSize(mapId, reflectJson):
+    majorId, minorId = getProjMajor(mapId), getProjMinor(mapId)
     defaultBinSize = 150
     binSize = defaultBinSize
     try:
@@ -129,19 +153,23 @@ def getReflectJson():
         )
         reflectJson = json.load(open(reflectDbPath, "r"))
     except IOError:
-        raise IOError(str(reflectDbPath))
+        raise IOError(
+            "Reflection MetaData is missing from the server."
+        )
 
     return reflectJson
 
 
-def getCalcType(projMajor, dataType):
-    config = getReflectJson()
-    return config[projMajor]["dataTypesToCalcType"][dataType]
+def getCalcType(projMajor, dataType, reflectJson):
+    try:
+        cType = reflectJson[projMajor]["dataTypesToCalcType"][dataType]
+    except KeyError:
+        cType = None
+    return cType
 
 
-def getDataFilePath(projMajor, dataType):
+def getDataFilePath(projMajor, dataType, reflectJson):
     dataRoot = os.environ.get('DATA_ROOT')
-    config = getReflectJson()
 
     filepath = \
         os.path.join(
@@ -149,7 +177,7 @@ def getDataFilePath(projMajor, dataType):
             "featureSpace",
             projMajor,
             "reflection",
-            config[projMajor]["dataTypesToFileName"][dataType]
+            reflectJson[projMajor]["dataTypesToFileName"][dataType]
         )
 
     return filepath

@@ -44,6 +44,8 @@ web=( \
     test_placeNode_web \
     test_placeNode2_web \
     test_projectList \
+    test_reflect_web \
+    test_webUtil \
 )
 
 # Deprecated with hexagram server code moving to the compute server
@@ -63,7 +65,7 @@ docker_safe=( \
     test_layoutBasicMakeUIInferFormat \
     test_layoutMetaData \
     test_layoutZeroReplace \
-    test_leesl \
+    test_leesL \
     test_pairwiseAttrStats \
     test_process_categoricals \
     test_reflect \
