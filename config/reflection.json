@@ -1,0 +1,40 @@
+{
+  "Pancan12":
+    {
+      "dataTypesToCalcType": {
+                    "mRNA": "ttest",
+                    "CNV" : "average",
+                    "miRNA" : "ttest",
+                    "RPPA" : "ttest",
+                    "Methylation": "ttest"
+                   },
+      "dataTypesToFileName": {
+                    "mRNA": "mRNA.hdf",
+                    "CNV" : "CNV.hdf",
+                    "miRNA" : "miRNA.hdf",
+                    "RPPA" : "RPPA.hdf",
+                    "Methylation": "Methylation.hdf"
+                   },
+      "SampleMap" : {
+          "toMapIds": ["Pancan12/GeneMap"],
+          "featOrSamp" : "sample"
+      },
+      "GeneMap" : {
+       "toMapIds" : ["Pancan12/SampleMap"],
+        "featOrSamp" : "feature"
+      }
+    },
+  "PancanAtlas":
+    {
+      "dataTypesToCalcType": { "mRNA" : "ttest"},
+      "dataTypesToFileName": { "mRNA" : "mRNA.hdf"},
+      "SampleMap" : {
+       "toMapIds" : ["PancanAtlas/GeneMap"],
+        "featOrSamp" : "sample"
+      },
+      "GeneMap" : {
+        "toMapIds" : ["PancanAtlas/SampleMap"],
+       "featOrSamp" :"feature"
+      }
+    }
+}
