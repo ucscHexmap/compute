@@ -5,7 +5,7 @@ The spatial smoothing scalar is used for a notion of density
 for each attribute-layout pair. And lees L measure for bivariate
 spatial association is used as an attribute-attribute value ranking.
 
-Uses leesl stats_matrix for computations.
+Uses leesL stats_matrix for computations.
 '''
 import math
 import pandas as pd
@@ -13,7 +13,7 @@ import sklearn.metrics.pairwise as sklp
 from scipy import stats
 import numpy as np
 import scipy.spatial.distance as dist
-import leesl
+import leesL
 
 def density(allAtts, datatypes, xys, n_jobs=1):
     '''
@@ -99,7 +99,7 @@ def density(allAtts, datatypes, xys, n_jobs=1):
                 else:
                     # The diagonal of the leesL calculation is the SSS
                     densities.extend(
-                        leesl.L(
+                        leesL.L(
                             datMat,
                             spatialWieghtMatrix(xys.loc[datMat.index])
                         ).diagonal()
@@ -129,7 +129,7 @@ def density(allAtts, datatypes, xys, n_jobs=1):
                 else:
                     densities.append(
                         catSSS(
-                            leesl.L(
+                            leesL.L(
                                 datMat,
                                 spatialWieghtMatrix(
                                     xys.loc[datMat.index]
@@ -146,7 +146,7 @@ def density(allAtts, datatypes, xys, n_jobs=1):
 def pairwiseAssociations(xys, binAttrDF):
     attrs = attrPreProcessing(xys, binAttrDF)
     spatialMatrix = spatialWieghtMatrix(xys)
-    return leesl.L(attrs, spatialMatrix)
+    return leesL.L(attrs, spatialMatrix)
 
 
 def oneByAll(allBinAttrDF, focusAttr, xys, n_jobs=1):
@@ -175,7 +175,7 @@ def oneByAll(allBinAttrDF, focusAttr, xys, n_jobs=1):
     pearsonSim = 1 - pearsonD
 
     # Lees L vector
-    leesLV = leesl.statistic_matrix(
+    leesLV = leesL.statistic_matrix(
         focusAttr,
         spatialWieghtMatrix(xys),
         allBinAttrDF
