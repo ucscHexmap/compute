@@ -55,7 +55,6 @@ next=(test_pairwiseAttrStats)
 
 # The rest of the tests.
 docker_safe=( \
-    test_dynLayoutAware \
     test_formatCheck \
     test_layoutBasic \
     test_layoutBasicMakeUI \
@@ -66,6 +65,7 @@ docker_safe=( \
     test_pairwiseAttrStats \
     test_process_categoricals \
     test_reflect \
+    test_spatial \
     test_sim6Layout \
     test_similarity \
     test_stats \

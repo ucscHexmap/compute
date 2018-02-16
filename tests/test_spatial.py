@@ -1,4 +1,9 @@
 import unittest
+import numpy as np
+import spatial as test
+from testUtil import message
+
+import unittest
 import pandas as pd
 import numpy as np
 import spatial
@@ -130,6 +135,50 @@ class Test_dynLayoutAware(unittest.TestCase):
             str(calculated.values)
         )
 
+    def test_catSSS_2x2(self):
+        """Function reproduces known value."""
+        example = np.array([
+            [1, -1],
+            [-1, 1]
+        ])
+
+        correct = 2
+        attempt = test.catSSS(example)
+        self.assertTrue(
+            np.isclose(attempt, correct),
+            message(attempt, correct)
+        )
+
+    def test_catSSS_3x3(self):
+        """Function reproduces known value."""
+        example = np.array([
+            [1, -1, -1],
+            [-1, 1, -1],
+            [-1, -1, 1],
+        ])
+
+        correct = 2
+        attempt = test.catSSS(example)
+        self.assertTrue(
+            np.isclose(attempt, correct),
+            message(attempt, correct)
+        )
+
+    def test_catSSS_4x4(self):
+        """Function reproduces known value."""
+        example = np.array([
+            [10, -10, -5, -15],
+            [-10, 10, -5, -15],
+            [-5, -5, 10, -10],
+            [-15, -15, -10, 10],
+        ])
+
+        correct = 20
+        attempt = test.catSSS(example)
+        self.assertTrue(
+            np.isclose(attempt, correct),
+            message(attempt, correct)
+        )
 
 if __name__ == '__main__':
     unittest.main()
