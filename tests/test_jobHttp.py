@@ -19,7 +19,7 @@ quePath = os.path.join(os.getcwd() , 'out/jobQueue.db') # database file name
 serverQueuePath = os.path.join(os.environ['HUB_PATH'], '../computeDb/jobQueue.db')
 serverRoot = 'http://'
 appCtx = Context({})
-if os.environ['USE_HTTPS'] == 1:
+if os.environ['USE_HTTPS'] == '1':
     serverRoot = 'https://'
     appCtx.sslCert = os.environ['CERT']
     appCtx.sslKey = os.environ['KEY'],
