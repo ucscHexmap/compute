@@ -129,7 +129,10 @@ class Test_jobHttp(unittest.TestCase):
         rData = json.loads(r.text)
         #print 'r.status_code:', r.status_code
         #print "rData:", rData
-        s.assertTrue(r.status_code == 200)
+        s.assertTrue(
+            r.status_code == 200,
+            util.message(r.status_code, 200)
+        )
         s.assertEqual(s.que.successSt, rData['status'])
         s.assertTrue('result' in rData)
         s.assertEqual(result1, rData['result'])
