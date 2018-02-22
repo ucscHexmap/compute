@@ -31,19 +31,20 @@ def readPandas(datafile):
     @return: pandas DataFrame
     """
 
-    headerLineNumber = _headerLine(datafile)
     comment_char = '#'
+    df = pd.read_csv(
+        datafile,
+        index_col=0,
+        comment=comment_char,
+        header=None,
+        sep="\t",
+    )
 
-    # If we found a header, check for duplicates.
-    if headerLineNumber is not None:
-        duplicates_check(_firstLineArray(datafile))
-
-    df = pd.read_csv(datafile,
-                       index_col=0,
-                       comment=comment_char,
-                       header=headerLineNumber,
-                       sep="\t",
-                       )
+    possible_header = df.iloc[0]
+    if hasHeader(possible_header):
+        df.columns = df.iloc[0]
+        df.drop([df.index[0]], inplace=True)
+        df = df.apply(lambda x: pd.to_numeric(x, errors="ignore"))
 
     # Put the filename as the index name
     df.index.name = datafile
@@ -91,24 +92,14 @@ def nCols(filename):
     return n_cols
 
 
-def _headerLine(datafile):
-    """
-    Determines whether or not there is a header.
-    Logic is, if it is a 3 line file either the header is as specified in
-    formatCheck.py, or there is no header.
-    @param datafile:
-    @return:
-    """
-    # Usually header line will be the first line.
-    header_line = 0
-    # If the file has three columns there may or may not be a header.
-    n_cols = nCols(datafile)
+def hasHeader(possible_header):
+    isHeader = True
+    n_cols = len(possible_header)
     if n_cols == 3:
-        if formatCheck.type_of_3col(datafile) == "NOT_VALID":
-            header_line = None
+        if formatCheck.type_of_3colHA(possible_header) == "NOT_VALID":
+            isHeader = False
 
-    return header_line
-
+    return isHeader
 
 def _firstLineArray(filename):
     with open(filename,'r') as fin:

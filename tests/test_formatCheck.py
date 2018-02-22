@@ -156,21 +156,32 @@ class Test_formatCheck(unittest.TestCase):
         s.assertTrue(fc._layoutInputFormat(s.full_sim) == "fullSimilarity")
 
     def test_recognize_sim_header1(s):
-        header_line = fc.type_of_3col(os.path.join(inDir,"sim_with_header"))
-        s.assertTrue(header_line=="sparseSimilarity")
+        first_line = utils._firstLineArray(
+            os.path.join(inDir, "sim_with_header")
+        )
+        header_line = fc.type_of_3col(first_line)
+        s.assertTrue(header_line == "sparseSimilarity")
 
     def test_dont_recognize_sim_header(s):
-        header_line = fc.type_of_3col(os.path.join(inDir,"similarity.tab"))
+        first_line = utils._firstLineArray(
+            os.path.join(inDir,"similarity.tab")
+        )
+        header_line = fc.type_of_3col(first_line)
         s.assertTrue(header_line=="NOT_VALID")
 
     def test_recognize_xy_header1(s):
-
-        header_line = fc.type_of_3col(os.path.join(inDir,"xy_with_header"))
-        s.assertTrue(header_line=="xyPositions")
+        first_line = utils._firstLineArray(
+            os.path.join(inDir, "xy_with_header")
+        )
+        header_line = fc.type_of_3col(first_line)
+        s.assertTrue(header_line == "xyPositions")
 
 
     def test_recognize_xy_header2(s):
-        header_line = fc.type_of_3col(os.path.join(inDir,"coordinates.tab"))
+        first_line = utils._firstLineArray(
+            os.path.join(inDir, "coordinates.tab")
+        )
+        header_line = fc.type_of_3col(first_line)
         s.assertTrue(header_line == "NOT_VALID")
 
     def test_duplicateCheck_with_dups(s):

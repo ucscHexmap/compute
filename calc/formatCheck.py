@@ -53,6 +53,7 @@ def warnAboutFormat(df,expected_type):
                          + inferred_type
     return message
 
+
 def _layoutInputFormat(df):
     """Produce a string that is either a valid layout input format or unknown"""
 
@@ -85,6 +86,7 @@ def _layoutInputFormat(df):
 
     return format_
 
+
 def _isFullSimilarity(df):
     """Uses symetric property to determine whether the input is full
     similarity"""
@@ -98,6 +100,7 @@ def _isFullSimilarity(df):
         )
     return passed
 
+
 def _isSparseSimilarity(df):
     """Uses the shape and datatype of the first columns to determine whether
     the input is sparse similarity"""
@@ -110,12 +113,14 @@ def _isSparseSimilarity(df):
 
     return exp_ncols and exp_type
 
+
 def _isClusterData(df):
     """Uses the datatype of each column to determine whether the input is
     clustering data"""
 
     dtypes_ = map(str, df.dtypes.tolist())
     return "object" not in dtypes_ and "bool" not in dtypes_
+
 
 def _isXYPositions(df):
     """Uses the number of columns, datatype, and the prerequisite that there
@@ -143,13 +148,10 @@ def _validHeaderOf3Col():
     }
 
 
-def type_of_3col(filename):
-    first_line = utils._firstLineArray(filename)
-    first_line = map(lambda x: x.lower(), first_line)
+def type_of_3col(header_array):
+    header_array = map(lambda x: x.lower(), header_array)
     valid_header_dict = _validHeaderOf3Col()
     for header in valid_header_dict.keys():
-        if first_line == valid_header_dict[header]:
+        if header_array == valid_header_dict[header]:
             return header
-
     return "NOT_VALID"
-
