@@ -166,7 +166,7 @@ def oneByAll(allBinAttrDF, focusAttr, xys, n_jobs=1):
     # Pearson correlation of all attributes is calculated for comparison
 
     pearsonD = sklp.pairwise_distances(
-        focusAttr.loc[inCommon].reshape(-1, 1).transpose(),
+        focusAttr.loc[inCommon].values.reshape(-1, 1).transpose(),
         allBinAttrDF.loc[inCommon].transpose(),
         metric='correlation',
         n_jobs=n_jobs
