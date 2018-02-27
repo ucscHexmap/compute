@@ -81,11 +81,9 @@ def createBookmark (state, viewServer, ctx):
     @return: a bookmark
     '''
     # Ask the view server to create a bookmark of this client state
-    # TODO fix the request to the view server to include cert
     try:
         bResult = requests.post(
             viewServer + '/query/createBookmark',
-            #cert=(ctx.app.sslCert, ctx.app.sslKey),
             verify=True,
             headers = { 'Content-type': 'application/json' },
             data = json.dumps(state)
@@ -111,13 +109,10 @@ def sendMail (fromAddr, toAddrIn, subject, body):
     if isinstance(toAddrIn, str):
         toAddr = [toAddrIn]
     
-    #msg = MIMEMultipart()
     msg = MIMEText(body)
     msg['From'] = fromAddr
     msg['To'] = toAddr
     msg['Subject'] = subject
-    #msg.attach(MIMEText(body, 'plain'))
-    #strMsg = msg.as_string()
     try:
         server = smtplib.SMTP('localhost')
         server.sendmail(fromAddr, toAddr, msg.as_string())
