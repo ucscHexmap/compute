@@ -285,14 +285,14 @@ def queryPlaceNodeRoute():
     raise SuccessResp(result)
 
 @app.route('/oneByAll/statCalculation', methods=['POST'])
-def onByAllStatRequest():
+def oneByAllStatRequest():
     """
     Post example:
     {
         mapName : "PancanAtlas/SampleMap",
         focusAttr: opts.dynamicData,
         focusAttrDatatype : dType,
-        mail : Meteor.user().username,
+        email : Meteor.user().username,
     };
     focusAttr is in this form:
         {"attrName" : { "sampleId" : value}, ... }
@@ -327,7 +327,7 @@ def oneByAllLeesLRequest():
         mapName : "PancanAtlas/SampleMap",
         focusAttr: opts.dynamicData,
         layoutIndex : 1,
-        mail : Meteor.user().username,
+        email : Meteor.user().username,
     };
     focusAttr is in this form:
         {"attrName" : { "sampleId" : value}, ... }
