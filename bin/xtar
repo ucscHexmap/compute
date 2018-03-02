@@ -17,7 +17,7 @@ if [ $PWD == '/data/compute' ] || \
         standalone \
         tests \
         www
-    tar -xf /cluster/home/swat/dev/compute/install.tar
+    tar -xf /cluster/home/swat/dev/compute/install.tgz
     mv binRun bin/run
     mv testsRun tests/run
 

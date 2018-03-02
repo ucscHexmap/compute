@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build a tarball for the compute server
-tar cf install.tar \
+tar czf install.tgz \
     bin \
     build \
     calc \
@@ -8,5 +8,5 @@ tar cf install.tar \
     standalone \
     tests \
     www
-scp install.tar kolossus:/cluster/home/swat/dev/compute
+scp install.tgz kolossus:/cluster/home/swat/dev/compute
 

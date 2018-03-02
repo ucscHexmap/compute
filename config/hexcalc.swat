@@ -14,7 +14,7 @@ export KEY=/cluster/home/swat/certs/hexcalc/server.key
 export PYENV=$HUB_PATH/../envHexcalc
 export TEST_DATA_ROOT=$HUB_PATH/tests/in/dataRoot
 export USE_HTTPS=1
-export VIEWER_URL=https://hexmap-new.sdsc.edu:8222
+export VIEWER_URL=https://tumormap.ucsc.edu:8222
 export WWW_SOCKET=hexcalc.ucsc.edu:8442
 
 # If the python environment is present then open it up.
