@@ -64,9 +64,9 @@ class JobProcess(object):
         s.queue = JobQueue(queuePath)
 
 def _formatError (errorMsg, stackTrace, operation, parms):
-    result = { 'error': 'Server error: ' }
+    result = { 'error': 'server error' }
     if errorMsg:
-        result['error'] += errorMsg
+        result['error'] = errorMsg
     result['stackTrace'] = stackTrace
     if 'map' in parms:
         result['map'] = parms['map']
