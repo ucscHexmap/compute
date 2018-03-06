@@ -439,8 +439,7 @@ class Test_placeNode(unittest.TestCase):
         s.assertTrue(r['status'] == 'Error')
         #print 'r:', r
         #print "r['result']['error']:@@" + r['result']['error'] + '@@'
-        expectedResult = \
-            'Server error: Clustering data not found for layout: someLayout'
+        expectedResult = 'Clustering data not found for layout: someLayout'
         s.assertEqual(expectedResult, r['result']['error'])
         s.assertTrue('stackTrace' in r['result'])
 
@@ -455,7 +454,7 @@ class Test_placeNode(unittest.TestCase):
         r = s.runJob(data)
         s.assertTrue(r['status'] == 'Error')
         expectedResult = \
-            'Server error: Clustering data not found for layout: someLayout'
+            'Clustering data not found for layout: someLayout'
         s.assertEqual(expectedResult, r['result']['error'])
         s.assertTrue('stackTrace' in r['result'])
 
