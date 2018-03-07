@@ -13,7 +13,7 @@ def preCalc(parms, ctx):
 
 def calcMain(parms, ctx):
     # Pull out needed vars.
-    mapName = parms["mapName"]
+    mapName = parms["map"]
     focusAttr = parms["focusAttr"]
     layoutIndex = parms["layoutIndex"]
     # Get data ready for calculation.

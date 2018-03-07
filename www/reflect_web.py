@@ -75,7 +75,7 @@ def getReflectParmameters(parms):
     """Make the parameter dict ready for reflection function."""
     reflectJson = getReflectJson()
     dataType = parms["dataType"]
-    mapId = parms["mapId"]
+    mapId = parms["map"]
     projMajor, projMinor = getProjMajor(mapId), getProjMinor(mapId)
 
     # Set parameter dictionary with other needed variables.

@@ -289,7 +289,7 @@ def oneByAllStatRequest():
     """
     Post example:
     {
-        mapName : "PancanAtlas/SampleMap",
+        map : "PancanAtlas/SampleMap",
         focusAttr: opts.dynamicData,
         focusAttrDatatype : dType,
         email : Meteor.user().username,
@@ -324,7 +324,7 @@ def oneByAllLeesLRequest():
     """
     Post example:
     {
-        mapName : "PancanAtlas/SampleMap",
+        map : "PancanAtlas/SampleMap",
         focusAttr: opts.dynamicData,
         layoutIndex : 1,
         email : Meteor.user().username,
@@ -371,8 +371,7 @@ def reflectionRequest():
     JSON post example
     {
         dataType : "dataTypePointsToAFileInReflectionConfig"
-        toMapId : "Pancan12/GeneMap",
-        mapId : "Pancan12/SampleMap",
+        map : "Pancan12/SampleMap",
         nodeIds : [id, id, ...],
         rankCategories: True/False,
         dynamicAttrName : "Kindey Isle"
