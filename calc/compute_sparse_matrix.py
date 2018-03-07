@@ -21,6 +21,7 @@ import numpy as np
 from utils import truncateNP
 from utils import duplicates_check
 from utils import readPandas
+from typeTransforms import pandasToNumpy, numpyToPandas
 
 VALID_METRICS = ['canberra','cosine','manhattan','chebyshev','correlation','hamming',
                  'jaccard','rogerstanimoto','spearman']
@@ -146,24 +147,6 @@ def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
     npMatrix, col_header, row_header = pandasToNumpy(df)
 
     return npMatrix, col_header, row_header
-
-
-def numpyToPandas(mat, col_list, row_list):
-    return pd.DataFrame(mat, index=row_list, columns=col_list)
-
-
-def pandasToNumpy(df):
-    '''
-    does conversion of a pandas data frame to type returned by read_tabular
-    @param df: pandas data frame
-    @return: numpy.array, column list, row list
-    '''
-
-    mat = df.as_matrix()
-    col_list = df.columns.values.tolist()
-    row_list = df.index.tolist()
-
-    return mat, col_list, row_list
 
 def common_rows(p1, p2, fractionReq=.5):
     '''

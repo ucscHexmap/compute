@@ -34,7 +34,6 @@ DEV = False # True if in development mode, False if not
 import argparse, os, itertools, math, subprocess, shutil, tempfile, glob
 import collections, traceback, datetime, pprint, string
 import time
-from types import *
 import os.path
 import tsv, csv, json
 from utils import sigDigs
@@ -48,7 +47,6 @@ import compute_sparse_matrix
 import StringIO
 from utils import tabFilesToDF
 import spatial
-import sklearn.metrics
 import sklearn.metrics.pairwise as sklp
 import numpy as np
 from process_categoricals import create_colormaps_file
@@ -56,6 +54,7 @@ import utils
 import formatCheck
 import sys
 import mapOutput, mapData
+import typeTransforms
 
 validReflectionMapTypes = \
     ['geneMatrix']
@@ -1319,7 +1318,9 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     if inferring_format:
                         # "Genomic filename is actually a pandas dataFrame
                         dt, sample_labels, feature_labels = \
-                            compute_sparse_matrix.pandasToNumpy(genomic_filename)
+                            typeTransforms.pandasToNumpy(
+                                genomic_filename
+                            )
                     else:
                         dt, sample_labels, feature_labels = \
                             read_tabular(genomic_filename,
@@ -1348,7 +1349,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     if inferring_format:
                         # Then genomic filename is actually a pandas dataFrame.
                         dt, sample_labels, feature_labels = \
-                            compute_sparse_matrix.pandasToNumpy(
+                            typeTransforms.pandasToNumpy(
                                 genomic_filename
                             )
                     else:
@@ -1389,7 +1390,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
                     if inferring_format:
                         # Then similarity filename is really a pandas dataFrame.
                         dt, sample_labels, feature_labels = \
-                            compute_sparse_matrix.pandasToNumpy(
+                            typeTransforms.pandasToNumpy(
                                 similarity_filename
                             )
                     else:

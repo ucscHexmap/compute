@@ -24,6 +24,7 @@ import sys
 import utils
 import argparse
 import numpy as np
+import typeTransforms
 
 def parse_args():
 
@@ -99,10 +100,10 @@ def getNeighbors(newNodesDF,referenceDF,top,num_jobs=1):
 
     #chacnge pandas to nps, compute_similarities() expects numpy's
     refnp,sample_labels,feature_labels = \
-        compute_sparse_matrix.pandasToNumpy(referenceDF)
+        typeTransforms.pandasToNumpy(referenceDF)
 
     newnp,sample_labels2,feature_labels2 = \
-        compute_sparse_matrix.pandasToNumpy(newNodesDF)
+        typeTransforms.pandasToNumpy(newNodesDF)
 
     #returns a data frame with first column as the new pivots, second column as the neighbor
     # and third column as the similairty score.
@@ -158,40 +159,43 @@ def getPlacementUrl(xy,sampleId='',mapID='CKCC/v3'):
 def main():
 
     args = parse_args()
-    #get filenames from args
+    # Gather args.
     fin = args.refdata
     xyDF = args.xypositions
     newSamples = args.newNodes
-
-    #needed parmaters
-    mapId    = args.mapID
-    top      = args.top
+    mapId = args.mapID
+    top = args.top
     num_jobs = args.num_jobs
-    outbase  = args.outputbase
+    outbase = args.outputbase
 
-    #make the output file names from the given base name
+    # Make all the file names needed to gather data.
     neiFile = outbase + '_neighbors.tab'
     xyFile = outbase + '_xypositions.tab'
     urlFile = outbase + '_urls.list'
 
-    #read needed data in as pandas dataframe
-    referenceDF = \
-        compute_sparse_matrix.numpyToPandas(*compute_sparse_matrix.read_tabular(fin))
+    # Gather data needed for computation.
+    referenceDF = typeTransforms.numpyToPandas(
+            *compute_sparse_matrix.read_tabular(fin)
+    )
+    newNodesDF = typeTransforms.numpyToPandas(
+            *compute_sparse_matrix.read_tabular(newSamples)
+    )
+    xyDF = utils.readXYs(xyDF)
 
-    newNodesDF  = \
-        compute_sparse_matrix.numpyToPandas(*compute_sparse_matrix.read_tabular(newSamples))
+    # Do computation.
+    neighboorhoods, xys, urls = placeNew(
+        newNodesDF,
+        referenceDF,
+        xyDF,
+        top,
+        mapId,
+        num_jobs
+    )
 
-    xyDF        = \
-        utils.readXYs(xyDF)
-
-    #do computation
-    neighboorhoods, xys, urls = placeNew(newNodesDF,referenceDF,
-                                         xyDF,top,mapId,num_jobs)
-
-    #write all output to files
-    neighboorhoods.to_csv(neiFile,sep='\t',header=None,index=False)
-    xys.to_csv(xyFile,sep='\t')
-    np.array(urls).tofile(urlFile,sep='\n')
+    # Write output to files.
+    neighboorhoods.to_csv(neiFile, sep='\t', header=None, index=False)
+    xys.to_csv(xyFile, sep='\t')
+    np.array(urls).tofile(urlFile, sep='\n')
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -17,6 +17,7 @@ import utils
 import pandas as pd
 import numpy as np
 
+import typeTransforms
 import job
 
 def formatEmailResult(result):
@@ -206,12 +207,13 @@ def _putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
     @param tabSepArray:
     @return:
     '''
-    return (compute_sparse_matrix.numpyToPandas(
+    return (
+        typeTransforms.numpyToPandas(
             *compute_sparse_matrix.read_tabular(featurePath)
-                                                ),
-            utils.readXYs(xyPath),
-            _nodesToPandas(nodesDict)
-          )
+        ),
+        utils.readXYs(xyPath),
+        _nodesToPandas(nodesDict)
+    )
 
 def _nodesToPandas(pydict):
     '''
