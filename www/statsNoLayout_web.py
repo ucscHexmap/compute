@@ -4,7 +4,9 @@ generated attribute to all other attributes on a map."""
 import job
 import pairwiseStats as stats
 from typeTransforms import dictToPandasSeries
-from mapData import getDataTypeDict, getAllAttributes
+import mapData
+import os
+
 
 def preCalc(parms, ctx):
     userEmail = parms['email']
@@ -13,14 +15,16 @@ def preCalc(parms, ctx):
 
 def calcMain(parms, ctx):
     # Pull out needed vars.
-    mapName = parms["mapName"]
+    mapName = parms["map"]
     focusAttr = parms["focusAttr"]
     focusAttrDatatype = parms["focusAttrDatatype"]
 
+
     # Get data ready for calculation.
+    mapPath = ctx.pathToMap(mapName)
     focusAttr = dictToPandasSeries(focusAttr)
-    allAttrDF = getAllAttributes(mapName)
-    datatypeDict = getDataTypeDict(mapName)
+    allAttrDF = mapData.getAllAttributes(mapPath)
+    datatypeDict = mapData.getDataTypeDict(mapPath)
 
     # Do calculation.
     pvalueDF = stats.oneByAllStats(

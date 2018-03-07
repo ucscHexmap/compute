@@ -13,12 +13,14 @@ def preCalc(parms, ctx):
 
 def calcMain(parms, ctx):
     # Pull out needed vars.
-    mapName = parms["mapName"]
+    mapName = parms["map"]
     focusAttr = parms["focusAttr"]
     layoutIndex = parms["layoutIndex"]
+
+    mapPath = ctx.pathToMap(mapName)
     # Get data ready for calculation.
     focusAttr = dictToPandasSeries(focusAttr)
-    allBinAttrDF = mapData.getAllBinaryAttrs(mapName)
+    allBinAttrDF = mapData.getAllBinaryAttrs(mapPath)
     xys = mapData.getXYs(mapName, layoutIndex)
 
     # Do calculation.

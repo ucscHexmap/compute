@@ -17,6 +17,8 @@ expDir = os.path.join(testDir,'exp/similarity/')
 import compute_sparse_matrix
 import testUtil as tu
 import numpy as np
+import typeTransforms
+
 
 class Test_similarity(unittest.TestCase):
 
@@ -26,7 +28,7 @@ class Test_similarity(unittest.TestCase):
         nrows=40
         dataDF = tu.getdf('','random',nrows=nrows,ncols=ncols)
         #switch over to numpy
-        dt, cn, rn = compute_sparse_matrix.pandasToNumpy(dataDF)
+        dt, cn, rn = typeTransforms.pandasToNumpy(dataDF)
 
         #make sure the returned dimensions and values are correct
         passed  = len(rn) == nrows and \
@@ -49,7 +51,7 @@ class Test_similarity(unittest.TestCase):
         rn = range(nrows)
 
         #use our conversion to numpy
-        data = compute_sparse_matrix.numpyToPandas(dataNP,cn,rn)
+        data = typeTransforms.numpyToPandas(dataNP,cn,rn)
 
         #makes sure the row names and column names are as expected and then
         # makes sure all the values are equal

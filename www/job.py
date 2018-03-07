@@ -1,16 +1,15 @@
-
 # The job API.
 
-import os, traceback, datetime, json, importlib, logging
-from multiprocessing import Process
+import json
 import subprocess
+from util_web import ErrorResp
+from jobQueue import JobQueue
+
 try:
     from thread import get_ident
 except ImportError:
     from dummy_thread import get_ident
 
-from util_web import Context, ErrorResp
-from jobQueue import JobQueue
 
 def _packTask (operation, parms, ctx):
 
@@ -52,7 +51,6 @@ def getStatus (id, queuePath):
     return statusResult
 
 def add (email, operation, parms, ctx):
-
     # Add a job to the tail end of the job queue.
     # @param         email: email/username requesting the job
     # @param    operation: job operation to run; the python module that

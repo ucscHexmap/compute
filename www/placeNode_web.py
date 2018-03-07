@@ -5,18 +5,15 @@
 #   - mapping between mapID and layout to data file locations
 #   - http response and code
 
-import os, json, types, requests, traceback, csv, logging
-from argparse import Namespace
-from flask import request
+import os
 import validate_web as validate
 import util_web
-from util_web import ErrorResp, getMapMetaData, createBookmark
+from util_web import ErrorResp, createBookmark
 import placeNode
 import compute_sparse_matrix
 import utils
 import pandas as pd
 import numpy as np
-
 import typeTransforms
 import job
 
@@ -240,7 +237,7 @@ def _getBackgroundData(data, ctx):
     @return: cluster data file path and the pre-bin xy coordinates
     '''
     try:
-        layouts = getMapMetaData(data['map'], ctx)['layouts']
+        layouts = ctx.getMapMetaData(data['map'])['layouts']
         clusterData = layouts[data['layout']]['clusterData']
         clusterDataFile = os.path.join(ctx.app.dataRoot, clusterData)
     except Exception as e:
@@ -249,7 +246,7 @@ def _getBackgroundData(data, ctx):
 
     # Find the index of the layout
     ctx.layoutIndex = \
-        util_web.getLayoutIndex(data['layout'], data['map'], ctx)
+        ctx.app.getLayoutIndex(data['layout'], data['map'])
 
     # Find the xyPosition file
     xyPositionFile = os.path.join(
@@ -258,7 +255,7 @@ def _getBackgroundData(data, ctx):
     return clusterDataFile, xyPositionFile
 
 def calcMain(dataIn, ctx):
-    ctx.mapDir = os.path.join(ctx.app.viewDir, dataIn['map'])
+    ctx.mapDir = ctx.app.pathToMap(dataIn['map'])
 
     # Find the helper data needed to place nodes
     clusterDataFile, xyPositionFile = _getBackgroundData(dataIn, ctx)
@@ -270,16 +267,22 @@ def calcMain(dataIn, ctx):
         top = 6 # TODO: this default should be set in the calc module.
 
     # Make expected python data structs
-    referenceDF, xyDF, newNodesDF = \
-     _putDataIntoPythonStructs(clusterDataFile,
-                              xyPositionFile,
-                              dataIn['nodes'])
+    referenceDF, xyDF, newNodesDF = _putDataIntoPythonStructs(
+        clusterDataFile,
+        xyPositionFile,
+        dataIn['nodes']
+     )
 
     # Call the calc script.
     try:
-        neighboorhood, xys, urls = placeNode.placeNew(newNodesDF,referenceDF,
-                                                  xyDF, top, dataIn['map'],
-                                                  num_jobs=1)
+        neighboorhood, xys, urls = placeNode.placeNew(
+            newNodesDF,
+            referenceDF,
+            xyDF,
+            top,
+            dataIn['map'],
+            num_jobs=1
+        )
 
     except ValueError as error:
         # Make useful error message if we recognize the error.
@@ -290,8 +293,7 @@ def calcMain(dataIn, ctx):
 
     ctx.dataIn = dataIn
     
-    if hasattr(ctx, 'overlayNodes'):
-    
+    if hasattr(ctx, "callingOldApi"):
         # Respond to request here when using the older API.
         status, result = _postCalc(result, ctx)
         return result
@@ -332,8 +334,7 @@ def preCalc(dataIn, ctx):
     '''
     _validateParms(dataIn)
 
-    if hasattr(ctx, 'overlayNodes'):
-
+    if hasattr(ctx, "callingOldApi"):
         # Execute the job immediately when using the older API.
         return calcMain(dataIn, ctx)
 

@@ -15,42 +15,84 @@ import reflect_web
 import statsNoLayout_web
 import statsLayout_web
 
-from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
-    reportRouteError
+from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, AppCtx, \
+    reportRouteError, Context
 import validate_web as validate
 
 # Set up the flask application.
 app = Flask(__name__)
 
 # Set up the application context used by all threads.
-def contextInit ():
+def contextInit():
+    """
+    Produce the global app context, appCtx.
+    appCtx variables accessible through '.' are:
+    adminEmail
+    databasePath
+    dataRoot
+    dataServer
+    debug
+    dev
+    featureSpaceDir
+    hubPath
+    jobProccessPath
+    jobQueuePath
+    jobStatusUrl
+    unitTest
+    viewDir
+    viewServer
+    :return:
+    """
     global appCtx
-    appCtx = Context({})
+    appCtx = AppCtx({})
+
+    # Context from environment variables.
     appCtx.adminEmail = os.environ.get('ADMIN_EMAIL')
-    appCtx.dataRoot = os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING')
+    appCtx.dataRoot = os.environ.get(
+        'DATA_ROOT',
+        'DATA_ROOT_ENV_VAR_MISSING'
+    )
     appCtx.debug = os.environ.get('DEBUG', 0)
     appCtx.dev = int(os.environ.get('DEV', 0))
     appCtx.hubPath = os.environ.get('HUB_PATH')
     appCtx.unitTest = int(os.environ.get('UNIT_TEST', 0))
-    appCtx.viewServer = os.environ.get('VIEWER_URL', 'https://tumormap.ucsc.edu')
+    appCtx.viewServer = os.environ.get(
+        'VIEWER_URL',
+        'https://tumormap.ucsc.edu'
+    )
 
     # Derived context.
-    appCtx.databasePath = \
-        os.environ.get('DATABASE_PATH', appCtx.hubPath + '/../computeDb')
-    appCtx.jobQueuePath = os.path.abspath(
-        os.path.join(appCtx.databasePath, 'jobQueue.db'))
-    appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
-    appCtx.viewDir = os.path.join(appCtx.dataRoot, 'view')
-    url = os.environ['WWW_SOCKET']
-    if os.environ['USE_HTTPS'] == '1':
-        appCtx.dataServer = 'https://' + url
+    appCtx.databasePath = os.environ.get(
+        'DATABASE_PATH',
+        appCtx.hubPath + '/../computeDb'
+    )
+    using_https = os.environ['USE_HTTPS'] == '1'
+    if using_https:
+        appCtx.dataServer = 'https://' + os.environ['WWW_SOCKET']
     else:
-        appCtx.dataServer = 'http://' + url
+        appCtx.dataServer = 'http://' + os.environ['WWW_SOCKET']
+
+    appCtx.featureSpaceDir = os.path.join(
+        appCtx.dataRoot,
+        'featureSpace'
+    )
+    appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
+    appCtx.jobQueuePath = os.path.abspath(
+        os.path.join(
+            appCtx.databasePath,
+            'jobQueue.db'
+        )
+    )
     appCtx.jobStatusUrl = appCtx.dataServer + '/jobStatus/jobId/'
+    appCtx.viewDir = os.path.join(
+        appCtx.dataRoot,
+        'view'
+    )
+
     return appCtx
 
 # Set up logging
-def loggingInit ():
+def loggingInit():
     logFormat = '%(asctime)s %(levelname)s: %(message)s'
     logLevel = None
     if appCtx.unitTest:
@@ -235,7 +277,7 @@ def getAllJobsRoute():
 
 # Handle map authorization routes
 @app.route('/mapAuth/mapId/<path:mapId>', methods=['GET'])
-@app.route('/mapAuth/mapId/<path:mapId>/email/<string:userEmail>', \
+@app.route('/mapAuth/mapId/<path:mapId>/email/<string:userEmail>',
     methods=['GET'])
 @app.route('/mapAuth/mapId/<path:mapId>' + \
     '/email/<string:userEmail>/role/<string:userRole>', methods=['GET'])
@@ -268,20 +310,27 @@ def queryJobTestHelperRoute():
 # Handle query/createMap route.
 @app.route('/query/createMap', methods=['POST'])
 def queryCreateMapRoute():
-    result = createMap_web.preCalc(validatePost(), Context({'app': appCtx }))
+    result = createMap_web.preCalc(validatePost(), Context({'app': appCtx}))
     raise SuccessResp(result)
 
 # Handle query/overlayNode route, older version of placeNode
 @app.route('/query/overlayNodes', methods=['POST'])
 def queryOverlayNodesRoute():
-    result = placeNode_web.preCalc(validatePost(),
-        Context({'app': appCtx, 'overlayNodes': True}))
+
+    callCtx = Context({"app": appCtx, "callingOldApi": True})
+    result = placeNode_web.preCalc(
+        validatePost(),
+        callCtx
+    )
     raise SuccessResp(result)
 
 # Handle query/placeNode routes
 @app.route('/query/placeNode', methods=['POST'])
 def queryPlaceNodeRoute():
-    result = placeNode_web.preCalc(validatePost(), Context({'app': appCtx}))
+    result = placeNode_web.preCalc(
+        validatePost(),
+        Context({'app': appCtx})
+    )
     raise SuccessResp(result)
 
 @app.route('/oneByAll/statCalculation', methods=['POST'])
@@ -289,7 +338,7 @@ def oneByAllStatRequest():
     """
     Post example:
     {
-        mapName : "PancanAtlas/SampleMap",
+        map : "PancanAtlas/SampleMap",
         focusAttr: opts.dynamicData,
         focusAttrDatatype : dType,
         email : Meteor.user().username,

@@ -7,7 +7,7 @@ import job
 import jobProcess
 from jobProcess import JobProcess
 from jobQueue import JobQueue
-from util_web import Context
+from util_web import Context, AppCtx
 
 # Job runner contexts
 quePath = os.path.join(os.getcwd() , 'out/placeNodeJobQueue.db') # database file name
@@ -26,7 +26,8 @@ appCtxDict = {
 }
 appCtxDict['jobQueuePath'] = os.path.join(quePath)
 appCtxDict['viewDir'] = os.path.join(appCtxDict['dataRoot'], 'view')
-appCtx = Context(appCtxDict)
+
+appCtx = AppCtx(appCtxDict)
 appCtxUnicode = json.loads(json.dumps(appCtxDict))
 ctx1NoAppUnicode = json.loads(json.dumps({'prop1': 1}))
 ctxdict = {'app': appCtx}
@@ -408,13 +409,11 @@ class Test_placeNode(unittest.TestCase):
         s.assertTrue(data['error'] ==
             'neighborCount parameter should be a positive integer')
             
-    def runJob (s, data):
-    
+    def runJob(s, data):
         # Add the job to the queue.
         r = job.add('swat@soe.ucsc.edu', 'placeNode', data, ctx1)
         jobId = r['jobId']
         status = r['status']
-
         # A new process, so we need another instance of the job runner.
         myJobProcess = JobProcess(quePath)
 
@@ -423,7 +422,6 @@ class Test_placeNode(unittest.TestCase):
 
         # Execute the job.
         jobProcess.main([quePath, jobId])
-
         # Return the result of the job.
         return s.jobQueue.getStatus(1)
 
@@ -437,10 +435,12 @@ class Test_placeNode(unittest.TestCase):
         }
         r = s.runJob(data)
         s.assertTrue(r['status'] == 'Error')
-        #print 'r:', r
-        #print "r['result']['error']:@@" + r['result']['error'] + '@@'
-        expectedResult = 'Clustering data not found for layout: someLayout'
-        s.assertEqual(expectedResult, r['result']['error'])
+        expectedResult = \
+            'Server error: Clustering data not found for layout: someLayout'
+        s.assertEqual(
+            expectedResult, r['result']['error'],
+            r['result']['stackTrace']
+        )
         s.assertTrue('stackTrace' in r['result'])
 
     def test_layout_has_no_background_data(s):
@@ -568,7 +568,6 @@ class Test_placeNode(unittest.TestCase):
             }
         }
         status, result = placeNode_web._postCalc(result, ctx)
-        #print 'result:', result
         data = result
 
         s.assertTrue('newNode1' in data['nodes'])

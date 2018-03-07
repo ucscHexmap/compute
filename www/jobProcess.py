@@ -10,7 +10,7 @@ try:
 except ImportError:
     from dummy_thread import get_ident
 
-from util_web import Context
+from util_web import AppCtx, Context
 from jobQueue import JobQueue
 
 class JobProcess(object):
@@ -37,12 +37,12 @@ class JobProcess(object):
         # Unpack the task info into its components.
         unpacked = json.loads(packedTask)
 
-        # Convert the job and app contexts to an instances of the Context class.
-        ctx = Context(unpacked['ctx'])
-        appCtx = Context(ctx.app)
-
-        # Replace ctx.app as a dict with the appCtx Context class instance.
-        ctx.app = appCtx
+        # Convert the job and app contexts to an instances of the AppCtx class.
+        appCtx = AppCtx(unpacked['ctx']['app'])
+        del unpacked['ctx']['app']
+        ctxDict = {"app": appCtx}
+        ctxDict.update(unpacked['ctx'])
+        ctx = Context(ctxDict)
 
         return unpacked['operation'], unpacked['parms'], ctx
 

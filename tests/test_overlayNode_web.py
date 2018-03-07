@@ -1,6 +1,7 @@
 import os, json, requests
 import unittest
 import testUtil
+from testUtil import message
 import www
 
 class Test_overlayNode(unittest.TestCase):
@@ -379,7 +380,7 @@ class Test_overlayNode(unittest.TestCase):
             data=json.dumps(dict(
                 map='someMap',
                 layout='someLayout',
-                nodes = dict(
+                nodes=dict(
                     someNode='someValue',
                 )
             ))
@@ -390,8 +391,18 @@ class Test_overlayNode(unittest.TestCase):
             s.assertTrue('', 'no json data in response')
         #print "### rv.status_code:", rv.status_code
         #print "### data['error']:", data['error']
-        s.assertTrue(rv.status_code == 500)
-        s.assertTrue(data['error'] == 'Server uncaught exception: Clustering data not found for layout: someLayout')
+        expected = """Server uncaught exception: Clustering data not found for layout: someLayout"""
+
+        s.assertTrue(
+            rv.status_code == 500,
+            data
+            #message(rv.status_code, 500)
+        )
+        s.assertTrue(
+            data['error'] == expected,
+            data['stackTrace']
+            #message(data['error'], expected)
+        )
 
     def test_layout_has_background_data(s):
         rv = s.app.post('/query/overlayNodes',
@@ -408,14 +419,21 @@ class Test_overlayNode(unittest.TestCase):
             data = json.loads(rv.data)
         except:
             s.assertTrue('', 'no json data in response')
+
         #print "rv.status_code", rv.status_code
         #print "data['error']", data['error']
         expectedResult = \
             'Clustering data not found for layout: someLayout'
-        s.assertTrue(rv.status_code == 500, 'rv.status_code:' + str(rv.status_code))
-        s.assertTrue(data['error'] == \
-            'Server uncaught exception: Clustering data not found for layout: someLayout', \
-            'data:' + str(data))
+        s.assertTrue(
+            rv.status_code == 500,
+            message(rv.status_code, 500)
+        )
+        expectedMessage = """Server uncaught exception: Clustering data not found for layout: someLayout"""
+
+        s.assertTrue(
+            data['error'] == expectedMessage,
+            message(data['error'], expectedMessage)
+        )
 
     def test_create_bookmark(s):
         #resData = '{"TESTpythonCallStub":"success"}\n';

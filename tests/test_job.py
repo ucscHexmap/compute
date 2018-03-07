@@ -7,13 +7,10 @@ import datetime
 import json
 
 import unittest
-import testUtil as util
 import job
 from jobQueue import JobQueue
-import jobQueue as que
 from jobProcess import JobProcess
-import jobProcess
-from util_web import Context
+from util_web import AppCtx, Context
 
 # TODO create a dir: out
 testDir = os.getcwd()
@@ -32,7 +29,7 @@ appCtxDict = {
     'unitTest': True,
     'adminEmail': 'admin@x.y',
 }
-appCtx = Context(appCtxDict)
+appCtx = AppCtx(appCtxDict)
 appCtxUnicode = json.loads(json.dumps(appCtxDict))
 
 ctx1NoAppUnicode = json.loads(json.dumps({'prop1': 1}))
@@ -89,7 +86,7 @@ class Test_job(unittest.TestCase):
         self.jobProcess = JobProcess(quePath)
 
     def test_packTask(s):
-        packed = job._packTask(operation1, parms1, ctx1);
+        packed = job._packTask(operation1, parms1, ctx1)
         #print ' task1:', task1
         #print 'packed:', packed
         s.assertEqual(task1, packed)
@@ -97,16 +94,15 @@ class Test_job(unittest.TestCase):
     def test_unpackTask(s):
         packed = job._packTask(operation1, parms1, ctx1)
         operation, parms, ctx = s.jobProcess.unpackTask(packed)
-        #print 'operation, parms, ctx:', operation, parms, ctx
         s.assertEqual(operation1, operation)
         s.assertEqual(parms1, parms)
 
-        # Check the app Context class instance.
+        # Check the app AppCtx class instance.
         #print 'appCtxUnicode:', appCtxUnicode
         #print 'ctx.app:', ctx.app
         s.assertEqual(str(appCtxUnicode), str(ctx.app))
 
-        # Check the job Context class instance, minus the app context.
+        # Check the job AppCtx class instance, minus the app context.
         del ctx.app
         s.assertEqual(str(ctx1NoAppUnicode), str(ctx))
     

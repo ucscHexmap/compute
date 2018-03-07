@@ -1,6 +1,6 @@
 
 from reflection import reflection
-from util_web import getProjMajor, getProjMinor, mkTempFile, tmpDir
+from util_web import getProjMajor, getProjMinor
 from util_web import ErrorResp
 
 import pickle
@@ -18,7 +18,7 @@ def calcMain(parms, ctx):
     dataType = parms["dataType"]
     selectionName = parms["dynamicAttrName"]
 
-    reflectionParms = getReflectParmameters(parms)
+    reflectionParms = getReflectParmameters(parms, ctx)
 
     reflectionScores, nNodes = reflection(reflectionParms)
 
@@ -27,7 +27,7 @@ def calcMain(parms, ctx):
     reflectionScores = formatForWeb(reflectionScores, attrName)
 
     # Write the response out as a pickle.
-    tmpFilePath = mkTempFile()
+    tmpFilePath = ctx.mkTempFile()
     attrId = reflectionAttrId(tmpFilePath)
     pickle.dump(reflectionScores, open(tmpFilePath, "wb"))
 
@@ -35,9 +35,10 @@ def calcMain(parms, ctx):
     return "Success", {"url": retrievalUrl, "nNodes": nNodes}
 
 
-def getReflectionAttr(attrId):
+def getReflectionAttr(attrId, ctx):
     """Grabs a reflection attr with an attribute Id."""
-    filepath = os.path.join(tmpDir(), attrId)
+
+    filepath = os.path.join(getTmpDir(ctx), attrId)
     with open(filepath, 'rb') as reflectData:
         reflectDict = pickle.load(reflectData)
 
@@ -71,7 +72,7 @@ def formatForWeb(reflectionScores, attrName):
     return dictFormat
 
 
-def getReflectParmameters(parms):
+def getReflectParmameters(parms, ctx):
     """Make the parameter dict ready for reflection function."""
     reflectJson = getReflectJson()
     dataType = parms["dataType"]
@@ -85,7 +86,8 @@ def getReflectParmameters(parms):
     parms["datapath"] = getDataFilePath(
         projMajor,
         dataType,
-        reflectJson
+        reflectJson,
+        ctx
     )
 
     return parms
@@ -168,13 +170,11 @@ def getCalcType(projMajor, dataType, reflectJson):
     return cType
 
 
-def getDataFilePath(projMajor, dataType, reflectJson):
-    dataRoot = os.environ.get('DATA_ROOT')
-
+def getDataFilePath(projMajor, dataType, reflectJson, ctx):
+    featureSpaceDir = ctx.featureSpaceDir,
     filepath = \
         os.path.join(
-            dataRoot,
-            "featureSpace",
+            featureSpaceDir,
             projMajor,
             "reflection",
             reflectJson[projMajor]["dataTypesToFileName"][dataType]

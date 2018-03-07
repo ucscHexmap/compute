@@ -1,9 +1,8 @@
 
-import os, json, csv, traceback, requests, logging, pprint, importlib
+import os, json, csv, traceback, requests, importlib
 import tempfile
 import smtplib
 from email.mime.text import MIMEText
-
 
 class SuccessResp (Exception):
 
@@ -32,45 +31,83 @@ class ErrorResp (Exception):
         self.message = {'error': message}
         self.status_code = status_code
 
-class Context (object):
+class Context(object):
     def __init__(self, entries):
         self.__dict__.update(entries)
+
     def __str__(self):
         return str(self.__dict__)
 
-def _getLayerDataTypes (mapId, ctx):
-    filename = os.path.join(
-        ctx.app.dataRoot, 'view', mapId, 'Layer_Data_Types.tab')
-    fd = open(filename, 'rU')
-    return csv.reader(fd, delimiter='\t'), fd
+class AppCtx(object):
+    def __init__(self, entries):
+        self.__dict__.update(entries)
 
-def getLayoutIndex (layoutName, mapId, ctx):
-    filename = os.path.join(ctx.app.dataRoot, 'view', mapId, 'layouts.tab')
-    with open(filename, 'rU') as f:
-        f = csv.reader(f, delimiter='\t')
-        index = None
-        for i, row in enumerate(f.__iter__()):
-            if row[0] == layoutName:
-                index = i
-                break
+    def __str__(self):
+        return str(self.__dict__)
+
+    def getTmpDir(self):
+        """
+        Gives the path to the temp directory. Makes a temp directory if
+        it is not present.
+        """
+        tmpDirPath = os.path.join(
+            self.hubPath,
+            "../computeDb",
+            "tmp"
+        )
+        tmpDirNotThere = (not os.path.isdir(tmpDirPath))
+        if tmpDirNotThere:
+            os.makedirs(tmpDirPath)
+
+        return tmpDirPath
+
+    def getLayoutIndex(self, layoutName, mapId):
+        filename = os.path.join(
+            self.viewDir,
+            mapId,
+            'layouts.tab'
+        )
+        with open(filename, 'rU') as f:
+            f = csv.reader(f, delimiter='\t')
+            index = None
+            for i, row in enumerate(f.__iter__()):
+                if row[0] == layoutName:
+                    index = i
+                    break
         return index
 
-def getMapMetaData (mapId, ctx):
-    
-    # Retrieve the meta data for this map
-    dataFd = None
-    filename = os.path.join(ctx.app.dataRoot, 'view', mapId, 'mapMeta.json')
-    try:
-        dataFd = open(filename, 'r')
-    except:
-        return {}
-    try:
-        data = json.load(dataFd)
-    except:
-        raise ErrorResp('Could not convert json to python for ' + filename)
+    def pathToMap(self, mapId):
+        return os.path.join(self.viewDir, mapId)
 
-    dataFd.close()
-    return data
+    def getMapMetaData(self, mapId):
+        """Retrieve the meta data for a specific map."""
+        dataFd = None
+        filename = os.path.join(
+            self.dataRoot,
+            'view',
+            mapId,
+            'mapMeta.json'
+        )
+        try:
+            with open(filename, 'r') as dataFd:
+                data = json.load(dataFd)
+        except IOError as e:
+            if "file not found" in e.errno:
+                return {}
+            else:
+                raise
+        except:
+            raise ErrorResp(
+                'Could not convert json to python for ' + filename
+            )
+
+        dataFd.close()
+        return data
+
+    def mkTempFile(self):
+        tempDir = self.getTmpDir()
+        des, filepath = tempfile.mkstemp(dir=tempDir)
+        return filepath
 
 def createBookmark (state, viewServer, ctx):
     '''
@@ -99,7 +136,7 @@ def createBookmark (state, viewServer, ctx):
     else:
         raise ErrorResp(bData)
 
-def sendMail (fromAddr, toAddrIn, subject, body):
+def sendMail(fromAddr, toAddrIn, subject, body):
     #import smtplib
     #from email.MIMEMultipart import MIMEMultipart
     #from email.MIMEText import MIMEText
@@ -126,12 +163,12 @@ def sendClientEmail (email, subject, msg, appCtx):
 def sendAdminEmail (subject, msg, appCtx):
     sendMail(appCtx.adminEmail, appCtx.adminEmail, subject, msg)
 
-def reportResult (jobId, operation, status, result, email, doNotEmail, appCtx):
-
+def reportResult(jobId, operation, status, result, email, doNotEmail, appCtx):
     # Email the success or error result to user email and admin if appropriate.
     subject = 'TumorMap results'
     if appCtx.dev == 1:
         subject = 'DEV: ' + subject
+
     msg = 'status: ' + status + ' | operation: ' + operation + \
         ' | job ID: ' + str(jobId) + '\n'
 
@@ -192,21 +229,3 @@ def getProjMinor(mapId):
     except IndexError:
         minorId = None
     return minorId
-
-
-def mkTempFile():
-    tempDir = tmpDir()
-    des, filepath = tempfile.mkstemp(dir=tempDir)
-    return filepath
-
-def tmpDir():
-    tmpDirName = os.path.join(
-        os.environ.get("HUB_PATH"),
-        "../computeDb",
-        "tmp"
-    )
-    tmpDirNotThere = (not os.path.isdir(tmpDirName))
-    if tmpDirNotThere:
-        os.makedirs(tmpDirName)
-
-    return tmpDirName

@@ -1,8 +1,5 @@
-import unittest
-import numpy as np
 import spatial as test
 from testUtil import message
-
 import unittest
 import pandas as pd
 import numpy as np
@@ -106,22 +103,24 @@ class Test_dynLayoutAware(unittest.TestCase):
             [-0.120261,  0.083333, -1.000000],
             [-0.120261, 0.083333, -1.000000]
         ])
-        # mapData class needs these set to work properly.
-        os.environ["DATA_ROOT"] = os.path.join(
-            os.environ["HUB_PATH"],
-            "tests/in/dataRoot"
-        )
 
         mapName = "unitTest/layoutBasicExp"
+        mapPath = os.path.join(
+            os.environ["HUB_PATH"],
+            "tests/in/dataRoot/view",
+            mapName
+        )
+
+
 
         # Gather Data.
-        binAttrs = mapData.getAllBinaryAttrs(mapName)
+        binAttrs = mapData.getAllBinaryAttrs(mapPath)
         firstColumn = binAttrs.columns[0]
         dynAttr = binAttrs[firstColumn]
-        real_xys = mapData.getXYs(mapName, 0)
+        realXys = mapData.getXYs(mapPath, 0)
 
         # Run calculation to test.
-        calculated = spatial.oneByAll(binAttrs, dynAttr, real_xys)
+        calculated = spatial.oneByAll(binAttrs, dynAttr, realXys)
 
         allGood = np.allclose(calculated.values, answers)
 

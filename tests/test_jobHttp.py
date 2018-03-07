@@ -4,21 +4,19 @@
 # NOTE: these tests don't work under the centOS servers but do on the macOS.
 
 import os
-import datetime
 import json, requests, time
-
+from testUtil import message
 import www
 import unittest
-import testUtil as util
 from jobQueue import JobQueue
-from util_web import Context
+from util_web import AppCtx
 
 # TODO create a dir: out
 testDir = os.getcwd()
 quePath = os.path.join(os.getcwd() , 'out/jobQueue.db') # database file name
 serverQueuePath = os.path.join(os.environ['HUB_PATH'], '../computeDb/jobQueue.db')
 serverRoot = 'http://'
-appCtx = Context({})
+appCtx = AppCtx({})
 if os.environ['USE_HTTPS'] == '1':
     serverRoot = 'https://'
     appCtx.sslCert = os.environ['CERT']
@@ -84,54 +82,59 @@ class Test_jobHttp(unittest.TestCase):
                 serverRoot + '. Is it up?')
         
         rData = json.loads(r.text)
-        #print 'r.status_code', r.status_code
-        #print 'r.text:', r.text
-        #print 'rData:', rData
-        s.assertEqual(r.status_code, 200)
+        s.assertEqual(r.status_code, 200, message(r.status_code,200))
         s.assertEqual('just testing data server', rData)
     
     def test_getStatusInJobQueue(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.inJobQueueSt})
         r = s.get('/jobStatus/jobId/1')
         rData = json.loads(r.text)
-        #print 'test_getStatusInJobQueue():r.status_code:', r.status_code
-        #print "test_getStatusInJobQueue():rData:", rData
-        s.assertEqual(r.status_code, 200)
-        s.assertEqual('InJobQueue', rData['status'])
-        s.assertFalse('result' in rData)
+        s.assertEqual(r.status_code, 200,
+                      message(r.status_code, 200)
+        )
+        s.assertEqual('InJobQueue', rData['status'],
+                      message(r.status_code, 200)
+        )
+        s.assertFalse(
+            'result' in rData,
+            "key 'result' should not be in \n" + str(rData)
+        )
 
     def test_getStatusRunning(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.runningSt})
         time.sleep(wait)
         r = s.get('/jobStatus/jobId/1')
         rData = json.loads(r.text)
-        #print 'r.status_code:', r.status_code
-        #print "rData:", rData
-        s.assertEqual(r.status_code, 200)
+        s.assertEqual(r.status_code, 200, )
         s.assertEqual(s.que.runningSt, rData['status'])
-        s.assertFalse('result' in rData)
+        s.assertFalse(
+            'result' in rData,
+            "key 'result' should not be in \n" + str(rData)
+        )
 
     def test_getStatusSuccess(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.successSt})
         time.sleep(wait)
         r = s.get('/jobStatus/jobId/1')
         rData = json.loads(r.text)
-        #print 'r.status_code:', r.status_code
-        #print "rData:", rData
-        s.assertTrue(r.status_code == 200)
+        s.assertTrue(
+            r.status_code == 200,
+            message(r.status_code, 200)
+        )
         s.assertEqual(s.que.successSt, rData['status'])
-        s.assertFalse('result' in rData)
-    
+        s.assertFalse(
+            'result' in rData,
+            "key 'result' should not be in \n" + str(rData)
+        )
+
     def test_getStatusSuccessResult(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.successSt + 'Result'})
         time.sleep(wait)
         r = s.get('/jobStatus/jobId/1')
         rData = json.loads(r.text)
-        #print 'r.status_code:', r.status_code
-        #print "rData:", rData
         s.assertTrue(
             r.status_code == 200,
-            util.message(r.status_code, 200)
+            message(r.status_code, 200)
         )
         s.assertEqual(s.que.successSt, rData['status'])
         s.assertTrue('result' in rData)
@@ -146,7 +149,10 @@ class Test_jobHttp(unittest.TestCase):
         #print "rData:", rData
         s.assertTrue(r.status_code == 200)
         s.assertEqual(s.que.errorSt, rData['status'])
-        s.assertFalse('result' in rData)
+        s.assertFalse(
+            'result' in rData,
+            "key 'result' should not be in \n" + str(rData)
+        )
 
     def test_getStatusErrorResult(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt + 'Result'})
