@@ -8,5 +8,5 @@ tar czf install.tgz \
     standalone \
     tests \
     www
-scp install.tgz kolossus:/cluster/home/swat/dev/compute
+scp install.tgz hexmap-new:/cluster/home/swat/dev/compute
 

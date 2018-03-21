@@ -14,10 +14,6 @@ import job
 
 def _postCalc(result, ctx):
 
-    # Be sure we have a view server
-    if not 'viewServer' in ctx.parms:
-        ctx.parms['viewServer'] = ctx.app.viewServer
-
     # Open the log file which is the result returned.
     logFile = result
     try:
@@ -37,7 +33,7 @@ def _postCalc(result, ctx):
             'unknown error. ' + 'logfile: ' + logFile)
 
     result = {
-        'url': ctx.app.viewServer + '/?p=' + ctx.parms['map'],
+        'url': ctx.viewServer + '/?p=' + ctx.map,
         'logFile': logFile
     }
     return "Success", result
@@ -80,7 +76,12 @@ def calcMain(parms, ctx):
 
     # Call the calc function.
     result = layout.makeMapUIfiles(opts)
-    ctx.parms = parms
+    
+    # Save some parms we need for post-processing.
+    if 'viewServer' in parms:
+        ctx.viewServer = parms['viewServer']
+    else:
+        ctx.viewServer = ctx.app.viewServer
 
     return _postCalc(result, ctx)
 

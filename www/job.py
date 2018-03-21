@@ -66,6 +66,14 @@ def add (email, operation, parms, ctx):
     # Extract any doNotEmail flag.
     doNotEmail = parms.pop('doNotEmail', None)
     
+    if 'map' in parms:
+        ctx.map = parms['map']
+    elif 'mapId' in parms:
+        ctx.map = parms['mapId']
+
+    if email != None:
+        ctx.email = email;
+
     packedTask = _packTask(operation, parms, ctx)
     queuePath = ctx.app.jobQueuePath
     jobId = JobQueue(queuePath).add(id, packedTask, email, doNotEmail)

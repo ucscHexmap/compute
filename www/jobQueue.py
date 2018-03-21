@@ -163,7 +163,7 @@ class JobQueue(object):
                     str(result),
                 None,
                 None,
-                ctx.app
+                ctx
             )
         elif status == 'Error' or \
             (status == 'Success' and job[s.emailI] and not job[s.doNotEmailI]):
@@ -174,7 +174,7 @@ class JobQueue(object):
                 result,
                 job[s.emailI],
                 job[s.doNotEmailI],
-                ctx.app
+                ctx
             )
 
     def getTask (s, id):

@@ -12,12 +12,14 @@ class SuccessResp (Exception):
         Exception.__init__(self)
         self.data = data
 
+
 class SuccessRespNoJson (Exception):
 
     # Define a success response class which does not convert to json.
     def __init__(self, data):
         Exception.__init__(self)
         self.data = data
+
 
 class ErrorResp (Exception):
 
@@ -32,17 +34,20 @@ class ErrorResp (Exception):
         self.message = {'error': message}
         self.status_code = status_code
 
+
 class Context (object):
     def __init__(self, entries):
         self.__dict__.update(entries)
     def __str__(self):
         return str(self.__dict__)
 
+
 def _getLayerDataTypes (mapId, ctx):
     filename = os.path.join(
         ctx.app.dataRoot, 'view', mapId, 'Layer_Data_Types.tab')
     fd = open(filename, 'rU')
     return csv.reader(fd, delimiter='\t'), fd
+
 
 def getLayoutIndex (layoutName, mapId, ctx):
     filename = os.path.join(ctx.app.dataRoot, 'view', mapId, 'layouts.tab')
@@ -54,6 +59,7 @@ def getLayoutIndex (layoutName, mapId, ctx):
                 index = i
                 break
         return index
+
 
 def getMapMetaData (mapId, ctx):
     
@@ -71,6 +77,7 @@ def getMapMetaData (mapId, ctx):
 
     dataFd.close()
     return data
+
 
 def createBookmark (state, viewServer, ctx):
     '''
@@ -99,6 +106,7 @@ def createBookmark (state, viewServer, ctx):
     else:
         raise ErrorResp(bData)
 
+
 def sendMail (fromAddr, toAddrIn, subject, body):
     #import smtplib
     #from email.MIMEMultipart import MIMEMultipart
@@ -120,55 +128,91 @@ def sendMail (fromAddr, toAddrIn, subject, body):
     except:
         pass
 
+
 def sendClientEmail (email, subject, msg, appCtx):
     sendMail(appCtx.adminEmail, email, subject, msg)
+
 
 def sendAdminEmail (subject, msg, appCtx):
     sendMail(appCtx.adminEmail, appCtx.adminEmail, subject, msg)
 
-def reportResult (jobId, operation, status, result, email, doNotEmail, appCtx):
 
+def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
+    
     # Email the success or error result to user email and admin if appropriate.
-    subject = 'TumorMap results'
-    if appCtx.dev == 1:
-        subject = 'DEV: ' + subject
-    msg = 'status: ' + status + ' | operation: ' + operation + \
-        ' | job ID: ' + str(jobId) + '\n'
 
-    
-    if status == 'Error':
-        subject = 'TumorMap error'
-        if appCtx.dev == 1:
+    # Capture any errors here so the admin gets notified via email because
+    # uncaught errors won't show up in the log.
+    subject = ''
+    msg = ''
+    adminMsg = ''
+    mapId = ''
+    url = ''
+    try:
+        if ctx.app.dev == 1:
             subject = 'DEV: ' + subject
-        if result:
-            if 'map' in result:
-                msg += '\nmap: ' + result['map']
-            if 'error' in result:
-                msg += '\nerror: ' + result['error']
 
-        # Send the error to the admin.
-        adminMsg = 'email: ' + str(email) + '\n' + msg
-        if result and 'stackTrace' in result and result['stackTrace'] != None:
-            adminMsg += '\n\n' + result['stackTrace']
-        sendAdminEmail(subject, adminMsg, appCtx)
+        # Build the admin summary.
+        adminMsg += '        job:  ' + str(jobId)
+        adminMsg += '\n  operation:  ' + operation
+        adminMsg += '\n     status:  ' + status
+        adminMsg += '\n      email:  ' + email
+        if hasattr(ctx, 'map'):
+            mapId = ctx.map
+        else:
+            mapId = 'None'
+        adminMsg += '\n       map:  ' + mapId
+        if 'url' in result:
+            url = result['url']
+        else:
+            url = 'None'
+        adminMsg += '\n       url:  ' + url + '\n'
 
-    elif email and not doNotEmail:
+        # Handle the successful result and mail it unless specified not to.
+        if status == 'Success' and not doNotEmail:
+            
+            # If the operation has a success result formatter, use it.
+            subject += 'TumorMap results'
+            moduleName = operation + '_web'
+            module = importlib.import_module(moduleName, package=None)
+            if hasattr(module, 'formatEmailResult'):
+                formattedResult = module.formatEmailResult(result, ctx)
+                msg += formattedResult
+
+            else:  # there is no result formatter, so use the default message.
+                msg = 'See the results of your request to ' + operation + \
+                    ' for map: ' + mapId + \
+                    ' at:\n\n' + url
+
+            sendClientEmail(email, subject, msg, ctx.app)
+
+        elif status == 'Error':
+
+            # Prepare the standard user message.
+            subject += 'TumorMap error'
+            msg = 'There was an error while calculating results for '
+            msg += operation
+            msg += ' for map: ' + mapId
+            msg += '\n\nerror: ' + result['error']
+
+            # Send the mwssage to the user if appropriate.
+            if not doNotEmail:
+                sendClientEmail(email, subject, msg, ctx.app)
+            
+            # Send the admin message.
+            if 'stackTrace' in result:
+                adminMsg += '\n\n' + result['stackTrace']
+            adminMsg += '\n\nUser message:\n------------\n' + msg
+            sendAdminEmail(subject, adminMsg, ctx.app)
+            
+    except:
     
-        # This must be a successful result.
-        # If the operation has a success result formatter, use it.
-        moduleName = operation + '_web'
-        module = importlib.import_module(moduleName, package=None)
-        if result and hasattr(module, 'formatEmailResult'):
-            formattedResult = module.formatEmailResult(result)
-            msg += formattedResult
-
-        else:  # there is no result formatter, so look for a URL.
-            if result and 'url' in result:
-                msg += '\n' + result['url']
-
-    # Send the success or error to the user if appropriate.
-    if email and not doNotEmail:
-        sendClientEmail(email, subject, msg, appCtx)
+        # Send admin error email.
+        # TODO capture stacktrace for admin email.
+        subject += ': exception when reporting job results'
+        adminMsg += '\n\n' + traceback.format_exc(100)
+        adminMsg += '\n\nUser message:\n' + msg
+        sendAdminEmail(subject, adminMsg, ctx.app)
 
 def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):
     subject = 'TumorMap error'

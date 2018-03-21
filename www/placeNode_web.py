@@ -19,17 +19,19 @@ import numpy as np
 
 import job
 
-def formatEmailResult(result):
+def formatEmailResult(result, ctx):
 
     # Format the results for sending in an email.
     
+    msg = 'See your newly placed nodes on the map: ' + ctx.map + ' at:\n\n'
+
     # Find all of the urls.
     url = {}
     for node in result['nodes']:
         url[node] = result['nodes'][node]['url']
     uniqueUrls = set(url.values())
-    msg = '\nFor placing the new nodes:'
-    
+    msg += url + '\n\nFor placing the new nodes:\n'
+
     # Include each node.
     for nodeName in sorted(result['nodes'].keys()):
         msg += '\n' + nodeName
@@ -339,5 +341,6 @@ def preCalc(dataIn, ctx):
     email = None
     if 'email' in dataIn:
         email = dataIn['email']
+
     return job.add(email, 'placeNode', dataIn, ctx)
 
