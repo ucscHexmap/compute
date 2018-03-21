@@ -156,17 +156,23 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         adminMsg += '        job:  ' + str(jobId)
         adminMsg += '\n  operation:  ' + operation
         adminMsg += '\n     status:  ' + status
-        adminMsg += '\n      email:  ' + email
+        if email == None:
+            adminMsg += '\n      email:  None'
+        else:
+            adminMsg += '\n      email:  ' + email
         if hasattr(ctx, 'map'):
             mapId = ctx.map
         else:
             mapId = 'None'
-        adminMsg += '\n       map:  ' + mapId
-        if 'url' in result:
-            url = result['url']
+        adminMsg += '\n        map:  ' + mapId
+        if result == None:
+            adminMsg += '\n    result:  None\n'
         else:
-            url = 'None'
-        adminMsg += '\n       url:  ' + url + '\n'
+            if 'url' in result:
+                url = result['url']
+            else:
+                url = 'None'
+            adminMsg += '\n        url:  ' + url + '\n'
 
         # Handle the successful result and mail it unless specified not to.
         if status == 'Success' and not doNotEmail:
@@ -183,8 +189,8 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
                 msg = 'See the results of your request to ' + operation + \
                     ' for map: ' + mapId + \
                     ' at:\n\n' + url
-
-            sendClientEmail(email, subject, msg, ctx.app)
+            if email != None:
+                sendClientEmail(email, subject, msg, ctx.app)
 
         elif status == 'Error':
 
@@ -193,16 +199,18 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
             msg = 'There was an error while calculating results for '
             msg += operation
             msg += ' for map: ' + mapId
-            msg += '\n\nerror: ' + result['error']
+            if result != None:
+                msg += '\n\nerror: ' + result['error']
 
             # Send the mwssage to the user if appropriate.
-            if not doNotEmail:
+            if not doNotEmail and email != None:
                 sendClientEmail(email, subject, msg, ctx.app)
             
             # Send the admin message.
-            if 'stackTrace' in result:
+            if result != None and 'stackTrace' in result:
                 adminMsg += '\n\n' + result['stackTrace']
             adminMsg += '\n\nUser message:\n------------\n' + msg
+            subject += ' for user email: ' + email
             sendAdminEmail(subject, adminMsg, ctx.app)
             
     except:
@@ -212,6 +220,7 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         subject += ': exception when reporting job results'
         adminMsg += '\n\n' + traceback.format_exc(100)
         adminMsg += '\n\nUser message:\n' + msg
+        subject += ' for user email: ' + email
         sendAdminEmail(subject, adminMsg, ctx.app)
 
 def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):
