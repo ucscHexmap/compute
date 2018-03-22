@@ -223,6 +223,9 @@ def dataRoute(dataId):
 # Handle data404ok/<dataId> routes which are data requests by data ID.
 # A 404 is ok to return here, so we do it as 'success' so that errors
 # will not be thrown on the client console.
+# TODO: the data server should be returning a 204 rather than 404.
+#       error 204 would not make an http error display on the browser console
+#       and would make this logic more simple.
 @app.route('/dataOk404/<path:dataId>', methods=['GET'])
 def dataRouteOk404(dataId):
     dataRouteInner(dataId, True)
