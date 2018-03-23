@@ -142,16 +142,21 @@ def viewServer(data):
         return
     _validateString('viewServer', data)
 
-def layoutInputDataId (data, required=False):
-    name = 'layoutInputDataId'
-    _validateString(name, data, required)
-    _validatePathName(data[name], name)
+def dataIdOrUrl (dataId, url, data, required=False):
+    if dataId in data:
+        _validateString(dataId, data)
+        _validatePathName(data[dataId], dataId)
+    elif url in data:
+        _validateString(url, data)
+    elif required:
+        raise ErrorResp(
+            dataId + ' or ' + url + ' parameter missing or malformed')
 
-def colorAttributeDataId (data, required=False):
-    name = 'colorAttributeDataId'
-    if name in data:
-        _validateString(name, data)
-        _validatePathName(data[name], name)
+def layoutInput (data, required=False):
+    dataIdOrUrl('layoutInputDataId', 'layoutInputUrl', data, required)
+
+def colorAttribute (data, required=False):
+    dataIdOrUrl('colorAttributeDataId', 'colorAttributeUrl', data, required)
 
 def neighborCount (data):
     name = 'neighborCount'

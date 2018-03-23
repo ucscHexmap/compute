@@ -87,6 +87,10 @@ def createBookmark (state, viewServer, ctx):
     @param ctx: the job context
     @return: a bookmark
     '''
+    # Include the email addrs in the bookmark.
+    if hasattr(ctx, 'email'):
+        state['email'] = ctx.email
+    
     # Ask the view server to create a bookmark of this client state
     try:
         bResult = requests.post(
@@ -148,6 +152,10 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
     adminMsg = ''
     mapId = ''
     url = ''
+    
+    def attachStackTrace(adminMsg, trace):
+        adminMsg += '\ntraceback:\n' + trace + '\n'
+    
     try:
         if ctx.app.dev == 1:
             subject = 'DEV: ' + subject
@@ -158,15 +166,16 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         adminMsg += '\n     status:  ' + status
         if email == None:
             adminMsg += '\n      email:  None'
+            attachStackTrace(adminMsg, traceback.format_exc())
         else:
             adminMsg += '\n      email:  ' + email
         if hasattr(ctx, 'map'):
-            mapId = ctx.map
+            adminMsg += '\n        map:  ' + ctx.map
         else:
-            mapId = 'None'
-        adminMsg += '\n        map:  ' + mapId
+            adminMsg += '\n        map:  None'
         if result == None:
             adminMsg += '\n    result:  None\n'
+            attachStackTrace(adminMsg, traceback.format_exc())
         else:
             if 'url' in result:
                 url = result['url']
@@ -174,43 +183,51 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
                 url = 'None'
             adminMsg += '\n        url:  ' + url + '\n'
 
-        # Handle the successful result and mail it unless specified not to.
+        module = importlib.import_module(operation + '_web', package=None)
+
+        # Handle the successful result and mail it unless told not to.
         if status == 'Success' and not doNotEmail:
             
-            # If the operation has a success result formatter, use it.
-            subject += 'TumorMap results'
-            moduleName = operation + '_web'
-            module = importlib.import_module(moduleName, package=None)
-            if hasattr(module, 'formatEmailResult'):
-                formattedResult = module.formatEmailResult(result, ctx)
-                msg += formattedResult
+            if email != 'None':
+                subject += 'TumorMap results'
 
-            else:  # there is no result formatter, so use the default message.
-                msg = 'See the results of your request to ' + operation + \
-                    ' for map: ' + mapId + \
-                    ' at:\n\n' + url
-            if email != None:
+                # If the operation has a success result formatter, use it.
+                if hasattr(module, 'formatEmailResult'):
+                    formattedResult = module.formatEmailResult(result, ctx)
+                    msg += formattedResult
+
+                else:  # there is no result formatter, so use the default message.
+                    msg = 'See the results of your request to ' + operation + \
+                        ' for map: ' + mapId + \
+                        ' at:\n\n' + url
                 sendClientEmail(email, subject, msg, ctx.app)
 
         elif status == 'Error':
 
             # Prepare the standard user message.
             subject += 'TumorMap error'
-            msg = 'There was an error while calculating results for '
-            msg += operation
-            msg += ' for map: ' + mapId
-            if result != None:
-                msg += '\n\nerror: ' + result['error']
+            
+            # If the operation has an error formatter, use it.
+            if hasattr(module, 'formatEmailError'):
+                formattedResult = module.formatEmailError(result, ctx)
+                msg += formattedResult
 
-            # Send the mwssage to the user if appropriate.
+            else:  # there is no error formatter, so use the default message.
+                msg = 'There was an error while calculating results for '
+                msg += operation
+                msg += ' for map: ' + mapId
+                if result != None:
+                    msg += '\n\nerror: ' + result['error']
+
+            # Send the message to the user if appropriate.
             if not doNotEmail and email != None:
                 sendClientEmail(email, subject, msg, ctx.app)
             
             # Send the admin message.
             if result != None and 'stackTrace' in result:
-                adminMsg += '\n\n' + result['stackTrace']
+                adminMsg += '\n\n' + result['stackTrace'] + '\n'
             adminMsg += '\n\nUser message:\n------------\n' + msg
-            subject += ' for user email: ' + email
+            subject += ' for user: ' + email
             sendAdminEmail(subject, adminMsg, ctx.app)
             
     except:
@@ -218,9 +235,12 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         # Send admin error email.
         # TODO capture stacktrace for admin email.
         subject += ': exception when reporting job results'
-        adminMsg += '\n\n' + traceback.format_exc(100)
+        attachStackTrace(adminMsg, traceback.format_exc())
         adminMsg += '\n\nUser message:\n' + msg
-        subject += ' for user email: ' + email
+        if email == None:
+            subject += ' for user email: None'
+        else:
+            subject += ' for user email: ' + email
         sendAdminEmail(subject, adminMsg, ctx.app)
 
 def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):

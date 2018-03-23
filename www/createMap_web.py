@@ -12,12 +12,43 @@ import validate_web as validate
 import layout
 import job
 
-def _postCalc(result, ctx):
+def formatGeneratedUrls(result, msg):
 
-    # Open the log file which is the result returned.
-    logFile = result
+    # Add any urls generated for uploaded layout input files.
+    for url in result['layoutInputUrl']:
+        msg += 'Your layout input data may be accessed in the future ' + \
+            'with:\n\n' + url + '\n\n'
+
+    # Add any urls generated for uploaded color attribute files.
+    for url in result['colorAttributeUrl']:
+        msg += 'Your color attributes data may be accessed in the future ' + \
+            'with:\n\n' + url + '\n\n'
+
+
+def formatEmailError(result, ctx):
+
+    # Format the error for sending in an email.
+    msg = 'There was an error while calculating results for createMap'
+    msg += ' for map: ' + ctx.map
+    if result != None:
+        msg += '\n\nerror: ' + result['error'] + '\n\n'
+    formatGeneratedUrls(result, msg)
+    return msg
+
+
+def formatEmailResult(result, ctx):
+
+    # Format the results for sending in an email.
+    msg = 'See your new map: ' + ctx.map + ' at:\n\n' + result['url'] + '\n\n'
+    formatGeneratedUrls(result, msg)
+    return msg
+
+
+def checkLog(result, ctx):
+
+    # Open the log file in the result returned.
     try:
-        f = open(logFile,'r')
+        f = open(result['logFile'], 'r')
     except (e):
         raise Exception('Could not open log file')
     
@@ -32,11 +63,21 @@ def _postCalc(result, ctx):
         raise Exception('Error when creating a map. Calc script had an ' + \
             'unknown error. ' + 'logfile: ' + logFile)
 
-    result = {
-        'url': ctx.viewServer + '/?p=' + ctx.map,
-        'logFile': logFile
-    }
-    return "Success", result
+
+def generateDataUrls(result, parms, ctx):
+
+    # Save any new data URLs in the results.
+    if 'layoutInputDataId' in parms:
+        result['layoutInputUrl'] = []
+        for dataId in parms['layoutInputDataId']:
+            result['layoutInputUrl'].append(
+                ctx.app.dataServer + '/data/' + dataId)
+    if 'colorAttributeDataId' in parms:
+        result['colorAttributeUrl'] = []
+        for dataId in parms['colorAttributeDataId']:
+            result['colorAttributeUrl'].append(
+                ctx.app.dataServer + '/data/' + dataId)
+
 
 def calcMain(parms, ctx):
 
@@ -60,30 +101,56 @@ def calcMain(parms, ctx):
     # that are expected by the calc function. If we want this to become a public
     # API, we need to accept the new names only.
     opts = Namespace()
-    opts.layoutInputFile = \
-        [path.join(ctx.app.dataRoot, parms['layoutInputDataId'])]
+    
+    # layoutInput is required: accept either a file location relative to the
+    # data root, or a URL.
+    if 'layoutInputDataId' in parms:
+        opts.layoutInputFile = \
+            [path.join(ctx.app.dataRoot, parms['layoutInputDataId'])]
+    elif 'layoutInputUrl' in parms:
+        opts.layoutInputFile = [parms['layoutInputUrl']]
+
+    # names and directory are required
     opts.names = [parms['layoutInputName']]
     opts.directory = path.join(ctx.app.dataRoot, parms['outputDirectory'])
-    if 'zeroReplace' in parms:
-        opts.zeroReplace = parms['zeroReplace']
+
+    # colorAttribute is optional: accept either a file location relative to the
+    # data root, or a URL.
     if 'colorAttributeDataId' in parms:
         opts.scores = \
             [path.join(ctx.app.dataRoot, parms['colorAttributeDataId'])]
+    elif 'colorAttributeUrl' in parms:
+        opts.scores = [parms['colorAttributeUrl']]
+
+    # The rest of these are optional.
+    if 'zeroReplace' in parms:
+        opts.zeroReplace = parms['zeroReplace']
     if 'noLayoutIndependentStats' in parms:
         opts.associations = not parms['noLayoutIndependentStats']
     if 'noLayoutAwareStats' in parms:
         opts.mutualinfo = not parms['noLayoutAwareStats']
 
     # Call the calc function.
-    result = layout.makeMapUIfiles(opts)
-    
-    # Save some parms we need for post-processing.
-    if 'viewServer' in parms:
-        ctx.viewServer = parms['viewServer']
-    else:
-        ctx.viewServer = ctx.app.viewServer
+    result = {
+        'logFile': layout.makeMapUIfiles(opts),
+    }
 
-    return _postCalc(result, ctx)
+    # Save any new data URLs in the results.
+    generateDataUrls(result, parms, ctx)
+
+    # Check the calc log for success.
+    checkLog(result, ctx)
+
+    # Save the url to access the new map.
+    if 'viewServer' in parms:
+        viewServer = parms['viewServer']
+    else:
+        viewServer = ctx.app.viewServer
+
+    result['url'] = viewServer + '/?p=' + ctx.map
+
+    return "Success", result
+
 
 def _validateParms(data):
 
@@ -93,7 +160,7 @@ def _validateParms(data):
 
     # Checks on required parameters
     validate.map(data, True)
-    validate.layoutInputDataId(data, required=True)
+    validate.layoutInput(data, required=True)
     validate.layoutInputName(data, required=True)
     # TODO: validate.outputDirectory(data, required=True)
 
@@ -101,12 +168,13 @@ def _validateParms(data):
     #validate.authGroup(data)
     validate.email(data)
     validate.neighborCount(data)
-    validate.colorAttributeDataId(data)
+    validate.colorAttribute(data)
     #validate.firstColorAttribute(data)
     #validate.colormapDataId(data)
     #validate.layoutAwareStats(data)
     #validate.layoutIndependentStats(data)
     #validate.viewServer(data)
+
 
 def preCalc(data, ctx):
 
