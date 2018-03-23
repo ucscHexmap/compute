@@ -20,17 +20,20 @@ Without the --percentile flag, the script will create the edge file
 format for the --top nearest neighbors.
 
 The --percentile flag allows for varying numbers of neighbors per
-node, by ensuring that all edges put into the sparse format are > than
-a percentile threshold. This percentile threshold is calculated
-through the given --top argument.
+node, by including edges  > than a percentile threshold 
+calculated from the given --top parameter. Calculating the percentile
+through top lets the user intuitively control the amount of edges 
+included in the sparse format. The upper bound for
+number of edges using the --percentile flag == --top * n_nodes.
 
-For example if --top 10 --percentile was chosen on 100 nodes,
-only the  > top 10% of edge values would be included in
-the sparse similarity matrix. Note that with --percentile it is
-possible to have nodes excluded from the sparse format, if the nodes
-have no similarities passing the given cutoff.
 
-Author: Duncan McColl duncmc831@gmail.com
+For example if --top 10 --percentile was chosen on 200 nodes, then
+2000 edges would be included but those edges would be in the >95%
+(1 -(10*200 / 200*200)) of edge values. Note with --percentile it is 
+possible to have a node excluded from the sparse format if there
+are no similarities passing the determined cutoff.
+
+Author: Duncan McColl dmccoll@ucsc.edu
 """
 import argparse
 import sys
