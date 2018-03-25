@@ -141,6 +141,34 @@ def sendAdminEmail (subject, msg, appCtx):
     sendMail(appCtx.adminEmail, appCtx.adminEmail, subject, msg)
 
 
+def attachStackTrace(traceStr=None):
+    trace = traceStr;
+    if trace ==  None:
+        trace = traceback.format_exc(100)
+
+    return '\n\nData server ' + trace + '\n'
+
+
+def addEmailToSubject(email):
+    return ' for user: ' + email
+
+
+def attachUserMessage(msg):
+    return 'User message:\n------------\n' + msg
+
+
+def attachItem(prefix, item=None):
+    msg = prefix;
+    newItem = item
+    try:
+        msg += item
+    except (e):
+        newItem = 'None'
+        msg += 'None'
+        msg += '\n\n' + str(e) + '\n\n'
+    return msg, newItem
+
+    
 def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
     
     # Email the success or error result to user email and admin if appropriate.
@@ -153,58 +181,61 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
     mapId = ''
     url = ''
     
-    def attachStackTrace(adminMsg, trace):
-        adminMsg += '\ntraceback:\n' + trace + '\n'
-    
     try:
         if ctx.app.dev == 1:
             subject = 'DEV: ' + subject
 
         # Build the admin summary.
-        adminMsg += '        job:  ' + str(jobId)
+        adminMsg += '     job ID:  ' + str(jobId)
         adminMsg += '\n  operation:  ' + operation
         adminMsg += '\n     status:  ' + status
-        if email == None:
-            adminMsg += '\n      email:  None'
-            attachStackTrace(adminMsg, traceback.format_exc())
-        else:
-            adminMsg += '\n      email:  ' + email
-        if hasattr(ctx, 'map'):
-            adminMsg += '\n        map:  ' + ctx.map
-        else:
-            adminMsg += '\n        map:  None'
-        if result == None:
-            adminMsg += '\n    result:  None\n'
-            attachStackTrace(adminMsg, traceback.format_exc())
-        else:
-            if 'url' in result:
-                url = result['url']
-            else:
-                url = 'None'
-            adminMsg += '\n        url:  ' + url + '\n'
+        
+        # Add email to admin summary.
+        more, newItem = attachItem('\n      email:  ', email)
+        adminMsg += more
+        email = newItem
+        
+        # Add map to admin summary.
+        more, newItem = attachItem('\n        map:  ', ctx.map)
+        adminMsg += more
+        mapId = newItem
 
+        # Add url to admin summary.
+        if result == None:
+            adminMsg += '\n     result:  None'
+        else:
+            adminMsg += '\n     result:  Exists'
+            if 'url' in result:
+                more, newItem = attachItem('\n        url:  ', result['url'])
+                adminMsg += more
+                url = newItem
+            else:
+                adminMsg += '\n        url:  None'
+                url = 'None'
+
+
+        # Find the operation module related to this message.
         module = importlib.import_module(operation + '_web', package=None)
 
-        # Handle the successful result and mail it unless told not to.
-        if status == 'Success' and not doNotEmail:
+        # Handle the successful result and mail it to user unless told not to.
+        if status == 'Success' and email != 'None' and not doNotEmail:
             
-            if email != 'None':
-                subject += 'TumorMap results'
+            subject += 'TumorMap results'
 
-                # If the operation has a success result formatter, use it.
-                if hasattr(module, 'formatEmailResult'):
-                    formattedResult = module.formatEmailResult(result, ctx)
-                    msg += formattedResult
+            # If the operation has a success result formatter, use it.
+            if hasattr(module, 'formatEmailResult'):
+                formattedResult = module.formatEmailResult(result, ctx)
+                msg += formattedResult
 
-                else:  # there is no result formatter, so use the default message.
-                    msg = 'See the results of your request to ' + operation + \
-                        ' for map: ' + mapId + \
-                        ' at:\n\n' + url
-                sendClientEmail(email, subject, msg, ctx.app)
+            else:  # there is no result formatter, so use the default message.
+                msg = 'See the results of your request to ' + operation + \
+                    ' for map: ' + mapId + \
+                    ' at:\n\n' + url
+            sendClientEmail(email, subject, msg, ctx.app)
 
         elif status == 'Error':
 
-            # Prepare the standard user message.
+            # Prepare the standard user error message.
             subject += 'TumorMap error'
             
             # If the operation has an error formatter, use it.
@@ -225,22 +256,19 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
             
             # Send the admin message.
             if result != None and 'stackTrace' in result:
-                adminMsg += '\n\n' + result['stackTrace'] + '\n'
-            adminMsg += '\n\nUser message:\n------------\n' + msg
-            subject += ' for user: ' + email
+                adminMsg += attachStackTrace(result['stackTrace'])
+            adminMsg += attachUserMessage(msg)
+            subject += addEmailToSubject(email)
             sendAdminEmail(subject, adminMsg, ctx.app)
             
     except:
     
-        # Send admin error email.
+        # Send admin error email due to an exception in error reporting.
         # TODO capture stacktrace for admin email.
         subject += ': exception when reporting job results'
-        attachStackTrace(adminMsg, traceback.format_exc())
-        adminMsg += '\n\nUser message:\n' + msg
-        if email == None:
-            subject += ' for user email: None'
-        else:
-            subject += ' for user email: ' + email
+        subject += addEmailToSubject(email)
+        adminMsg += attachStackTrace(traceback.format_exc(100))
+        adminMsg += attachUserMessage(msg)
         sendAdminEmail(subject, adminMsg, ctx.app)
 
 def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):
