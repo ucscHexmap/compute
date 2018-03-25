@@ -23,24 +23,25 @@ def formatEmailResult(result, ctx):
 
     # Format the results for sending in an email.
     
-    msg = 'See your newly placed nodes on the map: ' + ctx.map + ' at:\n\n'
+    msg = 'See your newly placed nodes on the map: ' + ctx.map + ':'
 
     # Find all of the urls.
     url = {}
     for node in result['nodes']:
         url[node] = result['nodes'][node]['url']
     uniqueUrls = set(url.values())
-    msg += url + '\n\nFor placing the new nodes:\n'
+
+    # If there is only one url, include that one.
+    if len(uniqueUrls) < 2:
+        msg += '\n\n' + list(uniqueUrls)[0]
+
+    msg += '\n\nFor placing the new nodes:\n'
 
     # Include each node.
     for nodeName in sorted(result['nodes'].keys()):
         msg += '\n' + nodeName
         if len(uniqueUrls) > 1:
             msg += ': ' + url[nodeName]
-
-    # If there is only one url, include that one.
-    if len(uniqueUrls) < 2:
-        msg = '\n' + list(uniqueUrls)[0] + '\n' + msg
 
     return msg
 
