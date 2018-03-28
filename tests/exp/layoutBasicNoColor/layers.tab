@@ -1,10 +1,11 @@
-DNA_signature	layer_8.tab	60		-inf
-TP63_expression altered	layer_4.tab	60	40	-inf
-Apoptosis	layer_5.tab	60		-inf
-TP63_mutated	layer_2.tab	60	20	-inf
-Random	layer_6.tab	60		-inf
-TP53_expression altered	layer_3.tab	60	40	-inf
-Subtype	layer_0.tab	60		-inf
-TP53_mutated	layer_1.tab	60	20	-inf
-RB1 level	layer_9.tab	60		-inf
-DNA_Repair	layer_7.tab	60	20	-inf
+3_categories	layer_0.tab	59		0.5217092
+mutated/not	layer_1.tab	59	21.0	0.329299
+1/0	layer_9.tab	59	39.0	0.1241965
+continuous_float	layer_6.tab	59		0.02103615
+yes/No	layer_2.tab	59	39.0	0.3761979
+bad_indices	layer_10.tab	59		0.05441783
+true/False	layer_3.tab	59	20.0	0.1241965
+On/off	layer_4.tab	59	39.0	0.1241965
+continuous_integer_w_dot	layer_5.tab	59		0.5312605
+continuous_integer	layer_8.tab	59		0.1039525
+true/No	layer_7.tab	59	20.0	0.1241965

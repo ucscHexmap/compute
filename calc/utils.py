@@ -3,9 +3,10 @@
 utils.py
 Misc. utilities for the server python code
 """
-import math, traceback
+import os, math, traceback
 import numpy as np
 import pandas as pd
+import formatCheck
 
 #The following functions are for shared by modules and used to read in data
 def readXYs(fpath):
@@ -18,42 +19,134 @@ def readXYs(fpath):
 
     return pd.read_csv(fpath,sep='\t',index_col=0,comment='#',header=None)
 
-def getAttributes(fileNameList,dir='',debug=False):
-    '''
-    creates a single attribute/metadata dataframe (pandas) from a list of filenames
-     expects rows to be similar (describing nodes in tumor map format) and
-     columns to describe each attribute or unit of metadata
 
-    NOte: adds a '/' to the end of dir if not there
+def readPandas(datafile):
+    """
+    This reads data into a pandas dataframe following these specifications.
+    >the file is tab separated
+    >ignore lines with '#'
+    >if the first line not hidden with '#' is all strings, then it is a header
+    >the first column holds the row names
+    @param datafile:
+    @return: pandas DataFrame
+    """
+
+    comment_char = '#'
+    df = pd.read_csv(
+        datafile,
+        index_col=0,
+        comment=comment_char,
+        header=None,
+        sep="\t",
+    )
+
+    possible_header = df.iloc[0]
+    if hasHeader(possible_header):
+        df.columns = df.iloc[0]
+        df.drop([df.index[0]], inplace=True)
+        df = df.apply(lambda x: pd.to_numeric(x, errors="ignore"))
+
+    # Put the filename as the index name
+    df.index.name = datafile
+    return df
+
+
+def duplicates_check(list_):
+    s = pd.Series(list_)
+    dups = s[s.duplicated()]
+    n_dups = len(dups)
+    if n_dups:
+        if n_dups > 100:
+            message = "Over 100 duplicate ids found. " \
+                      "Identifiers need to be unique for proper processing"
+        else:
+            message = "Duplicate ids found. " \
+                      "Identifiers need to be unique for proper processing." \
+                      "They are: \n" + "\n".join(dups)
+
+        raise ValueError(message)
+
+
+def duplicate_columns_check(df):
+    """
+    Throw a value error if duplicate columns are found.
+    @param df: pandas dataframe
+    @return: None
+    """
+    duplicates_check(df.columns)
+
+
+def nCols(filename):
+    """
+    Count number of columns in a tab separated file.
+    @param filename:
+    @return: int, number of columns in the file
+    """
+    n_cols = -1
+    with open(filename, "r") as fin:
+        for line in fin:
+            if line.strip()[0] != "#":
+                n_cols = len(line.split("\t"))
+                break
+
+    return n_cols
+
+
+def hasHeader(possible_header):
+    isHeader = True
+    n_cols = len(possible_header)
+    if n_cols == 3:
+        if formatCheck.type_of_3colHA(possible_header) == "NOT_VALID":
+            isHeader = False
+
+    return isHeader
+
+def _firstLineArray(filename):
+    with open(filename,'r') as fin:
+        # Only reads the first line.
+        for line in fin:
+            return line.strip().split("\t")
+
+
+def tabFilesToDF(fileNameList, dir=''):
+    '''
+    Creates a single attribute/metadata dataframe (pandas) from a list
+    of tab delimeted files.
+    Rows in each file should overlap with other files in the list.
+    Columns describe an attribute or unit of metadata.
+    All columns are converted to float unless an error is thrown.
 
     :param fileNameList: this is a list of attribute matrices
     :param dir: this is the name of the directory that attributes are in
     :return: a pandas dataframe with all the attributes for a given map
     '''
-    if debug:
-        print 'getAttributes() called with'
-        print fileNameList
 
-    # TODO: the standard way to handle this is always use os.path.join() to
-    # join a dir with a file, or to join any sort of paths. That utility
-    # adds a '/' if needed.  It can take two or more paths to join.
-    if (len(dir) > 0 and dir[-1]!= '/'):
-        dir+='/'
-
-    dfs = [] #list to hold individual dfs
+    dfs = []
     for filename in fileNameList:
-        filename = dir + filename
+        # Allow the filename to be a stringIO buffer.
+        try:
+            filename = os.path.join(dir, filename)
+        except AttributeError:
+            pass
 
-        #assume first column is row name and do below to get rid of duplicates
-        df = pd.read_csv(filename,sep='\t')#,index_col=0)
+        df = pd.read_csv(filename, sep='\t', dtype='str')
 
-        if debug:
-            print "column names for attr file: " + str(df.columns)
+        df = df.drop_duplicates(subset=df.columns[0], keep='last')
+        df = df.set_index(df.columns[0])
+        dfs.append(df)
 
-        dfs.append(df.drop_duplicates(subset=df.columns[0], keep='last').set_index(df.columns[0]))
+    # Make one dataframe out of the many.
+    allAtts = pd.concat(dfs, axis=1)
 
-    #stich all attributes together
-    return(pd.concat(dfs,axis=1))
+    # Float conversion.
+    for colname in allAtts.columns:
+        try:
+            allAtts[colname] = allAtts[colname].astype(np.float)
+        except ValueError as e:
+            pass
+
+    return allAtts
+
 
 def sigDigs(x, sig=7,debug=False):
 
@@ -73,11 +166,13 @@ def sigDigs(x, sig=7,debug=False):
     # Then convert back to a float
     return float(format % x)
 
+
 def toFloat(x):
     try:
         return float(x)
     except ValueError:
         return float('NaN')
+
 
 def truncate(f, n):
     '''
@@ -96,6 +191,5 @@ def truncate(f, n):
     i, p, d = s.partition('.')
     return '.'.join([i, (d+'0'*n)[:n]])
 
-#this makes the function truncate easily/efficiently applyable to every cell in an  numpy array
-#http://stackoverflow.com/questions/7701429/efficient-evaluation-of-a-function-at-every-cell-of-a-numpy-array
+# Make the truncate function able to apply to an numpy array.
 truncateNP = np.vectorize(truncate,otypes=[np.float])

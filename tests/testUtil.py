@@ -8,15 +8,15 @@ from os import path
 import string
 import unittest
 from scipy import stats
-
-from rootDir import getRootDir
+import StringIO
 import pandas as pd
+import string, random
 
-rootDir = getRootDir()
-testDir = rootDir + 'tests/pyUnittest/'
+testDir = os.getcwd()
 
-PYTHONPATH = rootDir + 'www/server'
-os.environ["PYTHONPATH"] = PYTHONPATH
+def message(actual, expected):
+    msg = str(actual) + " | didn't match | " + str(expected)
+    return msg
 
 def findCurlStatusCode(verbose):
     i = verbose.find('< HTTP/1.1')
@@ -56,7 +56,7 @@ def removeOldOutFiles(outDir):
         pass
     os.makedirs(outDir)
 
-def compareActualVsExpectedDir(s, outDir, expDir,excludeFiles=['log']):
+def compareActualVsExpectedDir(s, expDir, outDir, excludeFiles=['log', 'meta.json', 'mapMeta.json']):
     os.chdir(expDir)
     expFiles = glob.glob('*')
     expFiles.sort()
@@ -65,11 +65,21 @@ def compareActualVsExpectedDir(s, outDir, expDir,excludeFiles=['log']):
     outFiles.sort()
     
     # Verify the filenames are those expected
+    for filename in excludeFiles:
+        try:
+            outFiles.remove(filename)
+        except:
+            pass
+        try:
+            expFiles.remove(filename)
+        except:
+            pass
     #print 'outFiles', outFiles
     #print 'expFiles', expFiles
     s.assertTrue(outFiles == expFiles,
                  msg='Differences in file names: ' +
-                     str( set(expFiles).symmetric_difference(set(outFiles)))
+                     str( set(expFiles).symmetric_difference(set(outFiles))) +
+                     ' between ' + expDir + ' and ' + outDir
                  )
 
     # Compare the file contents with the expected
@@ -85,29 +95,51 @@ def compareActualVsExpectedDir(s, outDir, expDir,excludeFiles=['log']):
     mismatch = diff[1]
 
     s.assertTrue(mismatch == [] or mismatch == None,
-                 msg='mismatching files: ' + str(mismatch)
+                 msg='mismatching files: ' + str(mismatch) +
+                     ' between ' + expDir + ' and ' + outDir
+
                  ) # mismatched files
     
     # There should be no errors resulting from the diff
     #if diff[2] != []:
     #    print 'errors comparing files: ' + str(diff[2])
     s.assertTrue(diff[2] == [],
-                 msg='Errors with diff: ' + str(diff[2])
+                 msg='Errors with diff: ' + str(diff[2]) +
+                     ' between ' + expDir + ' and ' + outDir
+
                  ) # errors
 
-def compareActualVsExpectedFile(s, fname, outDir, expDir):
+def compareActualVsExpectedFile2(s, expPath, outPath):
+    
+    # Compare an expected file with an output file given full pathnames.
+
+    # Verify the file exists
+    s.assertTrue(path.isfile(outPath), msg='is not a file: ' + outPath)
+
+    # Compare the file contents
+    s.assertTrue(filecmp.cmp(outPath, expPath),
+                 msg='files do not match: ' + expPath + ' and ' + outPath)
+    
+def compareActualVsExpectedFile(s, fname, expDir, outDir):
+
+    # Compare two files of the same base name in different directories.
     
     # Verify the directory exists
     s.assertTrue(path.exists(outDir))
-
-    # Verify the file exists
-    s.assertTrue(path.isfile(path.join(outDir,fname)),
-                 msg='is not a file: ' + path.join(outDir,fname))
-
-    # Compare the file contents
-    s.assertTrue(filecmp.cmp(path.join(outDir,fname),path.join(expDir,fname)),
-                 msg='file did not match: ' + fname)
     
+    compareActualVsExpectedFile2(
+        s, path.join(expDir, fname), path.join(outDir, fname))
+
+def dataFrameToStrBuf(df):
+    '''
+    makes a dataframe into a type that can be read as a file object
+    @param df:
+    @return:
+    '''
+    s_buf = StringIO.StringIO()
+    df.to_csv(s_buf,sep='\t')
+    s_buf.seek(0)
+    return s_buf
 
 def gen_dat(nrows=50,ncols=40,mu=0,std=1):
     '''
@@ -140,4 +172,8 @@ def getdf(fin='',type_='tab',rownamecol=0,nrows=50,ncols=40):
         return pd.DataFrame(gen_dat(nrows,ncols),index=range(0,nrows),
                             columns=range(0,ncols))
     else:
-        return "SOME WENT WRONG"
+        raise ValueError("SOME WENT WRONG")
+
+def randStr(N):
+    return ''.join(random.choice(string.ascii_uppercase + string.digits) for _
+                  in range(N))

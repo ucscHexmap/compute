@@ -43,7 +43,7 @@ from colormath.color_diff import delta_e_cmc
 from colormath.color_objects import LabColor, sRGBColor
 from colormath.color_conversions import convert_color
 import traceback
-from utils import getAttributes
+from utils import tabFilesToDF
 
 #find a good place to set the seed... this isn't it
 np.random.seed(1)
@@ -160,14 +160,14 @@ def defaultColors():
     ]
     '''
     colors = [
-        '#0000FF','#00FF00','#00FFFF',
-        '#FF0000','#FF00FF','#FFFF00',
-        '#00007F','#00FF7F',
-        '#007F00','#007FFF','#007F7F',
-        '#FF007F','#FFFF7F','#FF7F00',
-        '#FF7FFF','#FF7F7F','#7F0000',
-        '#7F00FF','#7F007F'
-    ]
+              '#0000FF','#00FF00','#00FFFF',
+              '#FF0000','#FF00FF','#FFFF00',
+              '#00007F','#00FF7F',
+              '#007F00','#007FFF','#007F7F',
+              '#FF007F','#FFFF7F','#FF7F00',
+              '#FF7FFF','#FF7F7F','#7F0000',
+              '#7F00FF','#7F007F'
+              ]
     
     #change them to color objects
     colors = map(convertHexToLab,colors)
@@ -193,7 +193,13 @@ def convertLabToHexStr(labColor):
     :param labColor: a Lab colormath object 
     :return: a hex-string color code
     '''
-    return convert_color(labColor,sRGBColor).get_rgb_hex()
+    hexstr = convert_color(labColor,sRGBColor).get_rgb_hex()
+
+    #make sure the hexstring is the appropriate length
+    if len(hexstr)>7:
+        hexstr = hexstr[:7]
+
+    return hexstr
 
 def chatter(str, prefix = ''):
     '''
@@ -215,7 +221,10 @@ def read_colormaps(colormapsFile):
     if colormapsFile == '':
         return []
     else:
-        cfin = open(colormapsFile,'r')
+        try:
+            cfin = open(colormapsFile,'r')
+        except TypeError as e:
+            cfin = colormapsFile
 
         cmaps = []
         for line in cfin:
@@ -230,8 +239,12 @@ def write_colormaps(outfile,cmaps):
     :param cmaps: a colormap object, list of lists in specified format
     :return: None
     '''
-    
-    fout = open(outfile,'w')
+    #try except allows for buffers to be passed in as 'outfile'
+    try:
+        fout = open(outfile,'w')
+    except TypeError:
+        fout = outfile
+        pass
 
     #copying the colormaps object to a file entry by entry
     for attrentry in cmaps:
@@ -242,8 +255,12 @@ def write_colormaps(outfile,cmaps):
             else:
                 fout.write(str(value))
         fout.write('\n')
-    
-    fout.close()
+
+    #if you leave the file object open it gives more flexiblity passing a
+    # buffer in as 'outfile', meaning you don't have to write out to a file
+    # to grab and analyze a colormap. If uncomment expect the test_bool in
+    # test_process_categoricals.py to fail
+    #fout.close()
 
 def duplicatesCheck(attrList):
     '''
@@ -363,6 +380,36 @@ def metaVsCmaps(cmapCats,metaCats,attributeName,debug=False):
 
     return disagreeance,inCmapNotMeta,inMetaNotCmap
 
+def _indsort(list_):
+    return [i[0] for i in sorted(enumerate(list_), key=lambda x:x[1],
+                                 reverse=True)]
+def _reorder(list_, myorder):
+    return [ list_[i] for i in myorder]
+
+def order_catids_alphabetically(colormaps):
+
+    for ind, cmap_entry in enumerate(colormaps):
+
+        attrid = cmap_entry[0]
+        colors = get_colors_from_cmaps_entry(cmap_entry)
+        catids = get_cats_from_cmaps_entry(cmap_entry)
+
+        indecies_sort = _indsort(catids)
+        catids = sorted(catids,reverse=True)
+        colors = _reorder(colors, indecies_sort)
+        # Make a new entry with a different order.
+        colormaps[ind] = _make_cmap_entry(catids, colors, attrid)
+
+    return colormaps
+
+def _make_cmap_entry(catids, colors, attrid):
+    """Make a cmap entry array for one attribute id."""
+    cmap_entry = []
+    cmap_entry.append(attrid)
+    for ind, catid in enumerate(catids):
+        cmap_entry.extend([ind, catid, colors[ind]])
+    return cmap_entry
+
 # Unused. We want to keep all previous categories for now
 def remove_cats_from_cmap_entry(cmap_entry,catsToRemove,debug=False):
     '''
@@ -422,19 +469,23 @@ def transformToColormapInts(attrDF,colormaps,debug=False):
 
         for cat in catIndexDict.keys():
             #replace each category with the proper index
-            attrDF[attrName].iloc[np.array(attrDF[attrName] == cat)] = catIndexDict[cat]
+            attrDF.iloc[np.array(attrDF[attrName] == cat),
+                        np.array(attrDF.columns==attrName)] = \
+                catIndexDict[cat]
 
         #attrDF[attrName].astype('uint')
 
     attrDF = attrDF.apply(pd.to_numeric)
 
     return attrDF
+
 '''
-create_colormaps_file(['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/mcrchopra.atts.with_strs.tab'],
+create_colormaps_file(['/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/attributes.tab'],
                       out_file='/home/duncan/trash/trash.cmaps.tab',
-                      colormaps='/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/mcrchopra.colormaps.tab',
+                      colormaps='/home/duncan/Desktop/TumorMap/TMdev/hexagram/tests/pyUnittest/in/layout/colormaps.tab',
                       attrsfile='/home/duncan/trash/trash_attr.tab')
 '''
+
 def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrsfile='',debug=False):
     '''
     This function is the top of the hieracy of functions used for creating a
@@ -454,7 +505,7 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
         print colormaps
 
     #load metadata from different files and concat
-    attributes = getAttributes(in_attributes)
+    attributes = tabFilesToDF(in_attributes)
     #attributes is a pandas dataframe
 
     if debug:
@@ -469,7 +520,8 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     catAtts = attributes.columns[datatypes=='object']
     nCategoricals = len(catAtts)
 
-    chatter( str(nCategoricals) + " categorical attributes detected in metadata")
+    if debug:
+        chatter( str(nCategoricals) + " potential categorical attributes detected in metadata")
 
     #make sure there are not duplicate attribute names because things will likely break down the line
     dups = duplicatesCheck(catAtts)
@@ -530,14 +582,11 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
             #  things continue to special case out, otherwise we say 'yay'
             disagreeance,inCmapNotMeta,inMetaNotCmap = metaVsCmaps(catsInMetaData,catsInCmaps,categoricalAttr)
 
-            # if there is a categorical descriptor in the metadata, which is not
-            # in the colomapping then add this descriptor the the colormap
-            # mapping.
-            # Keep all old categories so the legend doesn't have any holes in it
             if disagreeance:
-
-                #now for any new category in the meta data, make a new color considering all the old colors
-                # and append the new categoy to the end of the colormap entry
+                # Now for any new category in the meta data, make a new color
+                # considering all the old colors. Append the new categoy to the
+                # end of the colormap entry.
+                # Keep all old categories so the legend has no holes in it.
                 for cat in inMetaNotCmap:
                     # get all the colors for that attribute
                     colors   = get_colors_from_cmaps_entry(cmapEntry)
@@ -569,7 +618,7 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     #make a new colormap entry for everthing not in the given (or not given) colormaps
     for catAtt in list(catAttsInMetaNotInCMs):
         if debug:
-            print 'found category in metadata with no colormapping: ' + catAtt
+                print 'found category in metadata with no colormapping: ' + catAtt
 
         #start of a new entry
         cmapEntry = [catAtt]
@@ -604,6 +653,7 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     # now we have a completed colormap mapping in cmap.
     # Here we convert to integer codes and write out the data
     # as a pickle file
+    cmaps = order_catids_alphabetically(cmaps)
     attributes = transformToColormapInts(attributes,cmaps)
     attributes.index.rename('nodes',inplace=True)
     if debug:
@@ -620,10 +670,11 @@ def create_colormaps_file(in_attributes,out_file, pickle='', colormaps='', attrs
     ###################################################
     if debug:
         print 'writing colormaps file to:' + out_file
-    
+
     write_colormaps(out_file,cmaps)
 
     return 0
+
 
 def main(args):
     

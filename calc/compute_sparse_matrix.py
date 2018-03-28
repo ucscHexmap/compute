@@ -13,15 +13,22 @@ Note: NaN's in the input matrix are replaced by 0. In cases where this is inappr
                                     --output_type sparse --out_file temp.out.tab --log log.tab --num_jobs 0
 '''
 
-import argparse, sys, numpy, multiprocessing, time,traceback
+import os, argparse, sys, numpy, multiprocessing, time,traceback
 import sklearn.metrics.pairwise as sklp
 import scipy.stats
 import pandas as pd
+import numpy as np
 from utils import truncateNP
+from utils import duplicates_check
+from utils import readPandas
 
-VALID_METRICS = ['canberra','cosine','euclidean','manhattan','chebyshev','correlation','hamming',
+VALID_METRICS = ['canberra','cosine','manhattan','chebyshev','correlation','hamming',
                  'jaccard','rogerstanimoto','spearman']
 VALID_OUTPUT_TYPE = ['SPARSE','FULL','SPARSE_PERCENT']
+
+def valid_metrics():
+    return str(VALID_METRICS)
+
 
 def parse_args(args):
 
@@ -35,7 +42,7 @@ def parse_args(args):
     parser.add_argument("--top", type=int, default=6,
         help="number of top neighbors to use in DrL layout")
     parser.add_argument("--metric", type=str, default="correlation",
-        help="valid metrics: spearman,canberra,cosine,euclidean,manhattan,chebyshev,correlation,hamming,jaccard,rogerstanimoto")
+        help="valid metrics: " + str(VALID_METRICS))
     parser.add_argument("--output_type",type=str, default="sparse",
         help="either sparse or full")
     parser.add_argument("--log",type=str, default="",
@@ -46,112 +53,104 @@ def parse_args(args):
         help="output file name")
     parser.add_argument("--rows", action="store_true",
         help="will take row wise similarity instead of columns")
+    parser.add_argument("--zeroReplace", action='store_true',
+        default=False,
+        help="if requested replaces NA values with 0")
 
     return parser.parse_args(args)
 
-def std_iszero(dt,log=sys.stdout):
-    '''
-    a check/warning the given matrix has rows or columns with standard deviation of 0
-    @param dt:
-    @return:
-    '''
-    rowstd = numpy.apply_along_axis(numpy.std,1,dt)
-    colstd = numpy.apply_along_axis(numpy.std,0,dt)
 
-    rowstdIs0 = numpy.argwhere(rowstd == 0).flatten()
-    colstdIs0 = numpy.argwhere(colstd == 0).flatten()
+def dropNasRowAndCols(df):
+    df.dropna(axis=1, how='all', inplace=True)
+    df.dropna(axis=0, how='all', inplace=True)
+    return df
 
-    if log!=None and len(rowstdIs0):
-        print >> log, "WARNING: rows " + str(rowstdIs0) + ' have standard deviation of 0'
-    if log!=None and len(colstdIs0):
-        print >> log, "WARNING: columns " + str(colstdIs0) + ' have standard deviation of 0'
 
-    return bool(len(rowstdIs0) or len(colstdIs0))
+def replaceNAsWZero(df):
+    return df.fillna(0)
 
-def read_tabular(in_file,numeric_flag=True,log=sys.stdout):
+
+def complainAboutStd0(df):
+    def raiseIfStdIs0(col):
+        allAreSameValue = np.all(col == col[1])
+        if allAreSameValue:
+            raise ValueError(
+                "Column with standard deviation of 0 encountered: " +
+                str(col.name)
+            )
+
+    df.apply(raiseIfStdIs0, axis=0)
+
+
+def hasStrings(df):
+    return len(numpy.argwhere(df.dtypes == object).flatten()) > 0
+
+
+def isNotFloat(x):
+    isnotfloat = True
+    try:
+        float(x)
+        isnotfloat = False
+    except ValueError:
+        pass
+    return isnotfloat
+
+
+def firstOccurenceOfString(df):
+    # First Column
+    col = df.columns[numpy.argwhere(df.dtypes == object).flatten()][0]
+    row = numpy.argwhere(map(isNotFloat, df[col])).flatten()[0]
+    return str(df.iloc[row, col])
+
+
+def processInputData(df, numeric_flag, replaceNA):
+    df = dropNasRowAndCols(df)
+    if replaceNA:
+        df = replaceNAsWZero(df)
+    if numeric_flag:
+        if hasStrings(df):
+            raise ValueError('Strings were found in input matrix, '
+                             'first occurence is:'
+                             + firstOccurenceOfString(df))
+
+    complainAboutStd0(df)
+
+    return df
+
+
+def logWarningAboutNAs(df, in_file,log=None):
+    #count the number of Nas so we can warn the user
+    nas = df.isnull().sum().sum()
+    if log != None and nas:
+        print >> log, "WARNING: " + str(nas) + " Na's found in data matrix " \
+                 + in_file + "."
+
+
+def read_tabular(in_file, numeric_flag=True, log=None, replaceNA=False):
     '''
     Reads a tabular matrix file and returns numpy matrix, col names, row names
     drops columns and rows that are full of nan
-    @param in_file: name of tab seperated input file
+    and fills na's with zero's if the 'replaceNA' flag is up
+    @param in_file: name of tab separated input file
     @param numeric_flag: if strings are found throws a value error
     @param log: where info chatter goes to
+    @param replaceNA: flag to replace NA's with zero
     @return: numpy matrix, list of column names, list of rownames
     '''
 
-    df = pd.read_csv(in_file,sep='\t',index_col=0)
-    #drop rows and columns that are full of na's
-    df.dropna(axis=1,how='all',inplace=True)
-    df.dropna(axis=0,how='all',inplace=True)
-    #count the number of Nas so we can warn the user
-    nas = df.isnull().sum().sum()
-    df = df.fillna(0)
-    #check and make sure the conversions all went smoothly
-    colsHadStrings= numpy.argwhere(df.dtypes == object).flatten()
+    df = readPandas(in_file)
+    df = processInputData(df, numeric_flag, replaceNA)
 
-    if log != None and nas:
-        print >> log, "WARNING: " + str(nas) + " Na's found in data matrix " + in_file + ". Set all to 0"
+    logWarningAboutNAs(df, in_file, log)
 
-    if len(colsHadStrings) and numeric_flag:
-            raise ValueError('Strings were found in input matrix, columns:' + str(colsHadStrings))
+    npMatrix, col_header, row_header = pandasToNumpy(df)
 
-    col_header = df.columns.values.tolist()
-    row_header = df.index.tolist()
-    df = df.as_matrix()
+    return npMatrix, col_header, row_header
 
-    return df, col_header, row_header
 
-def read_tabular_dep(input_file, numeric_flag):
-    '''data = open(input_file, 'r')
-    line = data.readline()
-    line = line.strip().split("\t")
-    col_headers = line[1:]
-    data.close()
+def numpyToPandas(mat, col_list, row_list):
+    return pd.DataFrame(mat, index=row_list, columns=col_list)
 
-    matrix = numpy.loadtxt(input_file, skiprows=1, delimiter='\t', usecols=range(1,len(line)))
-    #row_headers = numpy.loadtxt(input_file, skiprows=1, delimiter='\t', usecols=(0))
-    row_headers = []
-    return (matrix, col_headers, row_headers)'''
-
-    data = open(input_file, 'r')
-    init_matrix = []
-    col_headers = []
-    row_headers = []
-    line_num = 1
-    for line in data:
-        line_elems = line.strip().split("\t")
-        if line_num == 1:
-            col_headers = line_elems[1:]
-        else:
-            row_headers.append(line_elems[0])
-            features = line_elems[1:]
-            features = [x if x != "NA" else "0" for x in features]
-            features = [x if len(x) != 0 else "0" for x in features]
-            features = [x if x != "0.0000" else "0" for x in features]
-            init_matrix.append(features)
-
-        line_num += 1
-    data.close()
-
-    if numeric_flag:
-        #matrix = [map(float,x) for x in init_matrix]
-        matrix = [[float(y) for y in x] for x in init_matrix]
-    else:
-        matrix = init_matrix
-    return (matrix, col_headers, row_headers)
-
-def read_tabular2(input_file, numeric_flag):	#YN 20160629, a faster (still TBD) version of the above function but doesn't do invalid value conversion
-    with open(input_file,'r') as f:
-        lines = [l.rstrip('\n').split('\t') for l in f]
-    col_headers = lines[0][1:]
-    row_headers = [l[0] for l in lines[1:]]
-    if numeric_flag:
-        dt = [map(float,l[1:]) for l in lines[1:]]
-    else:
-        dt = [l[1:] for l in lines[1:]]
-    return (dt, col_headers, row_headers)
-
-def numpyToPandas(mat,col_list,row_list):
-    return pd.DataFrame(mat,index=row_list,columns=col_list)
 
 def pandasToNumpy(df):
     '''
@@ -166,7 +165,7 @@ def pandasToNumpy(df):
 
     return mat, col_list, row_list
 
-def common_rows(p1, p2,fractionReq=.5):
+def common_rows(p1, p2, fractionReq=.5):
     '''
     takes two pandas data frames and reduces them to have the same rows in the same order
     @param p1: a pandas dataframe
@@ -179,15 +178,24 @@ def common_rows(p1, p2,fractionReq=.5):
     p2rows = set(p2.index)
     rowsInCommon = p1rows.intersection(p2rows)
 
-    if len(rowsInCommon) < (fractionReq * max(len(p1rows),len(p2rows))):
+    if len(rowsInCommon) < (fractionReq * min(len(p1rows),len(p2rows))):
         raise ValueError, "Less than " + str(fractionReq * 100) + " %" \
                           " of features shared in row reduction operation."
 
     p1 = p1.loc[rowsInCommon]
     p2 = p2.loc[rowsInCommon]
+    # If changing the messages in the below error messages then they need to
+    # be changed in the playNode_web as well.
+    # TODO: We should have an error module with error message constants
+    # so parts of our app are not tied together like this.
+    if p1.shape[0] > p2.shape[0]:
+        raise ValueError("Duplicate rows in first matrix.")
+    if p1.shape[0] < p2.shape[0]:
+        raise ValueError("Duplicate rows in second matrix.")
+
     return p1,p2
 
-def percentile_sparsify(simdf,top):
+def percentile_sparsify(simdf, top):
     '''
     returns a sparsified version of simdf in edge format, keeping only the
     highest top * simdf.shape[0] edges in the matrix
@@ -207,6 +215,8 @@ def percentile_sparsify(simdf,top):
 
     cut = numpy.percentile(simdf.values, cutoff)
 
+    if simdf.columns.duplicated().sum():
+        raise ValueError("There are duplicated columns names")
     for row_name in simdf.index:
         row = simdf.loc[row_name][numpy.array(simdf.loc[row_name] > cut)]
 
@@ -274,26 +284,42 @@ def extract_similarities(dt, sample_labels, top, log=None,sample_labels2=[],perc
     except ValueError as e:
         #if the exception was thrown because of faulty use of max()
         if str(e) == "max() arg is an empty sequence":
-            raise ValueError, "top argument larger than amount of " \
-                              "comparisons"
+            raise ValueError, "Not enough samples for nearest neighbor " \
+                              "calculation, minimum required is : " + str(top)
         else: #pass the exception along as is...
             raise
 
     return output
 
-def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, top, log,dt2=numpy.array([]),sample_labels2=[]):
+def compute_similarities(dt, sample_labels, metric_type, num_jobs,
+                         output_type, top, log, dt2=numpy.array([]),
+                         sample_labels2=[]):
     '''
     :param dt: a numpy's two dimensional array holding the read in matrix data
     :param sample_labels: the names of the columns in order parallel to 'dt'
-    :param metric_type: the metric used to calculate similarities (see global VALID_METRICS)
-    :param num_jobs:  an int number of jobs to parallelize the similairty calculations
-    :param output_type: either 'FULL' or 'SPARSE', specifying a all-by-all output or a top n
-                        nearest neighbor output
-    :param top: when using 'SPARSE' output, the number of nearest neighbors to output in the edge file
-    :param log: the file descriptor pointed to where you want the chatter to go to, may be omitted
-    :param dt2: a second, optional two dimensional numpy.array, if used similarities between dt and dt2 returned.
+    :param metric_type: the metric used to calculate similarities
+    (see global VALID_METRICS)
+    :param num_jobs:  an int number of jobs to parallelize the similairty
+    calculations
+    :param output_type: either 'FULL' or 'SPARSE', specifying a all-by-all
+    output or a top n nearest neighbor output
+    :param top: when using 'SPARSE' output, the number of nearest neighbors to
+    output in the edge file
+    :param log: the file descriptor pointed to where you want the chatter to go
+    to, may be omitted
+    :param dt2: a second, optional two dimensional numpy.array, if used
+    similarities between dt and dt2 returned.
     :return: returns a pandas dataframe
     '''
+    duplicates_check(sample_labels)
+    if len(sample_labels2):
+        duplicates_check(sample_labels2)
+    # The unit tests get confused when running parallel jobs via sklearn
+    try:
+        if os.environ['UNIT_TEST']:
+            num_jobs = 1
+    except:
+        pass
 
     #chatter to log file if one is given
     if not(log == None):
@@ -304,6 +330,13 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
     #work around to provide spearman correlation to sklearn pairwise implementation
     # spearman is a rank transformed pearson ('correlation') metric
     if metric_type == 'spearman':
+        # The ranking function wgets rid of NAN's by placing them at the top of
+        # the rank. That functionality is both unexpected and undesirable.
+        # If NaNs are present in the data then raise an exception.
+        if numpy.isnan(dt).sum() or numpy.isnan(dt2).sum():
+            raise ValueError("NaN's where found in one of the data "
+                             "matrices. Similarity cannot be "
+                             "calculated when NaN's are present")
         if not(log == None):
             print >> log, 'rank transform for spearman being computed'
         #column wise rank transform
@@ -316,7 +349,7 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
         if not(log == None):
             print >> log, 'rank transform complete'
 
-    #calculate pairwise similarities,
+    #calculate pairwise similarities
     if len(dt2):   #if you have a second matrix then slightly different input
         x_corr = 1 - sklp.pairwise_distances(X=dt, Y=dt2, metric=metric_type, n_jobs=num_jobs)
     else:
@@ -368,42 +401,6 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs, output_type, 
 
     return output
 
-def compute_similarities_old(dt, sample_labels, metric_type, num_jobs, output_type, top, log):
-    '''
-    This function was erroring with an index error (on output to string) of unknown cause for some inputs.
-    '''
-    if not(log == None):
-        print >> log, "Computing similarities..."
-    curr_time = time.time()
-    x_corr = sklp.pairwise_distances(X=dt, Y=None, metric=metric_type, n_jobs=num_jobs)
-    x_corr = 1 - x_corr		#because computes the distance, need to convert to similarity
-    print "Resulting similarity matrix: "+str(len(x_corr))+" x "+str(len(x_corr[0]))
-    if not(log == None):
-        print >> log, str(time.time() - curr_time) + " seconds"
-    if not(log == None):
-        print >> log, "Outputting "+output_type.lower()+" matrix..."
-    curr_time = time.time()
-    output = ""
-    print output_type
-    if output_type == "SPARSE":
-        for i in range(len(x_corr)):
-            sample_dict = dict(zip(sample_labels, x_corr[i]))
-            del sample_dict[sample_labels[i]]	#remove self comparison
-            for n_i in range(top):
-                v=list(sample_dict.values())
-                k=list(sample_dict.keys())
-                m=v.index(max(v))
-                output = output + "\n" + sample_labels[i]+"\t"+k[m]+"\t"+str(v[m])
-                del sample_dict[k[m]]
-    elif output_type == "FULL":
-        output = "sample\t"+"\t".join(sample_labels)
-        for i in range(len(x_corr)):
-            value_str = [str(x) for x in x_corr[i]]
-            output = output + sample_labels[i]+"\t"+"\t".join(value_str) + "\n"
-    if not(log == None):
-        print >> log, str(time.time() - curr_time) + " seconds"
-    return(output)
-
 def main(args):
 
     start_time = time.time()
@@ -421,6 +418,7 @@ def main(args):
     out_file = opts.out_file
     log_file = opts.log
     rowwise = opts.rows
+    replaceNA = opts.zeroReplace
 
     #sets the log file appropriatly for chatter
     if len(log_file) > 0:
@@ -454,21 +452,22 @@ def main(args):
         print >> log, "Reading in input..."
 
     curr_time = time.time()
-    dt,sample_labels,feature_labels = read_tabular(in_file,True)
-
-    std_iszero(dt,log)
+    dt, sample_labels, feature_labels = read_tabular(in_file, True,
+                                                     replaceNA=replaceNA)
 
     if rowwise:
         sample_labels, feature_labels = feature_labels, sample_labels
+
     else:
         dt = numpy.transpose(dt)
 
 
     #if we are doing a second input (n-of-1 like)
     if len(in_file2):
-        dt2,sample_labels2,feature_labels2 = read_tabular(in_file2,True)
+        dt2,sample_labels2,feature_labels2 = read_tabular(in_file2, True,
+                                                          replaceNA=replaceNA)
         #switch types so that reducing rows is easier
-        dt = numpyToPandas(dt.transpose(),sample_labels,feature_labels)
+        dt = numpyToPandas(dt.transpose(),sample_labels, feature_labels)
         dt2 = numpyToPandas(dt2,sample_labels2,feature_labels2)
         #reduce to common rows
         dt,dt2 = common_rows(dt,dt2)

@@ -1,0 +1,13 @@
+.idea/*
+*.tar
+*.tgz
+run
+*pyc
+*save
+*.log
+tests/out
+www.log*
+www.pid
+nohup.out
+tmp/*
+config/setup

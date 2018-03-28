@@ -1,1 +1,1 @@
-# UCSC hexmap calc server
+# UCSC hexmap compute server

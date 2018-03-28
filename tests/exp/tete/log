@@ -1,0 +1,98 @@
+all given options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '/home/duncan/hex/compute/tests/in/layout/colormaps.tab',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_raw_tete/',
+ 'distanceMetric': 'spearman',
+ 'doingRows': False,
+ 'drlpath': None,
+ 'feature_space': ['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab'],
+ 'first_attribute': '',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'tete',
+ 'metric': 'spearman',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'nodeIdSearchUrl': 'https://www.google.com/search?q=',
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': ['/home/duncan/hex/compute/tests/in/layout/attributes.tab'],
+ 'similarity': None,
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+all adjusted options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '/home/duncan/hex/compute/tests/in/layout/colormaps.tab',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_raw_tete/',
+ 'distanceMetric': 'spearman',
+ 'doingRows': False,
+ 'drlpath': None,
+ 'feature_space': ['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab'],
+ 'first_attribute': '',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'tete',
+ 'metric': 'spearman',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'nodeIdSearchUrl': 'https://www.google.com/search?q=',
+ 'output_tar': '',
+ 'output_zip': '',
+ 'reflectionMapType': None,
+ 'role': None,
+ 'scores': ['/home/duncan/hex/compute/tests/in/layout/attributes.tab'],
+ 'similarity': None,
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 6,
+ 'window_size': 20,
+ 'zeroReplace': False}
+process_categoricals.py: : previously generated colormaps file given
+process_categoricals.py: : 7 attributes from colormap match metadata
+Writing matrix names...
+Created nodes_multiple list...
+About to open matrices...
+/home/duncan/anaconda2/lib/python2.7/site-packages/matplotlib/font_manager.py:273: UserWarning: Matplotlib is building the font cache using fc-list. This may take a moment.
+  warnings.warn('Matplotlib is building the font cache using fc-list. This may take a moment.')
+Iteration:  100, Loss: 1.949, Num viol: 0.0236
+Iteration:  200, Loss: 1.762, Num viol: 0.0250
+Iteration:  300, Loss: 1.694, Num viol: 0.0236
+Iteration:  400, Loss: 1.630, Num viol: 0.0231
+Iteration:  500, Loss: 1.582, Num viol: 0.0231
+Iteration:  600, Loss: 1.556, Num viol: 0.0231
+Iteration:  700, Loss: 1.528, Num viol: 0.0231
+Iteration:  800, Loss: 1.503, Num viol: 0.0227
+Iteration:  900, Loss: 1.488, Num viol: 0.0231
+Iteration: 1000, Loss: 1.472, Num viol: 0.0236
+Iteration: 1100, Loss: 1.455, Num viol: 0.0241
+Iteration: 1200, Loss: 1.445, Num viol: 0.0241
+Iteration: 1300, Loss: 1.435, Num viol: 0.0241
+Iteration: 1400, Loss: 1.423, Num viol: 0.0231
+Iteration: 1500, Loss: 1.415, Num viol: 0.0231
+Iteration: 1600, Loss: 1.407, Num viol: 0.0231
+Iteration: 1700, Loss: 1.398, Num viol: 0.0227
+Iteration: 1800, Loss: 1.391, Num viol: 0.0222
+Iteration: 1900, Loss: 1.386, Num viol: 0.0222
+Iteration: 2000, Loss: 1.380, Num viol: 0.0222
+Opened matrices...
+09-07 15:42:48 Attribute counts:  Binary: 6 + Categorical: 2 + Continuous: 3
+calculating density for layer 0
+categorical attribute being processed: 3_categories
+shape of dummy matrix after exclusion: (59, 3)
+categorical attribute being processed: bad_indices
+shape of dummy matrix after exclusion: (59, 3)
+Skipping sort stats without layout (sample-based)
+09-07 15:42:48 Visualization generation complete!

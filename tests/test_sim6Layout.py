@@ -3,33 +3,31 @@
 # This tests python, using python's easier calls to shell commands
 # from here than from mocha
 
-import sys, os, glob, filecmp, subprocess, json, tempfile, pprint, shutil
-from os import path
-import string
+import os
+
 import unittest
 import testUtil as util
-from rootDir import getRootDir
 
-rootDir = getRootDir()
-testDir = rootDir + 'tests/pyUnittest/'
-inDir = testDir + 'in/layout/'   # The input data
-outDirBase = testDir + 'out/layoutBasic'
-expDirBase = testDir + 'exp/layoutBasic'
+testDir = os.getcwd()
+inDir = os.path.join(testDir,'in/layout/')   # The input data
+outDirBase = os.path.join(testDir,'out/layoutBasic')
+expDirBase = os.path.join(testDir, 'exp/layoutBasic')
 expDir = expDirBase + '/'
-outSim6File = testDir + 'out/sim6Layout'
 
-rawDataFile = inDir + 'mcrchopra.data.tab'
-top6SimDataFile = inDir + 'mcr.top6.stable.tab'
+outSim6File = os.path.join(testDir, 'out/sim6Layout')
 
-colorDataFile = inDir + 'mcrchopra.colormaps.tab'
-attsCodedFile = inDir + 'mcrchopra.atts.with_strs.tab'
+rawDataFile = os.path.join(inDir, 'full_matrix.tab')
+top6SimDataFile = os.path.join(inDir, 'mcr.top6.stable.tab')
+
+colorDataFile = os.path.join(inDir, 'colormaps.tab')
+attsCodedFile = os.path.join(inDir, 'attributes.tab')
 
 import compute_sparse_matrix
 import layout
 
 class Test_sim6Layout(unittest.TestCase):
 
-    def test_sim6Layout(s):
+    def test_sim6Layout_check(s):
         '''
         This test insures that if you start from the same data,
           the output does not depend on the input form
@@ -55,7 +53,6 @@ class Test_sim6Layout(unittest.TestCase):
             "--colormaps", colorDataFile,
             "--directory", outDir,
             "--include-singletons",
-            "--no_density_stats",
             "--no_layout_independent_stats",
             "--no_layout_aware_stats"]
 

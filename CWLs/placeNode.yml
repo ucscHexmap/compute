@@ -1,0 +1,18 @@
+ClusterData:
+   class: File
+   path: ../tests/in/layout/full_matrix.tab
+
+XYpostions:
+   class: File
+   path:  ../tests/in/layout/coordinates.tab
+
+NewNodesData:
+   class: File
+   path: ../tests/in/layout/full_matrix.tab
+
+TopNeighbors: 6
+   
+numJobs : 4
+
+MapId: "CKCC/V3"
+

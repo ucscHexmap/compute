@@ -8,13 +8,11 @@ from os import path
 import string
 import unittest
 import testUtil as util
-from rootDir import getRootDir
 
-rootDir = getRootDir()
-testDir = rootDir + 'tests/pyUnittest/'
-inDir = testDir + 'in/layout/'   # The input data
-outDir = testDir + 'out/similarity/' # The actual output data
-expDir = testDir + 'exp/similarity/'
+testDir = os.getcwd()
+inDir = os.path.join(testDir,'in/layout/')   # The input data
+outDir = os.path.join(testDir,'out/similarity/') # The actual output data
+expDir = os.path.join(testDir,'exp/similarity/')
 
 import compute_sparse_matrix
 import testUtil as tu
@@ -169,9 +167,9 @@ class Test_similarity(unittest.TestCase):
 
             except ValueError as e:
                 #checks the exception says something about the 'top' argument
-                passed = 'top' in str(e)
+                passed = 'samples' in str(e)
                 s.assertTrue(passed,'Exception thrown did not complain about '
-                                    'top argument')
+                                    'samples argument')
 
     def test_Top0(s):
 
@@ -187,6 +185,41 @@ class Test_similarity(unittest.TestCase):
             passed = neiDF.shape == (0,0)
 
             s.assertTrue(passed,'top 0 did not have empty dimensions')
+
+    def test_error_on_dups(s):
+        filename = os.path.join(inDir,
+                                "full_matrix_duplicate_rows_and_cols.tab")
+
+        opts = [
+            "--top", "3",
+            "--in_file", filename,
+            "--out_file", os.devnull, # Write to nowhere.
+            "--metric", 'spearman',
+            ]
+
+        try:
+            compute_sparse_matrix.main(opts)
+            s.assertTrue(False)
+        except ValueError as e:
+            s.assertTrue(e, e)
+
+    def test_error_on_dups(s):
+        filename = os.path.join(inDir,
+                                "full_matrix_duplicate_rows_and_cols.tab")
+
+        opts = [
+            "--top", "3",
+            "--in_file", filename,
+            "--out_file", os.devnull, # Write to nowhere.
+            "--metric", 'spearman',
+            "--rows"
+            ]
+
+        try:
+            compute_sparse_matrix.main(opts)
+            s.assertTrue(False)
+        except ValueError as e:
+            s.assertTrue(e, e)
 
 if __name__ == '__main__':
     unittest.main()

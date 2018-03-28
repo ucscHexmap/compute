@@ -7,7 +7,7 @@ baseCommand: compute_sparse_matrix.py
 
 hints:
   - class: DockerRequirement
-    dockerPull: dmccoll/tmcalc:latest
+    dockerPull: ucschexmap/compute:dev
 
 arguments:
   ["--output_type", "full",

@@ -1,0 +1,154 @@
+07-31 14:23:46 Started
+command-line options:
+--outputDirectory
+/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/
+--firstAttribute
+mutated/not
+--layoutName
+layout
+--noLayoutIndependentStats
+--noLayoutAwareStats
+--distanceMetric
+cosine
+--outputTar
+/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/tar.tar
+--outputZip
+/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/zip.zip
+--authGroup
+myRole
+--colorAttributeFile
+/home/duncan/hex/compute/tests/in/layout/attributes.tab
+--neighborCount
+9
+--feature_space
+/home/duncan/hex/compute/tests/in/layout/full_matrix.tab
+all given options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/',
+ 'distanceMetric': 'cosine',
+ 'drlpath': None,
+ 'feature_space': ['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab'],
+ 'first_attribute': 'mutated/not',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'output_tar': '/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/tar.tar',
+ 'output_zip': '/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/zip.zip',
+ 'reflectionMapType': None,
+ 'role': 'myRole',
+ 'scores': ['/home/duncan/hex/compute/tests/in/layout/attributes.tab'],
+ 'similarity': None,
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 9,
+ 'window_size': 20,
+ 'zeroReplace': False}
+all adjusted options:
+{'associations': False,
+ 'attributeTags': None,
+ 'clumpinessStats': True,
+ 'colormaps': '',
+ 'coordinates': None,
+ 'directedGraph': True,
+ 'directory': '/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/',
+ 'distanceMetric': 'cosine',
+ 'drlpath': None,
+ 'feature_space': ['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab'],
+ 'first_attribute': 'mutated/not',
+ 'layoutInputFile': None,
+ 'layoutInputFormat': None,
+ 'layout_method': 'DrL',
+ 'mutualinfo': False,
+ 'names': ['layout'],
+ 'output_tar': '/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/tar.tar',
+ 'output_zip': '/home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/zip.zip',
+ 'reflectionMapType': None,
+ 'role': 'myRole',
+ 'scores': ['/home/duncan/hex/compute/tests/in/layout/attributes.tab'],
+ 'similarity': None,
+ 'similarity_full': None,
+ 'singletons': True,
+ 'truncation_edges': 9,
+ 'window_size': 20,
+ 'zeroReplace': False}
+Writing matrix names...
+Created nodes_multiple list...
+About to open matrices...
+DRL method
+None
+['/home/duncan/hex/compute/tests/in/layout/full_matrix.tab']
+None
+Feature matrices
+Opening Matrix 0 /home/duncan/hex/compute/tests/in/layout/full_matrix.tab
+8 x 60
+enumerating ctx.matrices 0
+07-31 14:23:47 ============== Starting drl computations for layout: 0 ... ==============
+Reach for parts in sim_reader:<tsv.TsvReader object at 0x7fc2fc14b090>
+07-31 14:23:47 DrL: Truncating...
+Using /tmp/tmpmdmcfc/layout0.sim for .sim file, 
+Will output /tmp/tmpmdmcfc/layout0.ind for .ind file,
+            /tmp/tmpmdmcfc/layout0.int for .int file, and
+            /tmp/tmpmdmcfc/layout0.full for .full file.
+Using memory = 1
+      topn = 9
+      normalize = 0
+Reading .sim file ... 
+Read 60 nodes and 600 lines.
+Creating .ind file ...
+Writing to .full file ...
+Creating .int file ...
+Scan 1 of .full file ...
+Program finished successfully.
+DrL: Doing layout...
+Using /tmp/tmpmdmcfc/layout0.int for .int file, and /tmp/tmpmdmcfc/layout0.icoord for .icoord file.
+Using random seed = 0
+      edge_cutting = 0.8
+      intermediate output = 0
+      output .iedges file = 0
+Proc. 0 scanning .int file ...
+Processor 0 reading .int file ...
+Entering liquid stage ...........................................................................................................................................................................................................
+Liquid stage completed in 0 seconds, total energy = 182987.
+Entering expansion stage ...........................................................................................................................................................................................................
+Finished expansion stage in 1 seconds, total energy = 109275.
+Entering cool-down stage ...........................................................................................................................................................................................................
+Completed cool-down stage in 0 seconds, total energy = 26870.2.
+Entering crunch stage .....................................................
+Finished crunch stage in 0 seconds, total energy = 64926.7.
+Entering simmer stage .......................................................................................................
+Finished simmer stage in 0 seconds, total energy = 3.1391.
+Layout calculation completed in 1 seconds (not including I/O).
+Writing out solution to /tmp/tmpmdmcfc/layout0.icoord ...
+Total Energy: 3.13102.
+Program terminated successfully.
+07-31 14:23:48 DrL: Restoring names...
+Using /tmp/tmpmdmcfc/layout0.icoord for .icoord file, and 
+       /tmp/tmpmdmcfc/layout0.ind for .ind file.
+Will output /tmp/tmpmdmcfc/layout0.coord for .coord file.
+Reading .ind file ...
+Reading .icoord file ...
+Creating .coord file ...
+Program finished successfully.
+07-31 14:23:48 Reading DrL output...
+07-31 14:23:48 ============== drl computations completed for layout: 0 ==============
+Opened matrices...
+07-31 14:23:48 Attribute counts:  Binary: 6 + Categorical: 2 + Continuous: 3
+calculating density for layer 0
+categorical attribute being processed: 3_categories
+shape of dummy matrix after exclusion: (59, 3)
+categorical attribute being processed: bad_indices
+shape of dummy matrix after exclusion: (59, 3)
+Skipping sort stats without layout (sample-based)
+31 14:23:48 Found top neighbors
+07-31 14:23:48 Visualization generation complete!
+Writing the output to a zip file /home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/zip.zip
+Done writing a zip file
+Writing the output to a tar file /home/duncan/hex/compute/tests/out/layoutBasic_renamingDeprecatedParms/tar.tar
+Done writing a tar file

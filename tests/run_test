@@ -1,0 +1,115 @@
+#!/bin/bash
+# Run a test after setting the path
+# $1: config file in compute/config, if left out will attempt to use
+# "$(pwd)/../config/setup"
+# $2: optional name of test(s) to run, defaults to 'all', one of:
+#     / all / docker_safe / web / <specific-test(s)> /
+#     where <specific-test(s)> may be one of:
+#       base file name, i.e.: test_layoutBasic
+#       a single test, i.e.: test_layoutBasic.Test_layoutBasic.test_full
+
+CONFIG_FILE=$1
+TO_RUN=$2
+
+# If there is only on arg then we assume its the subset to run
+if [ "$#" -eq 1 ]; then
+    CONFIG_FILE=""
+    TO_RUN=$1
+fi
+
+# Attempt to use default configuration if the argument has not been supplied
+if [ -z "$CONFIG_FILE" ] && [ -f "$(pwd)/../config/setup" ]; then
+    CONFIG_FILE=$(pwd)/../config/setup
+elif [ -z "$CONFIG_FILE" ]; then
+    echo "Path to configuration file as first arg necessary."
+    exit 1
+fi
+echo $CONFIG_FILE
+source $CONFIG_FILE
+
+export DATA_ROOT=$TEST_DATA_ROOT
+if [ -z ${TO_RUN} ]; then
+    TO_RUN=all
+fi
+
+export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
+export DEBUG=1
+
+# Test only the *_web.py files
+web=( \
+    test_basic_web \
+    test_createMap_web \
+    test_http \
+    test_job \
+    test_jobHttp \
+    test_overlayNode_web \
+    test_placeNode_web \
+    test_placeNode2_web \
+    test_projectList \
+    test_reflect_web \
+    test_webUtil \
+)
+
+# Small amount of most recent tests (erase/replace at will)
+next=(test_pairwiseAttrStats)
+
+# The rest of the tests.
+docker_safe=( \
+    test_formatCheck \
+    test_layoutBasic \
+    test_layoutBasicMakeUI \
+    test_layoutBasicMakeUIInferFormat \
+    test_layoutMetaData \
+    test_layoutZeroReplace \
+    test_leesL \
+    test_pairwiseAttrStats \
+    test_process_categoricals \
+    test_reflect \
+    test_spatial \
+    test_sim6Layout \
+    test_similarity \
+    test_stats \
+    # NOTE: alphabetical order to make it easier to find tests
+)
+
+# Combine the lists above to get ALL of the tests
+all=( "${web[@]}" "${DEPRECATED[@]}" "${docker_safe[@]}" )
+
+# tests that normally pass on a mac
+mac=( \
+    test_basic_web \
+    test_createMap_web \
+    test_dynLayoutAware \
+    test_formatCheck \
+    test_http \
+    test_job \
+    test_jobHttp \
+    test_layoutMetaData \
+    test_layoutZeroReplace \
+    test_overlayNode_web \
+    test_placeNode_web \
+    test_placeNode2_web \
+    test_process_categoricals \
+    test_projectList \
+    test_similarity \
+)
+
+# this really needs selenium rather than manually building maps from the UI
+    #test_createMapUi \
+
+if [ $TO_RUN == 'all' ]
+    then RUN_THIS="${all[@]}"
+elif [ $TO_RUN == 'docker_safe' ]
+    then RUN_THIS="${docker_safe[@]}"
+elif [ $TO_RUN == 'web' ]
+    then RUN_THIS="${web[@]}"
+elif [ $TO_RUN == 'mac' ]
+    then RUN_THIS="${mac[@]}"
+elif [ $TO_RUN == 'next' ]
+    then RUN_THIS="${next[@]}"
+else
+    RUN_THIS=$TO_RUN
+fi
+
+# Run the tests
+python2.7 -m unittest $RUN_THIS

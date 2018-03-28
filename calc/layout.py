@@ -12,161 +12,186 @@ present in your PATH.
 
 Re-uses sample code and documentation from 
 <http://users.soe.ucsc.edu/~karplus/bme205/f12/Scaffold.html>
+
+Notes about peculiarities in code:
+    1.) --include_singletons option: the name suggests you are including nodes
+        that would otherwise not be there, but from the code it is clear this is
+        not the case. --include_singletons simply draws a self connecting edge
+        on all the nodes already on the map before running through DRL. It is
+        unclear what affect this should have on a spring embedded layout
+        clustering algorithm. Its action can be viewed in the
+        drl_similarity_functions() code.
+        Update: Testing with the mcrchropra test data suggests this
+        argument does nothing.
+    2.) --truncate_edges option: This is defaulted to 6, and gets fed into the
+        DRL clustering algorithm. The name suggests that even if you provided
+        20 neighbors, downstream the DRL clustering algorithm would trim it
+        down to six.
 """
 
 DEV = False # True if in development mode, False if not
 
-import argparse, sys, os, itertools, math, subprocess, shutil, tempfile, glob, io
-import collections, traceback, time, datetime, pprint, string
-import scipy.stats, scipy.linalg, scipy.misc
-import time, socket
+import argparse, os, itertools, math, subprocess, shutil, tempfile, glob
+import collections, traceback, datetime, pprint, string
+import time
 from types import *
 import os.path
 import tsv, csv, json
 from utils import sigDigs
 from statsNoLayout import statsNoLayout
-from statsLayout import statsLayout
-import pool
 from topNeighbors import topNeighbors
 from topNeighbors import topNeighbors_from_sparse
 from compute_sparse_matrix import read_tabular
 from compute_sparse_matrix import compute_similarities
 from compute_sparse_matrix import extract_similarities
-import StringIO, gc
-from compute_layout import computePCA
-from compute_layout import computetSNE
-from compute_layout import computeisomap
-from compute_layout import computeMDS
-from compute_layout import computeICA
-from compute_layout import computeSpectralEmbedding
-from utils import getAttributes
-import leesL
-from sklearn import preprocessing
+import compute_sparse_matrix
+import StringIO
+from utils import tabFilesToDF
+import spatial
 import sklearn.metrics
 import sklearn.metrics.pairwise as sklp
 import numpy as np
 from process_categoricals import create_colormaps_file
 import utils
+import formatCheck
+import sys
+import mapOutput, mapData
+
+validReflectionMapTypes = \
+    ['geneMatrix']
 
 def parse_args(args):
-    """
-    This just defines parser arguments but does not actually parse the values
-    """
     parser = argparse.ArgumentParser(description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
-    # The primary parameters:
-    parser.add_argument("--similarity", nargs='+',action = 'append',
-        help="similarity sparse matrix file")
-    parser.add_argument("--similarity_full", nargs='+',action = 'append',
-        help="similarity full matrix file")
-    parser.add_argument("--feature_space", nargs='+',action = 'append',
-        help="full feature space matrix")
-    parser.add_argument("--coordinates", nargs='+',action = 'append',
-        help="file containing coordinates for the samples")
-    parser.add_argument("--metric", nargs='+',action = 'append',
-        help="metric corresponding to the feature matrix of the same index")
-    #parser.add_argument("--layout_method", type=str, default="DrL",
-    #    help="DrL, tSNE, MDS, PCA, ICA, isomap, spectralembedding")
+    # WebAPI / CWL / CLI: Primary parameters:
+    parser.add_argument("--layoutInputFile", action='append',
+        help="file containing the layout data as TSV")
+    parser.add_argument("--distanceMetric", type=str, default="spearman",
+        help="metric corresponding to the layout input data of the same " +
+        "index, one of: " + compute_sparse_matrix.valid_metrics())
+        # TODO Which layout formats use this? All of them to draw edges in
+        # the node density view?
+    parser.add_argument("--layoutName", type=str, action="append", dest="names",
+        default=[],
+        help="human-readable unique label for the layout of the same index")
+    parser.add_argument("--colorAttributeFile", type=str, dest="scores",
+        action="append",
+        help="file containing the attributes to color the map, as TSV")
+    parser.add_argument("--colormaps", type=str,
+        default='',
+        help="colormap for categorical attributes as TSV")
+    parser.add_argument("--firstAttribute", type=str, dest="first_attribute",
+        default="",
+        help="attribute to color the map upon first display")
+    parser.add_argument("--outputDirectory", "-d", type=str, dest="directory",
+        help="directory in which to create view output files")
+    parser.add_argument("--authGroup", type=str, dest="role",
+        default=None,
+        help="authorization group that may view this map")
+    parser.add_argument("--zeroReplace", action='store_true',
+        default=False,
+        help="Replaces NA values with 0")
+    parser.add_argument("--nodeIdSearchUrl", type=str,
+                        default="https://www.google.com/search?q=",
+        help="The search string URL to be prepended to the nodeId")
+    parser.add_argument("--doingRows", action='store_true',
+        default=False,
+        help="If a feature matrix is given, this flag transposes it in order"
+             " to perform row-wise similarity calculation")
+
+    # WebAPI / CWL / CLI: Lesser used parameters:
+    parser.add_argument("--reflectionMapType", type=str, default=None,
+        help="generate another map with 90-degree rotated clustering data " +
+        "so that clustering features are used as the nodes in the layout. " +
+        "Color attributes are provided and determined by the map type. One " +
+        "of: " + str(validReflectionMapTypes))
+    parser.add_argument("--attributeTags", type=str,
+        default=None,
+        help="tags for filtering attributes for display, as TSV")
+    parser.add_argument("--noLayoutIndependentStats", dest="associations",
+        action="store_false", default=True,
+        help="don't calculate layout-independent stats")
+    parser.add_argument("--noLayoutAwareStats", dest="mutualinfo",
+        action="store_false", default=True,
+        help="don't calculate layout-aware stats")
+    parser.add_argument("--neighborCount", type=int, default=6,
+        dest="truncation_edges",
+        help="edges per node for DrL and the directed graph")
+        
+    # CWL / CLI:
+    parser.add_argument("--outputZip", type=str, default="", dest="output_zip",
+        help="compress the output files into a zip file")
+    parser.add_argument("--outputTar", type=str, default="", dest="output_tar",
+        help="compress the output files into this tar file")
+
+    # CLI only:
+    parser.add_argument("--drlPath", "-r", type=str, dest="drlpath",
+        help="DrL binaries")
+
+    # Deprecated parameters:
+    parser.add_argument("--coordinates", type=str, action='append',
+        help="deprecated, use layoutInputFile instead & format will be auto-detected")
+    parser.add_argument("--directed_graph", dest="directedGraph",
+        action="store_true", default=True,
+        help="deprecated with constant value of true")
+        # old help="generate the data to draw the directed graph in the node" +
+        #    "density view")
+    parser.add_argument("--directory", type=str, default=".",
+        help="deprecated, use 'outputDirectory' instead")
+    parser.add_argument("--drlpath", type=str, dest="drlpath",
+        help="deprecated, use 'drlPath' instead")
+    parser.add_argument("--feature_space", type=str, action='append',
+        help="deprecated, use layoutInputFile & format will be auto-detected")
+    parser.add_argument("--first_attribute", type=str, default="",
+        help="deprecated, use 'firstAttribute' instead")
+    parser.add_argument("--include-singletons", dest="singletons",
+        action="store_true", default=False,
+        help="deprecated with a constant value of true")
+    parser.add_argument("--layoutInputFormat", type=str,
+        help="deprecated, format is auto-detected")
+    parser.add_argument("--names", type=str, action="append", default=[],
+        help="deprecated, use 'layoutName' instead")
+    parser.add_argument("--no_layout_independent_stats", dest="associations",
+        action="store_false", default=True,
+        help="deprecated, use 'noLayoutIndependentStats' instead")
+    parser.add_argument("--no_layout_aware_stats", dest="mutualinfo",
+        action="store_false", default=True,
+        help="deprecated, use 'noLayoutAwareStats' instead")
+    parser.add_argument("--metric", type=str, dest="distanceMetric",
+        default="spearman",
+        help="deprecated, use 'distanceMetric' instead")
+    parser.add_argument("--output_tar", type=str, default="",
+        help="deprecated, use 'outputTar' instead")
+    parser.add_argument("--output_zip", type=str, default="",
+        help="deprecated, use 'output_zip' instead")
+    parser.add_argument("--role", type=str, default=None,
+        help="deprecated, use 'authGroup' instead")
+    parser.add_argument("--scores", type=str, action="append",
+        help="deprecated, use 'colorAttributeFile' instead")
+    parser.add_argument("--self-connected-edges", dest="singletons",
+        action="store_true", default=False,
+        help="deprecated with a constant value of true")
+        # old help="add self-edges to input of DRL algorithm")
+    parser.add_argument("--similarity", type=str, action='append',
+        help="deprecated, use layoutInputFile & format will be auto-detected")
+    parser.add_argument("--similarity_full", type=str, action='append',
+        help="deprecated, use layoutInputFile & format will be auto-detected")
+    parser.add_argument("--truncation_edges", type=int, default=6,
+        help="deprecated, use 'neighborCount' instead")
+    parser.add_argument("--window_size", type=int, default=20,
+        help="deprecated with no substitute")
+        # old help="clustering window count is this value squared")
+
+    parser.add_argument("--layoutMethod", type=str, default="DrL",
+        help="DrL, tete")
     #parser.add_argument("--preprocess_method", type=str, default="",
     #    help="Preprocessing methods for feature data when tSNE, MDS, PCA, ICA, isomap, or spectralembedding methods are used; valid options are: standardize, normalize")
     #parser.add_argument("--tsne_pca_dimensions", type=str, default="11",
     #    help="Number of PCA dimensions to reduce data to prior to performing t-SNE")
-    parser.add_argument("--names", type=str, action="append", default=[],
-        help="human-readable unique name/label for one the similarity matrix")
-    parser.add_argument("--scores", type=str,
-        action="append",
-        help="values for each signature as TSV")
-    parser.add_argument("--self-connected-edges", dest="singletons",
-        action="store_true", default=False,
-        help="add self-edges to input of DRL algorithm")
-    parser.add_argument("--colormaps", type=str,
-        default='',
-        help="colormap for categorical attributes as TSV")
-    parser.add_argument("--first_attribute", type=str, default="",
-        help="attribute by which to color the map upon first display")
-    parser.add_argument("--directory", "-d", type=str, default=".",
-        help="directory in which to create other output files")
-    parser.add_argument("--role", type=str, default=None,
-        help="authorization role for this map")
-
-    # Lesser used parameters:
-    parser.add_argument("--attributeTags", type=str,
-        default=None,
-        help="tags for filtering attributes for display, as TSV")
-    parser.add_argument("--min_window_nodes", type=int, default=5,
-        dest="mi_window_threshold",
-        help="min nodes per window for layout-aware stats")
-    parser.add_argument("--max_window_nodes", type=int, default=20,
-        dest="mi_window_threshold_upper",
-        help="max nodes per window for layout-aware stats")
-    parser.add_argument("--no_density_stats", dest="clumpinessStats",
-        action="store_false", default=True,
-        help="don't calculate density stats")
-    parser.add_argument("--no_layout_independent_stats", dest="associations",
-        action="store_false", default=True,
-        help="don't calculate layout-independent stats")
-    parser.add_argument("--no_layout_aware_stats", dest="mutualinfo",
-        action="store_false", default=True,
-        help="don't calculate layout-aware stats")
-    parser.add_argument("--truncation_edges", type=int, default=6,
-        help="edges per node for DrL and the directed graph")
-    parser.add_argument("--window_size", type=int, default=20,
-        help="clustering window count is this value squared")
-    parser.add_argument("--drlpath", "-r", type=str,
-        help="DrL binaries")
-
-    # Rarely used, if ever, parameters:
-    parser.add_argument("--type", type=str, nargs='+',
-        help="the data types of the raw data matrices")
-    parser.add_argument("--rawsim", type=str, nargs='+',
-        help="correlates the raw data file to its similarity matrix")
-    parser.add_argument("--directed_graph", dest="directedGraph",
-        action="store_true", default=True,
-        help="generate the data to draw the directed graph")
-    parser.add_argument("--output_zip", type=str, default="",
-        help="compress the output files into a zip file")
-    parser.add_argument("--output_tar", type=str, default="",
-        help="compress the output files into a tar file")
-
-    # Deprecated parameters:
-    parser.add_argument("--mi_window_threshold", type=int, default=5,
-        help="deprecated, use --min_window_nodes instead")
-    parser.add_argument("--mi_window_threshold_upper", type=int, default=20,
-        help="deprecated, use --max_window_nodes instead")
-    parser.add_argument("--no-stats", dest="clumpinessStats",
-        action="store_false", default=True,
-        help="deprecated, use --no_density_stats instead")
-    parser.add_argument("--no-associations", dest="associations",
-        action="store_false", default=True,
-        help="deprecated, use --no_layout_independent_stats instead")
-    parser.add_argument("--no-mutualinfo", dest="mutualinfo",
-        action="store_false", default=True,
-        help="deprecated, use --no_layout_aware_stats instead")
-    parser.add_argument("--include-singletons", dest="singletons",
-        action="store_true", default=False,
-        help="deprecated, use --self-connected-edges instead")
-
 
     return parser.parse_args(args)
 
-'''
-Notes about peculiarities in code:
-    1.) --include_singletons option: the name suggests you are including nodes
-        that would otherwise not be there, but from the code it is clear this is
-        not the case. --include_singletons simply draws a self connecting edge on all the nodes already on the
-        map before running through DRL. It is unclear what affect this should have on a spring embedded layout
-        clustering algorithm. Its action can be viewed in the drl_similarity_functions() code.
-        Update: Testing with the mcrchropra test data suggests this argument does nothing.
-    2.) --truncate_edges option: This is defaulted to 6, and gets fed into the DRL clustering algorithm.
-                                 The name suggests that even if you provided 20 neighbors, downstream the
-                                 DRL clustering algorthm would trim it down to six.
-
-    3.) if --first_attribute is not specified then the first attribute is arbitraily selected.
-              This messes with the ordering given by the density values and may not be desired behavior
-'''
-##
-#DCM helpers
 def sparsePandasToString(sparseDataFrame):
     '''
     converts a sparse matrix, to edgefile formatted output string
@@ -242,7 +267,8 @@ def getDataTypes(attributeDF,colormapFile,debug=False):
     for attrName in categoricals:
         if debug:
             print attrName
-        if attrName in attributeDF.columns.tolist():
+        if attrName in attributeDF.columns.tolist() and \
+            attrName not in prunedCats:
             prunedCats.append(attrName)
         else:
             if debug:
@@ -295,7 +321,6 @@ def read_nodes(filename):
 
     # Return nodes dict back to main method for further processes
     return nodes
-##
 
 def timestamp():
     return str(datetime.datetime.now())[5:-7]
@@ -308,7 +333,6 @@ class Context:
         s.binary_layers = [] # Binary layer_names in the first layout
         s.continuous_layers = [] # Continuous layer_names in the first layout
         s.categorical_layers = [] # categorical layer_names in the first layout
-        s.beta_computation_data = {} # data formatted to compute beta values
         s.sparse = []
 
     def printIt(s):
@@ -318,7 +342,7 @@ class InvalidAction(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
-        return repr(self.value)
+        return str(self.value)
 
 def hexagon_center(x, y, scale=1.0):
     """
@@ -609,13 +633,15 @@ def drl_similarity_functions(matrix, index, options):
     tsv format whereby the DrL can take the values. Then all of the DrL
     functions are performed on the similarity matrix.
 
-    Options is passed to access options.singletons and other required apsects
+    Options is passed to access options.singletons and other required aspects
     of the parsed args.
+
     @param matrix: most information for this layout
     @param index: index for this layout
     """
 
-    print timestamp(), '============== Starting drl computations for layout:', index, '... =============='
+    print timestamp(), '============== Starting drl computations for layout:', \
+          index, '... =============='
     
     # Work in a temporary directory
     # If not available, create the directory.
@@ -642,6 +668,7 @@ def drl_similarity_functions(matrix, index, options):
     signatures = set()
 
     print "Reach for parts in sim_reader:" + str(sim_reader)
+
     for parts in sim_reader:
         # Keep the signature names used
         signatures.add(parts[0])
@@ -671,7 +698,6 @@ def drl_similarity_functions(matrix, index, options):
     sim_writer.close()
     
     # Now our input for DrL is prepared!
-    
     # Do DrL truncate.
     print timestamp(), "DrL: Truncating..."
     sys.stdout.flush()
@@ -681,7 +707,9 @@ def drl_similarity_functions(matrix, index, options):
             stdout=sys.stdout, stderr=subprocess.STDOUT)
     else:
         subprocess.check_call(["truncate", "-t", str(options.truncation_edges),
-            drl_basename], stdout=sys.stdout, stderr=subprocess.STDOUT)
+            drl_basename], stdout=sys.stdout,
+                              stderr=subprocess.STDOUT)
+
 
     # Run the DrL layout engine.
     print "DrL: Doing layout..."
@@ -705,11 +733,12 @@ def drl_similarity_functions(matrix, index, options):
         
     # Now DrL has saved its coordinates as <signature name>\t<x>\t<y> rows in 
     # <basename>.coord
-    
+
+
     # We want to read that.
     # This holds a reader for the DrL output
     coord_reader = tsv.TsvReader(open(drl_basename + ".coord", "r"))
-    
+
     # This holds a dict from signature name string to (x, y) float tuple. It is
     # also our official collection of node names that made it through DrL, and
     # therefore need their score data sent to the client.
@@ -719,18 +748,49 @@ def drl_similarity_functions(matrix, index, options):
     sys.stdout.flush()
 
     for parts in coord_reader:
-        nodes[parts[0]] = (float(parts[1]), float(parts[2]))
+        try:
+            nodes[parts[0]] = (float(parts[1]), float(parts[2]))
+        except IndexError:
+            print "DRL has provided bad output, parts: ", parts
+            raise
 
     coord_reader.close()
 
     # Delete our temporary directory.
     #shutil.rmtree(drl_directory)
 
-    print timestamp(), '============== drl computations completed for layout:', index, '=============='
+    print timestamp(), '============== drl computations completed for layout:',\
+          index, '=============='
 
 
     # Return nodes dict back to main method for further processes
     return nodes
+
+def sideLength(maxX,maxY,minX,minY,n):
+    """
+    determines side lenght of a hexagon.
+    rational here is that we'd like our hexagons to take up 5% of the space
+    on the clustering plane.
+    @param maxX: max of x in 2d clustering xy data
+    @param maxY: max of y in 2d clustering xy data
+    @param minX: min of x in 2d clustering xy data
+    @param minY: min of Y in 2d clustering xy data
+    @param n:    number of samples in 2d clustering xy data
+    @return: float for side length of the hexagon
+    """
+    #this is the total area of the plane coming from the node assignments
+    totalSpace = (maxX - minX) * (maxY - minY)
+
+    #percent of space we'd like to take up
+    PERCENTOFSPACE = .05
+    RECIPRICALHEXCONST = (2/ (3*np.sqrt(3)))
+    # area of a regular hex is sqrt(3)*3/2 * side^2
+    # so the side length we'd like for our hexs to take up 5% of the space
+    # is:
+    side = np.sqrt(totalSpace * PERCENTOFSPACE * RECIPRICALHEXCONST* (
+        1/float(n)))
+
+    return side
 
 def compute_hexagram_assignments(nodes, index, options, ctx):
     """
@@ -749,14 +809,21 @@ def compute_hexagram_assignments(nodes, index, options, ctx):
 
     # Write out the xy coordinates before squiggling. First find the x and y
     # offsets needed to make all hexagon positions positive
-    min_x = min_y = None
+    min_x = min_y = max_x = max_y = None
+    count=0
     for name, coords in nodes.iteritems():
+        count+=1
         if min_x is None:
             min_x = coords[0]
             min_y = coords[1]
+            max_x = coords[0]
+            max_y = coords[1]
         else:
             min_x = min(min_x, coords[0])
             min_y = min(min_y, coords[1])
+            max_x = max(max_x, coords[0])
+            max_y = max(max_y, coords[1])
+
 
     node_writer = tsv.TsvWriter(open(os.path.join(options.directory, "xyPreSquiggle_"+ str(index) + ".tab"), "w"))
 
@@ -775,13 +842,29 @@ def compute_hexagram_assignments(nodes, index, options, ctx):
     # None if it's free.
     hexagons = collections.defaultdict(lambda: None)
 
-    # This holds the side length that we use
-    side_length = 1.0
-    
+    # get side length that we want to:
+    # if we are using DRL assume that 1 is a good side length (it has worked so
+    # far without complaint :)
+
+    #figure out whether we have an xy entry
+    xyEntry = False
+    try:
+        xyEntry = len(options.coordinates) > 0
+    except TypeError:
+        xyEntry = options.layoutInputFormat == "xyPositions"
+
+    if xyEntry: #some other method is providing xy data
+        # we'd like hexagons to be 5% of the taken up space
+        side_length = sideLength(max_x,max_y,min_x,min_y,count)
+        print "x-y input: hexagon side length chosen as " + str(side_length)
+
+    else: # we are using OpenOrd and this side length works well with the
+          # scaling
+        side_length = 1.0
     # This holds what will be a layer of how badly placed each hexagon is
     # A dict from node name to layer value
     placement_badnesses = {}
-    
+
     for node, (node_x, node_y) in nodes.iteritems():
         # Assign each node to a hexagon
         # This holds the resulting placement badness for that hexagon (i.e. 
@@ -842,9 +925,113 @@ def write_similarity_names(options):
         for i, name in enumerate(options.names):
             f.writerow([name])
 
+def inferringFormat(options):
+    return options.layoutInputFile is not None
+
+def writeMetaData(options):
+
+    inferring_format = inferringFormat(options)
+    # Store some metadata in the meta.json file for map group info like role and
+    # into mapMeta.json for map-specific info like clustering data file path.
+    #
+    # If this is called via docker's CWL or via CLI we don't know the data
+    # directory structure and must make some assumptions and so the meta data
+    # file(s) may be incorrect. We expect these users to be more sophistocated
+    # and know about how to fix up the meta data.
+    # When called via the web API we set the data directory structure so the
+    # meta data is reliable.
+    
+    # Find the base map name, without the optional mapGroup.
+    mapBaseI = string.rfind(options.directory[:-1], '/') + 1
+    mapBase = options.directory[mapBaseI:]
+
+    # Start off assuming no mapGroup so it is the same dir as the base map.
+    mapGroupDir = options.directory
+    mapGroup = mapBase
+    
+    # Find the parent name.
+    parentI = string.rfind(options.directory[:mapBaseI-1], '/') + 1
+    parent = options.directory[parentI:mapBaseI-1]
+    
+    if parent != 'view':
+    
+        # The parent is either the map group or this is not our standard data
+        # directory structure.
+
+        # Find the grandparent name
+        gParentI = string.rfind(options.directory[:parentI-1], '/') + 1
+        gParent = options.directory[gParentI:parentI-1]
+        if gParent == 'view':\
+        
+            # This is our standard data directory structure with a mapGroup.
+            mapGroup = options.directory[parentI:mapBaseI-1]
+            mapGroupDir = options.directory[:mapBaseI-1]
+
+    # Save the map group meta data if there is any.
+    if options.role:
+        
+        # Open any existing meta.json file and load its meta data.
+        metaPath = os.path.join(mapGroupDir, 'meta.json')
+        meta = {}
+        try:
+            with open(metaPath, 'r') as f:
+                meta = json.load(f)
+                
+        except:
+            # No meta.json file yet.
+            pass
+        
+        # TODO make this write to an array of roles rather than a single
+        # value. For now do not overwrite any existing role
+        if 'role' not in meta:
+            meta['role'] = options.role
+        
+        try:
+            with open(metaPath, 'w') as f:
+                json.dump(meta, f, indent=4)
+        except:
+            # We assume we could not write to this dir because this was called
+            # via CWL/CLI and the directory is protected.
+            print('Warning: could not write meta.json file')
+                
+    # Save the base-map-specific meta data if there are any. This is for
+    # operations like placing new nodes or sub-maps.
+    if options.feature_space:
+
+        # Build the meta data for each layout. Paths written are relative to the
+        # data root so may not be reliable when called via CWL/CLI where we
+        # don't know the data root.
+        meta = { 'layouts': {} }
+        metaPath = os.path.join(options.directory, 'mapMeta.json')
+        for i, name in enumerate(options.names):
+        
+            # We only save this data if our standard data directory structure
+            # created with the web API is being used. We do the best we can by
+            # looking for 'featureSpace' in the layoutInput file name.
+            if inferring_format:
+                # In this case that position is a dataframe
+                # The name of the file is in the index name.
+                j = options.feature_space[i].index.name.find('featureSpace')
+            else:
+                j = options.feature_space[i].find('featureSpace')
+
+            if j < 0:
+                continue
+
+            # Save the file name relative to the data root
+            if inferring_format:
+                meta['layouts'][name] = {'clusterData': options.feature_space[i].index.name[j:]}
+            else:
+                meta['layouts'][name] = {'clusterData': options.feature_space[i][j:]}
+
+        meta["nodeIdSearchUrl"] = options.nodeIdSearchUrl
+        # Write the json file
+        with open(metaPath, 'w') as f:
+            json.dump(meta, f, indent=4)
+
 def copy_files_for_UI(options, layer_files, layers, layer_positives, clumpiness_scores):
     """
-    Copy some files over to the tumor map space so it may access them.
+    Copy some files over to the view space so it may access them.
     """
     # Write an index of all the layers we have, in the form:
     # <layer>\t<file>\t<number of signatures with data>\t<number of signatures
@@ -883,10 +1070,13 @@ def copy_files_for_UI(options, layer_files, layers, layer_positives, clumpiness_
         shutil.copy(options.attributeTags, tagsPath)
         print 'Tags file copied to', tagsPath
 
+    if options.feature_space or options.role:
+        writeMetaData(options)
+    
 def build_default_scores(options):
 
     # Build a fake scores file from the node IDs in the first layout. This is a
-    # hack to get around the server & client code expecting at least one layer.
+    # hack to get around the server code expecting at least one layer.
     
     file_name = options.directory + '/fake_layer.tab'
     with open(file_name, 'w') as fout:
@@ -897,78 +1087,193 @@ def build_default_scores(options):
     #options.scores = ['fake_layer_0', 'fake_layer_1']
     return file_name
 
-def hexIt(options, cmd_line_list, all_dict):
+def getDefaultOpts():
+    '''
+    @return: dictionary of default opts
+    '''
+    defaults = parse_args([]).__dict__
+    """
+    This shows the results of the above parse_args([]).__dict__ call on
+    03172016. It will change as argparse changes. Note that the key is the
+    "dest"
+      param of the arg defenition in arg_parse, and the value is the "default"
+    defaults = {'associations': True, #bool
+                'attributeTags': None, #string filepath
+                'clumpinessStats': True, #boolean
+                 'colormaps': '', #string filepath, empty if omitted
+                 'coordinates': None, #[[path,path,path]]
+                 'directedGraph': True, #bool
+                 'directory': '.', #string filepath
+                 'drlpath': None, #string filepath
+                 'feature_space': None, #[[path,path,path]]
+                 'first_attribute': '', sting filepath, empty if omitted
+                 'metric': None, [[metric,metric,metric]]
+                 'mutualinfo': True, #bool
+                 'names': [], #[string,string,...]
+                 'output_tar': '', #string filepath
+                 'output_zip': '', #string filepath
+                 'rawsim': None, #deprecated
+                 'role': None, #string specifying meaningful role description
+                 'scores': None, #[path,path,path,...]
+                 'similarity': None, #[[path,path,path,...]]
+                 'similarity_full': None, #[[path,path,path,...]]
+                 'singletons': False, #bool
+                 'truncation_edges': 6, #int
+                 'type': None, #deprecated
+                 }
+
+    """
+    return defaults
+
+def tete_wrapper(dt, col_names, neighborCount):
+    """Import and call tete with output expected by rest of pipeline."""
+    nodes = {}
+    try:
+        from tete import teter
+        xys = teter(dt, 2, neighborCount)
+        for i in range(xys.shape[0]):
+            nodes[col_names[i]] = (xys[i,0], xys[i,0])
+        return nodes
+    except ImportError:
+        raise ImportError("tete algorithm not available on this machine,"
+                          " python path is: \n" + str(sys.path))
+
+def fillOpts(options):
+    '''
+    fills in default options if not present
+    @param options: arg parse Namespace object
+    @return: modified "options" Namespace object
+    '''
+
+    #grab default options as a dict
+    defaults = getDefaultOpts()
+
+    #namespace class is mutable through vars(), like options.__dict__
+    optionsDict = vars(options)
+
+    #fill in defaults
+    for needed in defaults.keys():
+        try:
+            optionsDict[needed]
+        except KeyError:
+            optionsDict[needed] = defaults[needed]
+
+    # Override some options that have become constants.
+    options.clumpinessStats = True
+    options.directedGraph = True
+    options.singletons = True
+
+    # Handle input layout parameters
+    operatingVars = \
+        ['feature_space', 'similarity_full', 'similarity', 'coordinates']
+
+    if options.layoutInputFile is None:
+
+        # Using the deprecated parameters so they are already mapped to the
+        # operating variables. Only allow one format and ignore the rest.
+        formats = filter(lambda x: getattr(options, x), operatingVars)
+        
+        if len(formats) < 1:
+            raise ValueError("One of these feature layout options " +
+                "must be specified: feature_space similarity, " +
+                "similarity_full, coordinates.")
+        theFormat = formats[0]
+
+        # Keep the first format encountered and clear the rest.
+        for format in operatingVars:
+            if format != theFormat:
+                setattr(options, format, None)
+
+    return options
+
+def makeMapUIfiles(options, cmd_line_list=None):
     '''
     main function, contains entire pipeline for Tumor Map generation
-    :param options: parsed command line, or user supplied arguemnts, see parse_args() for details
+    :param options: parse args namespace object, see getDefaultOpts() for a
+                    dictionary of defaults of the needed object attributes
     :param cmd_line_list: the commands parsed off of the command line
-    :param all_dict: a dict made from cmd_line_list
     :return: None, writes out a plethora of needed files to a directory specified in 'options'
     '''
 
-    #make the destination directpry for output if its not there
+    #make sure the common defaults are in the options Namespace
+    givenOptions = options
+    options = fillOpts(options)
+
+    #make the destination directory for output if its not there
     if not os.path.exists(options.directory):
         os.makedirs(options.directory)
+
     #Set stdout and stderr to a log file in the destination directory
-    log_file_name = options.directory + '/log'
+    log_file_name = os.path.join(options.directory, 'log')
     stdoutFd = sys.stdout
     sys.stdout = open(log_file_name, 'w')
     sys.stderr = sys.stdout
 
-    #Start chattering to the log file
-    print timestamp(), 'Started'
-    print 'command-line options:'
-    pprint.pprint(cmd_line_list)
-    print 'all options:'
-    pprint.pprint(all_dict)
+    if cmd_line_list:
+        print timestamp(), 'Started'
+        print 'command-line options:'
+        #print out each arg on its own line
+        print '\n'.join(cmd_line_list)
+
+    #print all the options given to the log.
+    print 'all given options:'
+    pprint.pprint(givenOptions.__dict__)
+
+    #print all the options after adjustment to the log.
+    print 'all adjusted options:'
+    pprint.pprint(options.__dict__)
     sys.stdout.flush()
 
-    ctx = Context();
-    
-    options.layout_method = 'DrL'
+    # Check if we are computationally verifying the
+    # "layoutInputFormat".
+    inferring_format = inferringFormat(options)
+    if inferring_format:
+        more_than_one = False
+        for fin in options.layoutInputFile:
+            df = utils.readPandas(fin)
+            inferred_format= formatCheck._layoutInputFormat(df)
+            if more_than_one:
+                assert inferred_format == last_inferred_format
+            #two cases where we really don't want to read in data twice
+            if inferred_format == "clusterData":
+                if not more_than_one:
+                    options.feature_space = []
+                if options.zeroReplace:
+                    df= df.fillna(0)
+                options.feature_space.append(df)
 
-    if options.role != None:
-    
-        # Create the metadata json file.
-        # We're going to make the assumption that any project being created with
-        # a role will have major and minor project dirs. So insert the metadata
-        # file into the major directory.
-        i = string.rfind(options.directory[:-1], '/')
-        majorDir = options.directory[:i]
-        
-        # If a meta.json file already exists, do not overwrite it because it
-        # may have been changed to allow others to have access.
-        metaPath = os.path.join(majorDir, 'meta.json')
-        if not os.path.isfile(metaPath):
-            with open(metaPath, 'w') as fout:
-                meta = '{ "role": "' + options.role + '" }\n';
-                fout.write(meta)
+            elif inferred_format == "fullSimilarity":
+                if not more_than_one:
+                    options.similarity_full = []
+
+                options.similarity_full.append(df)
+
+            elif inferred_format == "sparseSimilarity":
+                if not more_than_one:
+                    options.similarity= []
+                options.similarity.append(fin)
+
+            elif inferred_format == "xyPositions":
+                if not more_than_one:
+                    options.coordinates= []
+                options.coordinates.append(fin)
+
+            more_than_one = True
+            last_inferred_format = inferred_format
+
+        print "inferred_format was: " + inferred_format
+    #####
+
+    ctx = Context()
 
     #javascript expects at least one attribute so put something fake there
     # if none exist
     if options.scores == None:
         options.scores = [build_default_scores(options)]
 
-    #Make sure arguements are lists instead of list of lists
-    # needed for backward compatibiliy of scripts
-    if not (options.similarity == None):
-        options.similarity = [val for sublist in options.similarity for val in sublist]
-        print "Using sparse similarity"
-    if not (options.similarity_full == None):
-        options.similarity_full = [val for sublist in options.similarity_full for val in sublist]
-        print "Using full similarity"
-    if not (options.feature_space == None):
-        options.feature_space = [val for sublist in options.feature_space for val in sublist]
-        print "Using full feature space"
-    if not (options.metric == None):
-        options.metric = [val for sublist in options.metric for val in sublist]
-    if not (options.coordinates == None):
-        options.coordinates = [val for sublist in options.coordinates for val in sublist]
-        print "Using coordinates"
-    
     #if no colormaps file is specified then assume it needs to be created
     # and annotations need to be converted to tumor map mappings.
-    # If attributes are not specified then there's no colormaps to create
+    # If attributes are not specified then there is no colormap to create.
     if not(options.scores == None):
 
         create_colormaps_file(options.scores,os.path.join(options.directory,'colormaps.tab'),
@@ -986,7 +1291,7 @@ def hexIt(options, cmd_line_list, all_dict):
     x, y = hexagon_center(0, 0)
     if hexagon_pick(x, y) != (0, 0):
         raise Exception("Picking is broken!")
-    
+
     print "Writing matrix names..."
     #write the option,names out,
     # options.names is a human readable description of the data used to create
@@ -1006,131 +1311,134 @@ def hexIt(options, cmd_line_list, all_dict):
         for i, coords_filename in enumerate(options.coordinates):
             nodes = read_nodes(coords_filename)
             nodes_multiple.append(nodes)
-            dt = utils.readXYs(coords_filename)
-            eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(dt, metric='euclidean', p=2, w=None, V=None, VI=None))
-            #append the sparse matrix representation so the neighbors_x file can be created.
-            ctx.sparse.append(sparsePandasToString(extract_similarities(dt=eucl, sample_labels=dt.index, top=options.truncation_edges, log=None)))
+            ctx.sparse=[]
 
     else:
-        if options.layout_method.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
+        if options.layoutMethod.upper() == "TETE":
             for i, genomic_filename in enumerate(options.feature_space):
-                print 'Opening feature space matrix', i, genomic_filename
-                dt,sample_labels,feature_labels = read_tabular(genomic_filename, True)
-                print str(len(dt))+" x "+str(len(dt[0]))
-                #preprocess the data:
-                if not(options.preprocess_method == None or len(options.preprocess_method) == 0):
-                    if options.preprocess_method.upper() == "STANDARDIZE":
-                        dt_preprocessed = preprocessing.scale(dt)
-                        dt = dt_preprocessed
-                    elif options.preprocess_method.upper() == "NORMALIZE":
-                        dt_preprocessed = preprocessing.normalize(dt, norm='l2')
-                        dt = dt_preprocessed
+                    if inferring_format:
+                        # "Genomic filename is actually a pandas dataFrame
+                        dt, sample_labels, feature_labels = \
+                            compute_sparse_matrix.pandasToNumpy(genomic_filename)
                     else:
-                        raise InvalidAction("Invalid preprocessing method")
-                dt_t = np.transpose(dt)
-                if options.layout_method.upper() == "PCA":
-                    coord = computePCA(dt_t,sample_labels)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)                    
-                    
-                elif options.layout_method.upper() == "TSNE":
-                    coord = computetSNE(dt_t,sample_labels, int(options.tsne_pca_dimensions))
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "ISOMAP":
-                    coord = computeisomap(dt_t,sample_labels,options.truncation_edges)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "MDS":
-                    coord = computeMDS(dt_t,sample_labels)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "SPECTRALEMBEDDING":
-                    coord = computeSpectralEmbedding(dt_t,sample_labels, options.truncation_edges)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                elif options.layout_method.upper() == "ICA":
-                    coord = computeICA(dt_t,sample_labels)
-                    nodes_multiple.append(coord)
-                    coord_lst = [list(x) for x in coord.values()]
-                    eucl = scipy.spatial.distance.squareform(scipy.spatial.distance.pdist(coord_lst, metric='euclidean', p=2, w=None, V=None, VI=None))
-                    eucl_sparse = extract_similarities(dt=eucl, sample_labels=coord.keys(), top=options.truncation_edges, log=None)
-                    ctx.sparse.append(eucl_sparse)
-                    
-                else:
-                    raise InvalidAction("Invalid layout method is provided")
+                        dt, sample_labels, feature_labels = \
+                            read_tabular(genomic_filename,
+                                         True,
+                                         replaceNA=options.zeroReplace
+                                         )
+                    if options.doingRows:
+                        # Swap the sample and feature labels and continue
+                        sample_labels, feature_labels = \
+                            feature_labels, sample_labels
+                    else:
+                        dt = dt.transpose()
+
+                    nodes_multiple.append(tete_wrapper(dt,
+                                                       sample_labels,
+                                                options.truncation_edges))
+
+            options.coordinates = True
+
         else:    #'DRL'
             print 'DRL method'
-            print options.similarity
-            print options.feature_space
-            print options.similarity_full
-            if not (options.feature_space == None):    #full feature space matrix given
+            if not (options.feature_space == None):
                 print "Feature matrices"
                 for i, genomic_filename in enumerate(options.feature_space):
-                    print 'Opening Matrix', i, genomic_filename
-                    dt,sample_labels,feature_labels = read_tabular(genomic_filename, True)
+
+                    if inferring_format:
+                        # Then genomic filename is actually a pandas dataFrame.
+                        dt, sample_labels, feature_labels = \
+                            compute_sparse_matrix.pandasToNumpy(
+                                genomic_filename
+                            )
+                    else:
+                        dt, sample_labels, feature_labels = \
+                            read_tabular(genomic_filename,
+                                         True,
+                                         replaceNA=options.zeroReplace
+                                         )
+
                     print str(len(dt))+" x "+str(len(dt[0]))
-                    dt_t = np.transpose(dt)
-                    result = sparsePandasToString(compute_similarities(dt=dt_t, sample_labels=sample_labels, metric_type=options.metric[i], num_jobs=12, output_type="SPARSE", top=options.truncation_edges, log=None))
+
+                    if options.doingRows:
+                        # Swap the sample and feature labels and continue
+                        sample_labels, feature_labels = \
+                            feature_labels, sample_labels
+                    else:
+                        dt = np.transpose(dt)
+
+                    result = sparsePandasToString(
+                        compute_similarities(
+                            dt=dt,
+                            sample_labels=sample_labels,
+                            metric_type=options.distanceMetric,
+                            num_jobs=12,
+                            output_type="SPARSE",
+                            top=options.truncation_edges,
+                            log=None
+                        )
+                    )
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
                     ctx.sparse.append(result)
 
-            elif not (options.similarity_full == None):    #full similarity matrix given
+            elif not (options.similarity_full == None):
                 print "Similarity matrices"
-                for i, similarity_filename in enumerate(options.similarity_full):
-                    print 'Opening Matrix', i, similarity_filename
-                    dt,sample_labels,feature_labels = read_tabular(similarity_filename, True)
+                for similarity_filename in options.similarity_full:
+                    if inferring_format:
+                        # Then similarity filename is really a pandas dataFrame.
+                        dt, sample_labels, feature_labels = \
+                            compute_sparse_matrix.pandasToNumpy(
+                                similarity_filename
+                            )
+                    else:
+                        dt, sample_labels, feature_labels = \
+                            read_tabular(similarity_filename,
+                                         True,
+                                         replaceNA=options.zeroReplace
+                                         )
+
                     print str(len(dt))+" x "+str(len(dt[0]))
-                    result = sparsePandasToString(extract_similarities(dt=dt, sample_labels=sample_labels, top=options.truncation_edges, log=None))
+
+                    result = sparsePandasToString(
+                        extract_similarities(
+                            dt=dt,
+                            sample_labels=sample_labels,
+                            top=options.truncation_edges,
+                            log=None
+                        )
+                    )
+
                     result_stream = StringIO.StringIO(result)
                     matrix_file = tsv.TsvReader(result_stream)
                     ctx.matrices.append(matrix_file)
                     ctx.sparse.append(result)
             
-            elif not (options.similarity == None):        #sparse similarity matrix given
+            elif not (options.similarity == None):
                 print "Sparse similarity matrices"
                 open_matrices(options.similarity, ctx)
-                print options.similarity
+
             elif not(options.coordinates == None):
-                #do nothing.
                 '''already have x-y coords so don't need to do anything.'''
-            else:    #no matrix is given
-                raise InvalidAction("Invalid matrix input is provided")
-            
-            # Index for drl.tab and drl.layout file naming. With indexes we can match
-            # file names, to matrices, to drl output files.
-            #print "length of ctx.matrices = "+str(len(ctx.matrices))
-            # if we have x-ys then we don't need to do drl.
+
+            else:
+                raise InvalidAction("Invalid matrix input was provided")
+
+            # Skip DRL if we have xy positions.
             if (options.coordinates == None):
-                for index, i in enumerate (ctx.matrices):
+                # Run DRL for each of the layout input file sparse similarities.
+                for index, sparse_similarity in enumerate(ctx.matrices):
                     print "enumerating ctx.matrices "+str(index)
-                    nodes_multiple.append(drl_similarity_functions(i, index, options))
+                    nodes_multiple.append(
+                        drl_similarity_functions(
+                            sparse_similarity,
+                            index,
+                            options
+                        )
+                    )
 
     print "Opened matrices..."
-    #print nodes_multiple
-    #print len(nodes_multiple[0])
-    #print nodes_multiple
     
     # Index for drl.tab and drl.layout file naming. With indexes we can match
     # file names, to matrices, to drl output files.
@@ -1153,7 +1461,7 @@ def hexIt(options, cmd_line_list, all_dict):
     for index, i in enumerate(nodes_multiple):
         # Go get the placement badness
         placement_badness = compute_hexagram_assignments(i, index, options, ctx)
-            
+
         # Record the placement badness under this layout.
         placement_badnesses_multiple.append(placement_badness)
 
@@ -1309,25 +1617,45 @@ def hexIt(options, cmd_line_list, all_dict):
     clumpiness_scores = []
 
     datatypeDict = {'bin':[],'cat':[],'cont':[]}
+    nlayouts = len(nodes_multiple)
     # Determine Data Type
     if len(layer_names) > 0:
-        attrDF = getAttributes(options.scores)
+        attrDF = tabFilesToDF(options.scores)
         datatypeDict = getDataTypes(attrDF,options.directory + '/colormaps.tab')
-
+        mapOutput.writeDummyLayersTab(layer_files,layers,
+                                  attrDF, datatypeDict,
+                                  nlayouts, options.directory
+                                  )
     #puts the datatypes in the global object and writes them to the UI file
     writeAndPutLayerDatatypes(datatypeDict, options, ctx)
+
+
 
     if len(layer_names) > 1 and options.clumpinessStats:
         ###############################DCM121916###################################3
         #calculates density using the Lees'L method
 
-        for index in range(len(nodes_multiple)):
+        for index in range(nlayouts):
             print 'calculating density for layer ' + str(index)
             xys = utils.readXYs(options.directory + '/xyPreSquiggle_' + str(
                 index)+'.tab')
-            densityArray.append(leesL.densityOpt(attrDF,datatypeDict,xys,debug=True))
+            densityArray.append(
+                spatial.density(
+                    attrDF,
+                    datatypeDict,
+                    xys,
+                    n_jobs=8
+                )
+            )
 
-        leesL.writeLayersTab(attrDF,layers,layer_files,densityArray,datatypeDict,options)
+        mapOutput.writeLayersTab(
+            attrDF,
+            layers,
+            layer_files,
+            densityArray,
+            datatypeDict,
+            options
+        )
         ###########################################################################3
     else:
         #We aren't doing any stats.
@@ -1352,9 +1680,7 @@ def hexIt(options, cmd_line_list, all_dict):
             clumpiness_scores = [collections.defaultdict(lambda: float("-inf"))
                 for _ in options.coordinates]
         else:    #no matrix is given
-            raise InvalidAction("Invalid matrix input is provided")
-
-
+            raise InvalidAction("Invalid matrix input was provided")
 
     # Count how many layer entries are greater than 0 for each binary layer, and
     # store that number in this dict by layer name. Things with the default
@@ -1395,7 +1721,7 @@ def hexIt(options, cmd_line_list, all_dict):
             f.writerow([name])
 
     # Run pairwise meta data stats
-    if options.associations == True:
+    if options.associations:
         print 'layout independent stats starting'
         indstats_time = time.time()
         statsNoLayout(layers, layer_names, ctx, options)
@@ -1420,31 +1746,46 @@ def hexIt(options, cmd_line_list, all_dict):
     if (options.mutualinfo and len(layer_names) > 1):
         print 'LeesL layout aware stats being calculated'
 
-        #subset down  to binary attributes
+        # Binary attributes.
         binAttrDF= attrDF[datatypeDict['bin']]
 
-        #need to get layers file to know the indecies used for the outputted filenames
-        layers = leesL.readLayers(options.directory + '/layers.tab')
+        # layers.tab file has the attribute->file mapping.
+        layers = mapData.readLayers(options.directory + '/layers.tab')
 
         for index in range(len(nodes_multiple)):
             xys = utils.readXYs(options.directory + '/xyPreSquiggle_' + str(
                 index)+'.tab')
 
-            #filter and preprocess the binary attributes on the map
-            attrOnMap = leesL.attrPreProcessing4Lee(binAttrDF,xys)
             # attributes ar e
-            leeMatrix = leesL.leesL(leesL.spatialWieghtMatrix(xys),attrOnMap)
-            #take all pairwise correlations of Binaries to display along with Lees L
-            corMat=1-sklp.pairwise_distances(attrOnMap.transpose(),metric='correlation',n_jobs=8)
+            leeMatrix = spatial.pairwiseAssociations(
+                xys,
+                binAttrDF
+            )
+            #Correlations are displayed along with Lees L
+            corMat= 1 - sklp.pairwise_distances(
+                spatial.attrPreProcessing(xys, binAttrDF).transpose(),
+                metric='correlation',
+                n_jobs=8
+            )
 
-            leesL.writeToDirectoryLee(options.directory + '/',leeMatrix,corMat,attrOnMap.columns.tolist(),layers,index)
+            mapOutput.writeToDirectoryLee(
+                options.directory + '/',
+                leeMatrix,
+                corMat,
+                binAttrDF.columns.tolist(),
+                layers,
+                index
+            )
 
-    # Find the top neighbors of each node
+    # Find the top neighbors of each node.
+    # TODO This is only running to produce the directed graph data,
+    # 'neighbors_*.tab' to display the node density view. Seems like this is
+    # redundant.
     if not(options.coordinates == None):
         for index, i in enumerate(ctx.sparse):
             topNeighbors_from_sparse(ctx.sparse[index], options.directory, options.truncation_edges, index)
     else:
-        if options.layout_method.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
+        if options.layoutMethod.upper() in ['TSNE', 'MDS', 'PCA', 'ICA', 'ISOMAP', 'SPECTRALEMBEDDING']:
                 if options.directedGraph:
                     #topNeighbors(options.feature_space, options.directory, options.truncation_edges)
                     for index, i in enumerate(ctx.sparse):
@@ -1466,7 +1807,7 @@ def hexIt(options, cmd_line_list, all_dict):
                     for index, i in enumerate(ctx.sparse):
                         topNeighbors_from_sparse(ctx.sparse[index], options.directory, options.truncation_edges, index)
             else:    #no matrix is given
-                raise InvalidAction("Invalid matrix input is provided")
+                raise InvalidAction("Invalid matrix input was provided")
 
     print timestamp(), "Visualization generation complete!"
     
@@ -1491,64 +1832,9 @@ def hexIt(options, cmd_line_list, all_dict):
     sys.stdout = stdoutFd
     return log_file_name
 
-def PCA(dt):    #YN 20160620
-    pca = sklearn.decomposition.PCA(n_components=2)
-    pca.fit(dt)
-    return(pca.transform(dt))
-    
-def tSNE(dt):    #YN 20160620
-    pca = sklearn.decomposition.PCA(n_components=50)
-    dt_pca = pca.fit_transform(np.array(dt))
-    model = sklearn.manifold.TSNE(n_components=2, random_state=0)
-    np.set_printoptions(suppress=True)
-    return(model.fit_transform(dt_pca))
-
-def tSNE2(dt):    #YN 20160620
-    model = sklearn.manifold.TSNE(n_components=2, random_state=0)
-    np.set_printoptions(suppress=True)
-    return(model.fit_transform(dt))
-
-def isomap(dt):    #YN 20160620
-    return(sklearn.manifold.Isomap(N_NEIGHBORS, 2).fit_transform(dt))
-
-def MDS(dt):    #YN 20160620
-    mds = sklearn.manifold.MDS(2, max_iter=100, n_init=1)
-    return(mds.fit_transform(dt))
-
-def SpectralEmbedding(dt):    #YN 20160620
-    se = sklearn.manifold.SpectralEmbedding(n_components=2, n_neighbors=N_NEIGHBORS)
-    return(se.fit_transform(dt))
-
-def ICA(dt):    #YN 20160620
-    ica = sklearn.decomposition.FastICA(n_components=2)
-    return(ica.fit_transform(dt))
-    
-def compute_silhouette(coordinates, *args):        #YN 20160629: compute average silhouette score for an arbitrary group of nodes
-                                                #coordinates is a dictionary; example: {sample1: {"x": 200, "y": 300}, sample2: {"x": 250, "y": 175}, ...}
-                                                #args is simply 2 or more lists of samples that are present in the coordinates dictionary
-    if(len(args) < 2):
-        raise Exception('Invalid number of groupings have been specified. At least two groups are required.')
-        
-    clust_count = 1
-    cluster_assignments = []
-    samples = []
-    for a in args:
-        cluster_assignments.append([clust_count]*len(a))
-        samples.append(a)
-        clust_count += 1
-    cluster_assignments_lst = [item for sublist in cluster_assignments for item in sublist]
-    samples_lst = [item for sublist in samples for item in sublist]
-    features = []
-    for s in samples_lst:
-        features.append(np.array([coordinates[s]["x"], coordinates[s]["y"]]))
-    return(sklearn.metrics.silhouette_score(np.array(features), np.array(cluster_assignments_lst), metric='euclidean', sample_size=1000, random_state=None))
-
 def main(args):
     arg_obj = parse_args(args)
-    return hexIt(arg_obj, args, arg_obj.__dict__)
-
-def fromNodejs(args):
-    return main(args)
+    return makeMapUIfiles(arg_obj, args)
 
 if __name__ == "__main__" :
     try:
@@ -1556,5 +1842,5 @@ if __name__ == "__main__" :
     except:
         traceback.print_exc()
         return_code = 1
-        
+
     sys.exit(return_code)
