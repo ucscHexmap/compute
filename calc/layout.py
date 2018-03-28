@@ -1836,11 +1836,6 @@ def main(args):
     arg_obj = parse_args(args)
     return makeMapUIfiles(arg_obj, args)
 
-if __name__ == "__main__" :
-    try:
-        return_code = main(sys.argv[1:])
-    except:
-        traceback.print_exc()
-        return_code = 1
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
 
-    sys.exit(return_code)
