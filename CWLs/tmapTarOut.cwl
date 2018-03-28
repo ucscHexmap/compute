@@ -7,7 +7,7 @@ baseCommand: layout.py
 
 hints:
   - class: DockerRequirement
-    dockerPull: ucschexmap/compute:dev
+    dockerPull: ucschexmap/compute:latest
 
 arguments:
   ["--self-connected-edges",

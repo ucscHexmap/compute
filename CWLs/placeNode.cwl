@@ -7,7 +7,7 @@ baseCommand: placeNode.py
 
 hints:
   - class: DockerRequirement
-    dockerPull: ucschexmap/compute:dev
+    dockerPull: ucschexmap/compute:latest
 
 arguments:
   ["--outputbase", ""]

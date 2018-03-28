@@ -7,7 +7,7 @@ baseCommand: compute_sparse_matrix.py
 
 hints:
   - class: DockerRequirement
-    dockerPull: ucschexmap/compute:dev
+    dockerPull: ucschexmap/compute:latest
 
 arguments:
   ["--output_type", "full",
