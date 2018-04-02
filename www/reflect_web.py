@@ -17,7 +17,9 @@ def preCalc(parms, ctx):
 def calcMain(parms, ctx):
     dataType = parms["dataType"]
     selectionName = parms["dynamicAttrName"]
-
+    toLayout = parms["layout"]
+    viewerUrl = parms["viewerUrl"]
+    toMapId = parms["toMap"]
     reflectionParms = getReflectParmameters(parms)
 
     reflectionScores, nNodes = reflection(reflectionParms)
@@ -32,7 +34,22 @@ def calcMain(parms, ctx):
     pickle.dump(reflectionScores, open(tmpFilePath, "wb"))
 
     retrievalUrl = getRetrievalUrl(attrId)
-    return "Success", {"url": retrievalUrl, "nNodes": nNodes}
+
+    viewOnAMapUrl = getUrlToViewMap(
+        viewerUrl,
+        toMapId,
+        toLayout,
+        retrievalUrl,
+        ctx.app.dataServer
+    )
+
+    successJson = {
+        "url": viewOnAMapUrl,
+        "nNodes": nNodes,
+        "dataRetrievalUrl": retrievalUrl
+    }
+
+    return "Success", successJson
 
 
 def getReflectionAttr(attrId):
@@ -90,6 +107,36 @@ def getReflectParmameters(parms):
 
     return parms
 
+def getUrlToViewMap(
+        clientUrl,
+        toMapId,
+        layout,
+        retrievalUrl,
+        hubUrl):
+    """
+    :param clientUrl:
+    :param toMapId:
+    :param dataType:
+    :param retrievalUrl:
+    :param hubUrl:
+    :return: The url the client can use to veiw the reflection data
+    on a map.
+    """
+    viewMapUrl = clientUrl
+    # Which map to open.
+    viewMapUrl += "/?p="
+    viewMapUrl += toMapId
+    # Which layout the map will be opened up on.
+    viewMapUrl += "&layout="
+    viewMapUrl += layout
+    # Points back at this data hub so the data can be retrieved.
+    viewMapUrl += "&hub="
+    viewMapUrl += hubUrl
+    viewMapUrl += retrievalUrl
+    # Instructions to add the attribute.
+    viewMapUrl += "&compute=addAttr"
+
+    return viewMapUrl
 
 def getRetrievalUrl(attrId):
     """The URL to query the server for to retrieve data."""

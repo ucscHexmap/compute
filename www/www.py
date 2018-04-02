@@ -374,18 +374,26 @@ def reflectionRequest():
     JSON post example
     {
         dataType : "dataTypePointsToAFileInReflectionConfig"
+        layout : "layoutTheToMapWillOpenUpOn"
+        toMap : "mapToViewReflection"
         map : "Pancan12/SampleMap",
         nodeIds : [id, id, ...],
         rankCategories: True/False,
         dynamicAttrName : "Kindey Isle"
+        viewerUrl : "https://tumormap.ucsc.edu/"
         email: dmccoll@ucsc.edu
     };
     JSON response on Success from job queue:
         {
-            url : /reflect/attrId/<string:fileId>,
+            url : "http://aLong/UrlForTheClient/ToViewReflectionOnAMap"
+            dataRetrievalUrl : HUB_URL/reflect/attrId/<string:fileId>,
             nNodes : 123
         }
-        url is an enpoint to download the calculated file.
+        dataRetrievalUrl is an enpoint to download the calculated file.
+        "url" will open a map viewer with the reflection in your
+        browser.
+        nNodes is the number of nodes there was data for when
+        calculating reflection.
     """
     logging.info('Reflection requested')
 
