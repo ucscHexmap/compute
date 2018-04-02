@@ -12,27 +12,29 @@ import validate_web as validate
 import layout
 import job
 
-def formatGeneratedUrls(result, msg):
 
-    # Add any urls generated for uploaded layout input files.
-    for url in result['layoutInputUrl']:
-        msg += 'Your layout input data may be accessed in the future ' + \
-            'with:\n\n' + url + '\n\n'
+def formatGeneratedUrls(ctx):
 
-    # Add any urls generated for uploaded color attribute files.
-    for url in result['colorAttributeUrl']:
-        msg += 'Your color attributes data may be accessed in the future ' + \
-            'with:\n\n' + url + '\n\n'
+    # Add any urls generated for uploaded data files.
+    msg = ''
+    if hasattr(ctx, 'layoutInputUrls'):
+        for url in ctx.layoutInputUrls:
+            msg += 'Your layout input data may now be accessed ' + \
+                'with:\n\n' + url + '\n\n'
+    if hasattr(ctx, 'colorAttributeUrls'):
+        for url in ctx.colorAttributeUrls:
+            msg += 'Your color attributes data may now be accessed ' + \
+                'with:\n\n' + url + '\n\n'
+    return msg
 
 
 def formatEmailError(result, ctx):
 
     # Format the error for sending in an email.
-    msg = 'There was an error while calculating results for createMap'
-    msg += ' for map: ' + ctx.map
+    msg = 'There was an error while creating your map: ' + ctx.map
     if result != None:
         msg += '\n\nerror: ' + result['error'] + '\n\n'
-    formatGeneratedUrls(result, msg)
+    msg += formatGeneratedUrls(ctx)
     return msg
 
 
@@ -40,7 +42,7 @@ def formatEmailResult(result, ctx):
 
     # Format the results for sending in an email.
     msg = 'See your new map: ' + ctx.map + ' at:\n\n' + result['url'] + '\n\n'
-    formatGeneratedUrls(result, msg)
+    msg += formatGeneratedUrls(ctx)
     return msg
 
 
@@ -62,21 +64,6 @@ def checkLog(result, ctx):
     if not success:
         raise Exception('Error when creating a map. Calc script had an ' + \
             'unknown error. ' + 'logfile: ' + logFile)
-
-
-def generateDataUrls(result, parms, ctx):
-
-    # Save any new data URLs in the results.
-    if 'layoutInputDataId' in parms:
-        result['layoutInputUrl'] = []
-        for dataId in parms['layoutInputDataId']:
-            result['layoutInputUrl'].append(
-                ctx.app.dataServer + '/data/' + dataId)
-    if 'colorAttributeDataId' in parms:
-        result['colorAttributeUrl'] = []
-        for dataId in parms['colorAttributeDataId']:
-            result['colorAttributeUrl'].append(
-                ctx.app.dataServer + '/data/' + dataId)
 
 
 def calcMain(parms, ctx):
@@ -104,11 +91,15 @@ def calcMain(parms, ctx):
     
     # layoutInput is required: accept either a file location relative to the
     # data root, or a URL.
+    ctx.layoutInputUrls = []
     if 'layoutInputDataId' in parms:
         opts.layoutInputFile = \
             [path.join(ctx.app.dataRoot, parms['layoutInputDataId'])]
+        ctx.layoutInputUrls.append(
+            ctx.app.dataServer + '/data/' + parms['layoutInputDataId'])
     elif 'layoutInputUrl' in parms:
         opts.layoutInputFile = [parms['layoutInputUrl']]
+        ctx.layoutInputUrls.append(parms['layoutInputUrl'])
 
     # names and directory are required
     opts.names = [parms['layoutInputName']]
@@ -116,11 +107,15 @@ def calcMain(parms, ctx):
 
     # colorAttribute is optional: accept either a file location relative to the
     # data root, or a URL.
+    ctx.colorAttributeUrls = []
     if 'colorAttributeDataId' in parms:
         opts.scores = \
             [path.join(ctx.app.dataRoot, parms['colorAttributeDataId'])]
+        ctx.colorAttributeUrls.append(
+            ctx.app.dataServer + '/data/' + parms['colorAttributeDataId'])
     elif 'colorAttributeUrl' in parms:
         opts.scores = [parms['colorAttributeUrl']]
+        ctx.colorAttributeUrls.append(parms['colorAttributeUrl'])
 
     # The rest of these are optional.
     if 'zeroReplace' in parms:
@@ -134,9 +129,6 @@ def calcMain(parms, ctx):
     result = {
         'logFile': layout.makeMapUIfiles(opts),
     }
-
-    # Save any new data URLs in the results.
-    generateDataUrls(result, parms, ctx)
 
     # Check the calc log for success.
     checkLog(result, ctx)

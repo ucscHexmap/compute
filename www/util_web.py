@@ -184,14 +184,14 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         adminMsg += '\n     status:  ' + status
         adminMsg += '\n      email:  ' + email
         
-        # Map may be optional?
+        # Map is required but may have not made it to here.
         try:
-            mapId = result['url']
+            mapId = ctx.map
         except Exception as e:
             mapId = 'None'
-        adminMsg += '\n        map:  ' + ctx.map
+        adminMsg += '\n        map:  ' + mapId
         
-        # URL is optional
+        # URL is optional.
         try:
             url = result['url']
         except Exception as e:
@@ -215,6 +215,7 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
                 msg = 'See the results of your request to ' + operation + \
                     ' for map: ' + mapId + \
                     ' at:\n\n' + url
+                    
             sendClientEmail(email, subject, msg, ctx.app)
 
         elif status == 'Error':
@@ -247,7 +248,6 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
     except:
     
         # Send admin error email due to an exception in error reporting.
-        # TODO capture stacktrace for admin email.
         subject += ': exception when reporting job results'
         subject += findEmailForSubject(email)
         adminMsg += findStackTrace(traceback.format_exc(100))

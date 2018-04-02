@@ -19,6 +19,15 @@ import numpy as np
 
 import job
 
+def formatEmailError(result, ctx):
+
+    # Format the error for sending in an email.
+    msg = 'There was an error while placing your nodes on the map: ' + ctx.map
+    if result != None:
+        msg += '\n\nerror: ' + result['error'] + '\n\n'
+    return msg
+
+    
 def formatEmailResult(result, ctx):
 
     # Format the results for sending in an email.
@@ -45,6 +54,7 @@ def formatEmailResult(result, ctx):
 
     return msg
 
+
 def _checkDuplicateRowError(error):
     """
     Checks to see if there is a duplicate row error and sends a more meaningful
@@ -62,6 +72,7 @@ def _checkDuplicateRowError(error):
                          "Build a new map without duplicate row names.")
 
     raise error
+
 
 def _postCalc(result, ctx):
     '''
@@ -168,6 +179,7 @@ def _postCalc(result, ctx):
 
     return 'Success', result
 
+
 def _outputToDict(neighboorhood, xys, urls):
     '''
     This function takes the output from the newplacement call
@@ -201,6 +213,7 @@ def _outputToDict(neighboorhood, xys, urls):
 
     return retDict
 
+
 def _putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
     '''
     takes in the filenames and nodes dictionary needed for placement calc
@@ -215,6 +228,7 @@ def _putDataIntoPythonStructs(featurePath, xyPath, nodesDict):
             utils.readXYs(xyPath),
             _nodesToPandas(nodesDict)
           )
+
 
 def _nodesToPandas(pydict):
     '''
@@ -232,6 +246,7 @@ def _nodesToPandas(pydict):
                                                 )
 
     return df
+
 
 def _getBackgroundData(data, ctx):
     '''
@@ -257,6 +272,7 @@ def _getBackgroundData(data, ctx):
         ctx.mapDir, 'assignments' + str(ctx.layoutIndex) + '.tab')
 
     return clusterDataFile, xyPositionFile
+
 
 def calcMain(dataIn, ctx):
     ctx.mapDir = os.path.join(ctx.app.viewDir, dataIn['map'])
@@ -300,6 +316,7 @@ def calcMain(dataIn, ctx):
     # Save the result in the job queue.
     return _postCalc(result, ctx)
 
+
 def _validateParms(data):
     '''
     Validate the query.
@@ -323,6 +340,7 @@ def _validateParms(data):
         (not isinstance(data['neighborCount'], int) or \
         data['neighborCount'] < 1):
         raise ErrorResp('neighborCount parameter should be a positive integer')
+
 
 def preCalc(dataIn, ctx):
     '''
