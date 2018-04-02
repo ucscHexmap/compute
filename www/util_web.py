@@ -141,34 +141,27 @@ def sendAdminEmail (subject, msg, appCtx):
     sendMail(appCtx.adminEmail, appCtx.adminEmail, subject, msg)
 
 
-def attachStackTrace(traceStr=None):
-    trace = traceStr;
-    if trace ==  None:
-        trace = traceback.format_exc(100)
-
-    return '\n\nData server ' + trace + '\n'
-
-
-def addEmailToSubject(email):
-    return ' for user: ' + email
+def findStackTrace(traceStr=None):
+    try:
+        return '\n\nData server ' + traceStr + '\n'
+    except Exception as e:
+        try:
+            return '\n\nError finding stack trace: + str(e)\n'
+        except:
+            return '\n\nUnknown error finding stack trace.\n'
 
 
-def attachUserMessage(msg):
+def findEmailForSubject(email):
+    try:
+        return ' for user: ' + email
+    except:
+        return ' for user: None'
+
+
+def findUserMessage(msg):
     return 'User message:\n------------\n' + msg
 
 
-def attachItem(prefix, item=None):
-    msg = prefix;
-    newItem = item
-    try:
-        msg += item
-    except (e):
-        newItem = 'None'
-        msg += 'None'
-        msg += '\n\n' + str(e) + '\n\n'
-    return msg, newItem
-
-    
 def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
     
     # Email the success or error result to user email and admin if appropriate.
@@ -189,36 +182,27 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         adminMsg += '     job ID:  ' + str(jobId)
         adminMsg += '\n  operation:  ' + operation
         adminMsg += '\n     status:  ' + status
+        adminMsg += '\n      email:  ' + email
         
-        # Add email to admin summary.
-        more, newItem = attachItem('\n      email:  ', email)
-        adminMsg += more
-        email = newItem
+        # Map may be optional?
+        try:
+            mapId = result['url']
+        except Exception as e:
+            mapId = 'None'
+        adminMsg += '\n        map:  ' + ctx.map
         
-        # Add map to admin summary.
-        more, newItem = attachItem('\n        map:  ', ctx.map)
-        adminMsg += more
-        mapId = newItem
-
-        # Add url to admin summary.
-        if result == None:
-            adminMsg += '\n     result:  None'
-        else:
-            adminMsg += '\n     result:  Exists'
-            if 'url' in result:
-                more, newItem = attachItem('\n        url:  ', result['url'])
-                adminMsg += more
-                url = newItem
-            else:
-                adminMsg += '\n        url:  None'
-                url = 'None'
-
+        # URL is optional
+        try:
+            url = result['url']
+        except Exception as e:
+            url = 'None'
+        adminMsg += '\n        url:  ' + url
 
         # Find the operation module related to this message.
         module = importlib.import_module(operation + '_web', package=None)
 
         # Handle the successful result and mail it to user unless told not to.
-        if status == 'Success' and email != 'None' and not doNotEmail:
+        if status == 'Success' and not doNotEmail:
             
             subject += 'TumorMap results'
 
@@ -247,18 +231,17 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
                 msg = 'There was an error while calculating results for '
                 msg += operation
                 msg += ' for map: ' + mapId
-                if result != None:
-                    msg += '\n\nerror: ' + result['error']
+                msg += '\n\nerror: ' + result['error']
 
             # Send the message to the user if appropriate.
-            if not doNotEmail and email != None:
+            if not doNotEmail:
                 sendClientEmail(email, subject, msg, ctx.app)
             
             # Send the admin message.
-            if result != None and 'stackTrace' in result:
-                adminMsg += attachStackTrace(result['stackTrace'])
-            adminMsg += attachUserMessage(msg)
-            subject += addEmailToSubject(email)
+            if 'stackTrace' in result:
+                adminMsg += findStackTrace(result['stackTrace'])
+            adminMsg += findUserMessage(msg)
+            subject += findEmailForSubject(email)
             sendAdminEmail(subject, adminMsg, ctx.app)
             
     except:
@@ -266,9 +249,9 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         # Send admin error email due to an exception in error reporting.
         # TODO capture stacktrace for admin email.
         subject += ': exception when reporting job results'
-        subject += addEmailToSubject(email)
-        adminMsg += attachStackTrace(traceback.format_exc(100))
-        adminMsg += attachUserMessage(msg)
+        subject += findEmailForSubject(email)
+        adminMsg += findStackTrace(traceback.format_exc(100))
+        adminMsg += findUserMessage(msg)
         sendAdminEmail(subject, adminMsg, ctx.app)
 
 def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):
