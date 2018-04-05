@@ -15,7 +15,8 @@ export CA=/data/certs/chain.crt
 export CERT=/data/certs/server.crt
 
 # Points to the map data that will be served.
-export DATA_ROOT=/hive/groups/hexmap/prod/data
+#export DATA_ROOT=/hive/groups/hexmap/prod/data
+export DATA_ROOT=/data/data
 
 # Logging debug level when 1, when 0 production logging level
 export DEBUG=0
