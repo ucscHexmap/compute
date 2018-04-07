@@ -14,6 +14,7 @@ import projectList
 import reflect_web
 import statsNoLayout_web
 import statsLayout_web
+import viewData
 
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
     reportRouteError
@@ -136,7 +137,7 @@ def errorResponse(error):
 # Register the unhandled Exception handler
 @app.errorhandler(Exception)
 def unhandledException(e):
-    trace = traceback.format_exc()
+    trace = traceback.format_exc(100)
     # Build response.
     rdict = {
             "stackTrace" : trace,
@@ -229,6 +230,17 @@ def dataRoute(dataId):
 @app.route('/dataOk404/<path:dataId>', methods=['GET'])
 def dataRouteOk404(dataId):
     dataRouteInner(dataId, True)
+
+# Handle get attr by ID (name, not index) and map.
+@app.route('/attr/attrId/<path:attrId>/mapId/<path:mapId>', methods=['GET'])
+# attrId is defined as a path in case it contains a slash.
+def getAttrById(attrId, mapId):
+    data = viewData.getAttrById(attrId, mapId, appCtx)
+    result = Response(
+        data,
+        mimetype='text/csv',
+        headers={'Content-disposition': 'attachment'})
+    raise SuccessRespNoJson(result)
 
 # Handle get all jobs route
 @app.route('/getAllJobs', methods=['GET'])

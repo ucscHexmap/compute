@@ -169,7 +169,7 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
     # Capture any errors here so the admin gets notified via email because
     # uncaught errors won't show up in the log.
     subject = ''
-    msg = ''
+    msg = 'TumorMap '
     adminMsg = ''
     mapId = ''
     url = ''
@@ -204,7 +204,7 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         # Handle the successful result and mail it to user unless told not to.
         if status == 'Success' and not doNotEmail:
             
-            subject += 'TumorMap results'
+            subject += 'results'
 
             # If the operation has a success result formatter, use it.
             if hasattr(module, 'formatEmailResult'):
@@ -221,7 +221,7 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         elif status == 'Error':
 
             # Prepare the standard user error message.
-            subject += 'TumorMap error'
+            subject += 'error'
             
             # If the operation has an error formatter, use it.
             if hasattr(module, 'formatEmailError'):
@@ -248,7 +248,7 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
     except:
     
         # Send admin error email due to an exception in error reporting.
-        subject += ': exception when reporting job results'
+        subject += 'exception when reporting job results'
         subject += findEmailForSubject(email)
         adminMsg += findStackTrace(traceback.format_exc(100))
         adminMsg += findUserMessage(msg)

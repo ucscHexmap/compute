@@ -85,10 +85,10 @@ def main(args):
         status, result = jobProcess.run(id, operation, parms, ctx)
     except Exception as e:
         status = 'Error'
-        result = _formatError(str(e), traceback.format_exc(), operation, parms)
+        result = _formatError(str(e), traceback.format_exc(100), operation, parms)
     except:
         status = 'Error'
-        result = _formatError(None, traceback.format_exc(), operation, parms)
+        result = _formatError(None, traceback.format_exc(100), operation, parms)
 
     # Set the completion status.
     JobQueue(queuePath).setResult(id, status, result, ctx, operation)
