@@ -168,8 +168,8 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
 
     # Capture any errors here so the admin gets notified via email because
     # uncaught errors won't show up in the log.
-    subject = ''
-    msg = 'TumorMap '
+    subject = 'Tumormap '
+    msg = ''
     adminMsg = ''
     mapId = ''
     url = ''
