@@ -259,12 +259,12 @@ def mapAuthRoute(mapId, userEmail=None, userRole=[]):
         _urlParmToList(userRole), appCtx.viewDir)
     raise SuccessResp(result)
 
-# Handle get project list routes
+# Handle get map list routes
 @app.route('/mapList', methods=['GET'])
 @app.route('/mapList/email/<string:userEmail>', methods=['GET'])
 @app.route('/mapList/email/<string:userEmail>/role/<string:userRole>',
     methods=['GET'])
-def getMaoListRoute(userEmail=None, userRole=[]):
+def getMapListRoute(userEmail=None, userRole=[]):
     result = projectList.get(userEmail, _urlParmToList(userRole), appCtx.viewDir)
     raise SuccessResp(result)
     
@@ -392,7 +392,6 @@ def reflectionRequest():
         nodeIds : [id, id, ...],
         rankCategories: True/False,
         dynamicAttrName : "Kindey Isle"
-        viewerUrl : "https://tumormap.ucsc.edu/"
         email: dmccoll@ucsc.edu
     };
     JSON response on Success from job queue:

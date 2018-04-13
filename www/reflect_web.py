@@ -18,7 +18,7 @@ def calcMain(parms, ctx):
     dataType = parms["dataType"]
     selectionName = parms["dynamicAttrName"]
     toLayout = parms["layout"]
-    viewerUrl = parms["viewerUrl"]
+    viewerUrl = ctx.app.viewServer
     toMapId = parms["toMap"]
     reflectionParms = getReflectParmameters(parms)
 
