@@ -2,6 +2,7 @@
 # Retrieve view data for a map.
 
 import os, csv
+from util_web import ErrorResp
 
 def getAttrById(attrId, mapId, appCtx):
 
@@ -28,8 +29,17 @@ def getAttrById(attrId, mapId, appCtx):
     try:
         path = os.path.join(mapPath, attrIndex)
         with open(path, 'r') as f:
-            data = f.read()
+            data = csv.reader(f, delimiter='\t')
+            
+            # Convert the tsv to a dictionary of two arrays.
+            nodes = []
+            values = []
+            for j, row in enumerate(data.__iter__()):
+                print 'row:', row
+                nodes.append(row[0])
+                values.append(row[1])
     except:
         raise ErrorResp('With retrieving the attribute data: ' + str(e), 404)
 
-    return data
+
+    return { 'nodes': nodes, 'values': values }

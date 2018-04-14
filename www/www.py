@@ -235,12 +235,7 @@ def dataRouteOk404(dataId):
 @app.route('/attr/attrId/<path:attrId>/mapId/<path:mapId>', methods=['GET'])
 # attrId is defined as a path in case it contains a slash.
 def getAttrById(attrId, mapId):
-    data = viewData.getAttrById(attrId, mapId, appCtx)
-    result = Response(
-        data,
-        mimetype='text/csv',
-        headers={'Content-disposition': 'attachment'})
-    raise SuccessRespNoJson(result)
+    raise SuccessResp(viewData.getAttrById(attrId, mapId, appCtx))
 
 # Handle get all jobs route
 @app.route('/getAllJobs', methods=['GET'])
