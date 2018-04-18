@@ -1837,5 +1837,5 @@ def main(args):
     return makeMapUIfiles(arg_obj, args)
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv[1:]))
 
