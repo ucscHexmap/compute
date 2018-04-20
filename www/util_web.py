@@ -303,7 +303,7 @@ def tmpDir():
 # Convert a string to integer or float.
 def stringToFloatOrInt(s, dataType):
     val = float(s)
-    if dataType == 'Categorical':
+    if dataType == 'Categorical' or dataType == 'Binary':
         val = int(round(val))
     return val
 
