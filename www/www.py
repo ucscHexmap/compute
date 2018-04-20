@@ -23,6 +23,7 @@ import validate_web as validate
 # Set up the flask application.
 app = Flask(__name__)
 
+
 # Set up the application context used by all threads.
 def contextInit ():
     global appCtx
@@ -50,6 +51,7 @@ def contextInit ():
     appCtx.jobStatusUrl = appCtx.dataServer + '/jobStatus/jobId/'
     return appCtx
 
+
 # Set up logging
 def loggingInit ():
     logFormat = '%(asctime)s %(levelname)s: %(message)s'
@@ -70,6 +72,7 @@ def loggingInit ():
     logging.info('WWW server started with log level: ' + logLevel)
     logging.info('Allowable viewers: ' + str(allowableViewers))
 
+
 # Initialize the app.
 def initialize():
 
@@ -89,6 +92,7 @@ def initialize():
     except:
         pass
 
+
 # Validate a post
 def validatePost():
     if request.headers['Content-Type'] != 'application/json':
@@ -103,12 +107,14 @@ def validatePost():
 
     return dataIn
 
+
 # Convert a string with '+' as delimters into a list.
 def _urlParmToList (value):
     if type(value) == list:
         return value
     else:
         return value.split('+')
+
 
 # Register the success handler to convert to json
 @app.errorhandler(SuccessResp)
@@ -118,6 +124,7 @@ def successResponse(success):
     #logging.info('success json response: ' + str(response))
     return response
 
+
 # Register the success handler that doesn't convert to json
 @app.errorhandler(SuccessRespNoJson)
 def successResponseNoJson(success):
@@ -126,13 +133,15 @@ def successResponseNoJson(success):
     #logging.info('success no json response: ' + str(response))
     return response
 
+
 # Register the error handler
 @app.errorhandler(ErrorResp)
 def errorResponse(error):
     response = jsonify(error.message)
     response.status_code = error.status_code
-    statusCode, responseStr = str(response.status_code), str(response)
+    #statusCode, responseStr = str(response.status_code), str(response)
     return response
+
 
 # Register the unhandled Exception handler
 @app.errorhandler(Exception)
@@ -148,6 +157,7 @@ def unhandledException(e):
     reportRouteError(response.status_code, rdict['error'], appCtx,
         rdict['stackTrace'])
     return response
+
 
 # Handle route to upload files
 @app.route('/upload/<path:dataId>', methods=['POST'])
@@ -181,6 +191,7 @@ def upload(dataId):
         raise ErrorResp('Unable to save file.', 500)
     
     raise SuccessResp('upload of ' + filename + ' complete')
+
 
 def dataRouteInner(dataId, ok404=False):
     """
@@ -221,6 +232,7 @@ def dataRouteInner(dataId, ok404=False):
 def dataRoute(dataId):
     dataRouteInner(dataId)
 
+
 # Handle data404ok/<dataId> routes which are data requests by data ID.
 # A 404 is ok to return here, so we do it as 'success' so that errors
 # will not be thrown on the client console.
@@ -231,17 +243,31 @@ def dataRoute(dataId):
 def dataRouteOk404(dataId):
     dataRouteInner(dataId, True)
 
+
+# Handle route: get attribute names by map ID.
+@app.route('/attrList/mapId/<path:mapId>', methods=['GET'])
+def getAttrListRoute(mapId):
+    raise SuccessResp(viewData.getAttrList(mapId, appCtx))
+
+
+# Handle route: get layout names by map ID.
+@app.route('/layoutList/mapId/<path:mapId>', methods=['GET'])
+def getLayoutListRoute(mapId):
+    raise SuccessResp(viewData.getLayoutList(mapId, appCtx))
+
+
 # Handle get attr by ID (name, not index) and map.
 @app.route('/attr/attrId/<path:attrId>/mapId/<path:mapId>', methods=['GET'])
 # attrId is defined as a path in case it contains a slash.
 def getAttrById(attrId, mapId):
     raise SuccessResp(viewData.getAttrById(attrId, mapId, appCtx))
 
+
 # Handle get all jobs route
 @app.route('/getAllJobs', methods=['GET'])
 def getAllJobsRoute():
-    result = job.getAll(appCtx.jobQueuePath)
-    raise SuccessResp(result)
+    raise SuccessResp(job.getAll(appCtx.jobQueuePath))
+
 
 # Handle map authorization routes
 @app.route('/mapAuth/mapId/<path:mapId>', methods=['GET'])
@@ -250,9 +276,9 @@ def getAllJobsRoute():
 @app.route('/mapAuth/mapId/<path:mapId>' + \
     '/email/<string:userEmail>/role/<string:userRole>', methods=['GET'])
 def mapAuthRoute(mapId, userEmail=None, userRole=[]):
-    result = projectList.authorize(mapId, userEmail,
-        _urlParmToList(userRole), appCtx.viewDir)
-    raise SuccessResp(result)
+    raise SuccessResp(projectList.authorize(mapId, userEmail,
+        _urlParmToList(userRole), appCtx.viewDir))
+
 
 # Handle get map list routes
 @app.route('/mapList', methods=['GET'])
@@ -260,40 +286,51 @@ def mapAuthRoute(mapId, userEmail=None, userRole=[]):
 @app.route('/mapList/email/<string:userEmail>/role/<string:userRole>',
     methods=['GET'])
 def getMapListRoute(userEmail=None, userRole=[]):
-    result = projectList.get(userEmail, _urlParmToList(userRole), appCtx.viewDir)
-    raise SuccessResp(result)
+    raise SuccessResp(
+        projectList.get(userEmail, _urlParmToList(userRole), appCtx.viewDir))
     
+
 # Handle jobStatus route
 @app.route('/jobStatus/jobId/<int:jobId>', methods=['GET'])
 def jobStatusRoute(jobId):
-    result = job.getStatus(jobId, appCtx.jobQueuePath)
-    raise SuccessResp(result)
+    raise SuccessResp(job.getStatus(jobId, appCtx.jobQueuePath))
 
-# Handle query/jobTestHelper routes
+
+# Handle highlight attrs & nodes route
+@app.route('/highlightAttrNode', methods=['POST'])
+def highlightAttrNodeRoute():
+    raise SuccessResp(viewData.highlightAttrNode(validatePost(), appCtx))
+
+
+# Handle jobTestHelper route.
 @app.route('/query/jobTestHelper', methods=['POST'])
 def queryJobTestHelperRoute():
-    result = jobTestHelper_web.preCalc(validatePost(), Context({'app': appCtx}))
-    raise SuccessResp(result)
+    raise SuccessResp(
+        jobTestHelper_web.preCalc(validatePost(), Context({'app': appCtx})))
 
-# Handle query/createMap route.
+
+# Handle createMap route.
 @app.route('/query/createMap', methods=['POST'])
 def queryCreateMapRoute():
-    result = createMap_web.preCalc(validatePost(), Context({'app': appCtx }))
-    raise SuccessResp(result)
+    raise SuccessResp(
+        createMap_web.preCalc(validatePost(), Context({'app': appCtx })))
 
-# Handle query/overlayNode route, older version of placeNode
+
+# Handle overlayNode route, older version of placeNode
 @app.route('/query/overlayNodes', methods=['POST'])
 def queryOverlayNodesRoute():
-    result = placeNode_web.preCalc(validatePost(),
-        Context({'app': appCtx, 'overlayNodes': True}))
-    raise SuccessResp(result)
+    raise SuccessResp(placeNode_web.preCalc(validatePost(),
+        Context({'app': appCtx, 'overlayNodes': True})))
 
-# Handle query/placeNode routes
+
+# Handle placeNode routes
 @app.route('/query/placeNode', methods=['POST'])
 def queryPlaceNodeRoute():
-    result = placeNode_web.preCalc(validatePost(), Context({'app': appCtx}))
-    raise SuccessResp(result)
+    raise SuccessResp(
+        placeNode_web.preCalc(validatePost(), Context({'app': appCtx})))
 
+
+# Handle one-by-all layout-independent stats routes.
 @app.route('/oneByAll/statCalculation', methods=['POST'])
 def oneByAllStatRequest():
     """
@@ -329,6 +366,8 @@ def oneByAllStatRequest():
 
     raise SuccessResp(responseDict)
 
+
+# Handle one-by-all layout-aware stats route.
 @app.route('/oneByAll/leesLCalculation', methods=['POST'])
 def oneByAllLeesLRequest():
     """
@@ -362,7 +401,8 @@ def oneByAllLeesLRequest():
 
     raise SuccessResp(responseDict)
 
-# Handle reflect/metadata routes
+
+# Handle reflect metadata route.
 @app.route('/reflect/metaData/mapId/<path:mapId>', methods=['GET'])
 def getReflectMetadata(mapId):
     """
@@ -375,6 +415,8 @@ def getReflectMetadata(mapId):
     responseDict = reflect_web.getReflectionMetadata(mapId)
     raise SuccessResp(responseDict)
 
+
+# Handle reflect computation route.
 @app.route('/reflect', methods=['POST'])
 def reflectionRequest():
     """
@@ -411,6 +453,7 @@ def reflectionRequest():
 
     raise SuccessResp(responseDict)
 
+# Handle the retrieve reflect attribute route.
 @app.route('/reflect/attrId/<string:attrId>', methods=['GET'])
 def getRefAttr(attrId):
     """Returns reflection request JSON.
@@ -420,7 +463,8 @@ def getRefAttr(attrId):
     responseDict = reflect_web.getReflectionAttr(attrId)
     raise SuccessResp(responseDict)
 
-# Handle the route to test
+
+# Handle the route to test.
 @app.route('/test', methods=['POST', 'GET'])
 def testRoute():
     raise SuccessResp('just testing data server')
