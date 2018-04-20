@@ -2,7 +2,7 @@
 # Retrieve view data for a map.
 
 import os, csv
-from util_web import ErrorResp
+from util_web import ErrorResp, stringToFloatOrInt
 
 
 def getAttrFilename(attrId, mapId, appCtx):
@@ -114,8 +114,29 @@ def getAttrById(attrId, mapId, appCtx):
     if attrIndex == None:
         raise ErrorResp('Attribute not found.', 404)
 
-    # Get the values for this attr.
     mapPath = os.path.join(appCtx.dataRoot, 'view', mapId)
+
+    # Get the dataType.
+    try:
+        path = os.path.join(mapPath, 'Layer_Data_Types.tab')
+        dataType = None
+        with open(path, 'r') as f:
+            f = csv.reader(f, delimiter='\t')
+            
+            # Convert the tsv to a dictionary arrays.
+            types = {
+            }
+            #for j, row in f:
+            for j, row in enumerate(f.__iter__()):
+                dataType = row[0]
+                for attr in row:
+                    if attr == attrId and dataType != 'FirstAttribute':
+                        dataType = row[0]
+                        break
+    except Exception as e:
+        raise ErrorResp('With finding data type for attribute: ' + str(e), 404)
+
+    # Get the values for this attr.
     try:
         path = os.path.join(mapPath, attrIndex)
         with open(path, 'r') as f:
@@ -126,9 +147,7 @@ def getAttrById(attrId, mapId, appCtx):
             values = []
             for j, row in enumerate(f.__iter__()):
                 nodes.append(row[0])
-                values.append(row[1])
+                values.append(stringToFloatOrInt(row[1], dataType))
     except Exception as e:
         raise ErrorResp('With retrieving the attribute data: ' + str(e), 404)
-
-
-    return { 'nodes': nodes, 'values': values }
+    return { 'dataType': dataType, 'nodes': nodes, 'values': values }
