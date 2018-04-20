@@ -16,12 +16,22 @@ def _getSubDirs (rootDir):
     return sorted(list(subDirs))
 
 def _addMinors (majors, viewDir):
-    projects = {}
-    
+    projects = []
+    '''
+    [
+        ['Gliomas'],
+        ['Pancan12', ['GeneMap', 'SampleMap']],
+        ...
+    ]
+    '''
     for major in majors:
     
         # Add the first-level sub directories to this major directory's list.
-        projects[major] = _getSubDirs(os.path.join(viewDir, major))
+        minors = _getSubDirs(os.path.join(viewDir, major))
+        if len(minors) > 0:
+            projects.append([major, minors])
+        else:
+            projects.append([major])
 
     return projects
 
