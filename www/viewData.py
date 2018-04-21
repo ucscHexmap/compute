@@ -128,10 +128,10 @@ def getAttrById(attrId, mapId, appCtx):
             }
             #for j, row in f:
             for j, row in enumerate(f.__iter__()):
-                dataType = row[0]
+                type = row[0]
                 for attr in row:
-                    if attr == attrId and dataType != 'FirstAttribute':
-                        dataType = row[0]
+                    if attr == attrId and type != 'FirstAttribute':
+                        dataType = type
                         break
     except Exception as e:
         raise ErrorResp('With finding data type for attribute: ' + str(e), 404)
