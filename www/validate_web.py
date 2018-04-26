@@ -5,6 +5,17 @@ from util_web import SuccessResp, ErrorResp
 fileRegEx = r'[^A-Za-z0-9_\-\.].*'
 fileSlashRegEx = r'[^A-Za-z0-9_\-\.\//].*'
 
+def _dataIdOrUrl (dataId, url, data, required=False):
+    if dataId in data:
+        _validateString(dataId, data)
+        _validatePathName(data[dataId], dataId)
+    elif url in data:
+        _validateString(url, data)
+    elif required:
+        raise ErrorResp(
+            dataId + ' or ' + url + ' parameter missing or malformed')
+
+
 def _validateFileName (dirty, name, allowSlash=False):
     '''
     check to be sure this is a file-safe name without any problem characters
@@ -28,42 +39,20 @@ def _validateFileName (dirty, name, allowSlash=False):
     if not search == None:
         raise ErrorResp(msg)
 
+
+def _validateInteger (name, data, required=False):
+    if name in data:
+        try:
+            val = int(data[name])
+        except ValueError:
+            raise ErrorResp(name + ' parameter must be an integer')
+    elif required: # name is not in data
+        raise ErrorResp(name + ' parameter missing or malformed')
+
+
 def _validatePathName (dirty, name):
     _validateFileName (dirty, name, allowSlash=True)
 
-def cleanFileName (dirty):
-
-    # Make a directory or file name out of some string
-    # Valid characters:
-    #     a-z, A-Z, 0-9, dash (-), dot (.), underscore (_)
-    # All other characters are replaced with underscores.
-
-    if not dirty:
-        return None
-    
-    clean = ''
-    if not re.search(fileRegEx, dirty) == None:
-        for i in range(0, len(dirty)):
-            if re.search(fileRegEx, dirty[i]) == None:
-                clean += dirty[i]
-            else:
-                clean += '_'
-
-    return clean
-
-def _validateStringChars(val, name):
-    '''
-    Look for any non-printable characters in a string value, non-printables are
-    ascii decimal codes 0-31 and 127-255.
-    @param  val: the string value
-    @param name: the name of the parameter
-    @return: nothing or raise an ErrorResp
-    '''
-    regex = r'[\x00-\x1f\x7f-\xff]'
-    search = re.search(regex, val)
-    if not search == None:
-        raise ErrorResp(name +
-            ' parameter should only contain printable characters')
 
 def _validateString(name, data, required=False, arrayAllowed=False):
     '''
@@ -103,14 +92,70 @@ def _validateString(name, data, required=False, arrayAllowed=False):
     elif required: # name is not in data
         raise ErrorResp(name + ' parameter missing or malformed')
 
-def _validateInteger (name, data, required=False):
-    if name in data:
-        try:
-            val = int(data[name])
-        except ValueError:
-            raise ErrorResp(name + ' parameter must be an integer')
-    elif required: # name is not in data
-        raise ErrorResp(name + ' parameter missing or malformed')
+
+def _validateStringChars(val, name):
+    '''
+    Look for any non-printable characters in a string value, non-printables are
+    ascii decimal codes 0-31 and 127-255.
+    @param  val: the string value
+    @param name: the name of the parameter
+    @return: nothing or raise an ErrorResp
+    '''
+    regex = r'[\x00-\x1f\x7f-\xff]'
+    search = re.search(regex, val)
+    if not search == None:
+        raise ErrorResp(name +
+            ' parameter should only contain printable characters')
+
+
+def attributes(data, required=False):
+    _validateString('attributes', data, required, arrayAllowed=True)
+
+
+def authGroup(data):
+    _validateString('authGroup', data)
+
+
+def cleanFileName (dirty):
+
+    # Make a directory or file name out of some string
+    # Valid characters:
+    #     a-z, A-Z, 0-9, dash (-), dot (.), underscore (_)
+    # All other characters are replaced with underscores.
+
+    if not dirty:
+        return None
+    
+    clean = ''
+    if not re.search(fileRegEx, dirty) == None:
+        for i in range(0, len(dirty)):
+            if re.search(fileRegEx, dirty[i]) == None:
+                clean += dirty[i]
+            else:
+                clean += '_'
+
+    return clean
+
+
+def colorAttribute (data, required=False):
+    _dataIdOrUrl('colorAttributeDataId', 'colorAttributeUrl', data, required)
+
+
+def email(data):
+    _validateString('email', data, False, True)
+
+
+def layout(data, required=False):
+    _validateString('layout', data, required)
+
+
+def layoutInput (data, required=False):
+    _dataIdOrUrl('layoutInputDataId', 'layoutInputUrl', data, required)
+
+
+def layoutInputName(data, required):
+    _validateString('layoutInputName', data, required, True)
+
 
 def map(data, required):
     _validateString('map', data, required)
@@ -125,38 +170,6 @@ def map(data, required):
     else:
         _validateFileName(val, 'map', allowSlash=True)
 
-def layoutInputName(data, required):
-    _validateString('layoutInputName', data, required, True)
-
-def layout(data, required):
-    _validateString('layout', data, required)
-
-def authGroup(data):
-    _validateString('authGroup', data)
-
-def email(data):
-    _validateString('email', data, False, True)
-
-def viewServer(data):
-    if 'viewServer' not in data:
-        return
-    _validateString('viewServer', data)
-
-def dataIdOrUrl (dataId, url, data, required=False):
-    if dataId in data:
-        _validateString(dataId, data)
-        _validatePathName(data[dataId], dataId)
-    elif url in data:
-        _validateString(url, data)
-    elif required:
-        raise ErrorResp(
-            dataId + ' or ' + url + ' parameter missing or malformed')
-
-def layoutInput (data, required=False):
-    dataIdOrUrl('layoutInputDataId', 'layoutInputUrl', data, required)
-
-def colorAttribute (data, required=False):
-    dataIdOrUrl('colorAttributeDataId', 'colorAttributeUrl', data, required)
 
 def neighborCount (data):
     name = 'neighborCount'
@@ -164,3 +177,13 @@ def neighborCount (data):
     if name in data:
         if data[name] < 1 or data[name] > 30:
             raise ErrorResp('neighborCount parameter must be within the range, 1-30')
+
+
+def nodes(data, required=False):
+    _validateString('nodes', data, required, arrayAllowed=True)
+
+
+def viewServer(data):
+    if 'viewServer' not in data:
+        return
+    _validateString('viewServer', data)

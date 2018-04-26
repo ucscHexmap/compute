@@ -79,16 +79,16 @@ def getMapMetaData (mapId, ctx):
     return data
 
 
-def createBookmark (state, viewServer, ctx):
+def createBookmark (state, viewServer, ctx=None):
     '''
     Create a bookmark.
     @param state: map state to be stored in the bookmark
     @param viewServer: view server on which the bookmark will be stored
-    @param ctx: the job context
+    @param ctx: the job context, optional if this is not created for a job
     @return: a bookmark
     '''
     # Include the email addrs in the bookmark.
-    if hasattr(ctx, 'email'):
+    if ctx != None and hasattr(ctx, 'email'):
         state['email'] = ctx.email
     
     # Ask the view server to create a bookmark of this client state
