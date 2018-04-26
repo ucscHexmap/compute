@@ -256,6 +256,13 @@ def getLayoutListRoute(mapId):
     raise SuccessResp(viewData.getLayoutList(mapId, appCtx))
 
 
+# Get default first attribute name.
+@app.route('/firstAttr/mapId/<path:mapId>', methods=['GET'])
+# attrId is defined as a path in case it contains a slash.
+def getFirstAttr(mapId):
+    raise SuccessResp(viewData.getFirstAttr(mapId, appCtx))
+
+
 # Handle get attr by ID (name, not index) and map.
 @app.route('/attr/attrId/<path:attrId>/mapId/<path:mapId>', methods=['GET'])
 # attrId is defined as a path in case it contains a slash.

@@ -105,6 +105,27 @@ def getLayoutList(mapId, appCtx):
     return layoutList
 
 
+def getFirstAttr(mapId, appCtx):
+
+    # Get the dataType file which also contains the first attribute.
+    try:
+        mapPath = os.path.join(appCtx.dataRoot, 'view', mapId)
+        path = os.path.join(mapPath, 'Layer_Data_Types.tab')
+        first = None
+        with open(path, 'r') as f:
+            f = csv.reader(f, delimiter='\t')
+            for row in f:
+                type = row[0]
+                for attr in row:
+                    if type == 'FirstAttribute':
+                        first = row[1]
+                        break
+    except Exception as e:
+        raise ErrorResp('With finding default first attribute: ' + str(e), 404)
+
+    return first
+
+
 def getAttrById(attrId, mapId, appCtx):
 
     # Get an attribute's values by ID.
@@ -126,8 +147,7 @@ def getAttrById(attrId, mapId, appCtx):
             # Convert the tsv to a dictionary arrays.
             types = {
             }
-            #for j, row in f:
-            for j, row in enumerate(f.__iter__()):
+            for row in f:
                 type = row[0]
                 for attr in row:
                     if attr == attrId and type != 'FirstAttribute':
