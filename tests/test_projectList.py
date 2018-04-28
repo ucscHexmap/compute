@@ -226,12 +226,13 @@ class Test_projectList(unittest.TestCase):
             majors = ['major1', 'major2', 'major3', userDir],
             viewDir = viewRoot
         )
-        s.assertTrue(projs == {
-            'major1': ['major1a', 'major1b'],
-            'major2': ['major2a', 'major2b'],
-            'major3': [],
-            userDir:[]
-            }, 'projs: ' + str(projs))
+        #print 'userDir:', userDir
+        s.assertTrue(projs == [
+            ['major1', ['major1a', 'major1b']],
+            ['major2', ['major2a', 'major2b']],
+            ['major3'],
+            [userDir]
+            ], 'projs: ' + str(projs))
 
     def test_addMinors_noMajors (s):
         viewRoot = os.path.join(dataRoot, 'viewBasic')
@@ -239,7 +240,7 @@ class Test_projectList(unittest.TestCase):
             majors = [],
             viewDir = viewRoot
         )
-        s.assertTrue(projs == {}, 'projs: ' + str(projs))
+        s.assertTrue(projs ==[], 'projs: ' + str(projs))
 
     def test_get (s):
         viewRoot = os.path.join(dataRoot, 'viewBasic')
@@ -249,11 +250,11 @@ class Test_projectList(unittest.TestCase):
             viewDir = os.path.join(dataRoot, 'viewBasic')
         )
         dictJson = json.dumps(dict, sort_keys=True)
-        expected = {
-            'major1': ['major1a', 'major1b'],
-            'major2': ['major2a', 'major2b'],
-            userDir:[]
-        }
+        expected = [
+            ['major1', ['major1a', 'major1b']],
+            ['major2', ['major2a', 'major2b']],
+            [userDir]
+        ]
         expectedJson = json.dumps(expected, sort_keys=True)
         #print 'expectedJson:', expectedJson
         s.assertTrue(expectedJson == dictJson, 'dictJson: ' + str(dictJson))
@@ -346,11 +347,11 @@ class Test_projectList(unittest.TestCase):
             s.assertEqual('', 'Unable to connect to unit test data server: ' +
                 appCtx.dataServer)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = {
-            'major1': ['major1a', 'major1b'],
-            'major2': ['major2a', 'major2b'],
-            'user_ucsc.edu': []
-        }
+        expected = [
+            ['major1', ['major1a', 'major1b']],
+            ['major2', ['major2a', 'major2b']],
+            [userDir]
+        ]
         dataDict = json.loads(r.data)
         #print 'dataDict:', dataDict
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
@@ -363,12 +364,12 @@ class Test_projectList(unittest.TestCase):
             s.assertEqual('', 'Unable to connect to unit test data server: ' +
                 appCtx.dataServer)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = {
-            'major1': ['major1a', 'major1b'],
-            'major2': ['major2a', 'major2b'],
-            'major3': [],
-            'user_ucsc.edu': []
-        }
+        expected = [
+            ['major1', ['major1a', 'major1b']],
+            ['major2', ['major2a', 'major2b']],
+            ['major3'],
+            [userDir]
+        ]
         dataDict = json.loads(r.data)
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
 
@@ -380,10 +381,10 @@ class Test_projectList(unittest.TestCase):
             s.assertEqual('', 'Unable to connect to unit test data server: ' +
                 appCtx.dataServer)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = {
-            'major1': ['major1a', 'major1b'],
-            'user_ucsc.edu': []
-        }
+        expected = [
+            ['major1', ['major1a', 'major1b']],
+            [userDir]
+        ]
         dataDict = json.loads(r.data)
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
 
@@ -395,9 +396,9 @@ class Test_projectList(unittest.TestCase):
             s.assertEqual('', 'Unable to connect to unit test data server: ' +
                 appCtx.dataServer)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = {
-            'major1': ['major1a', 'major1b']
-        }
+        expected = [
+            ['major1', ['major1a', 'major1b']]
+        ]
         dataDict = json.loads(r.data)
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
 

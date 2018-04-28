@@ -16,15 +16,13 @@ import job
 def formatGeneratedUrls(ctx):
 
     # Add any urls generated for uploaded data files.
-    msg = ''
+    msg = 'data may now be accessed without uploading for future maps with:\n\n'
     if hasattr(ctx, 'layoutInputUrls'):
         for url in ctx.layoutInputUrls:
-            msg += 'Your layout input data may now be accessed ' + \
-                'with:\n\n' + url + '\n\n'
+            msg = 'Your layout input ' + msg + url + '\n\n'
     if hasattr(ctx, 'colorAttributeUrls'):
         for url in ctx.colorAttributeUrls:
-            msg += 'Your color attributes data may now be accessed ' + \
-                'with:\n\n' + url + '\n\n'
+            msg = 'Your color attributes ' + msg + url + '\n\n'
     return msg
 
 

@@ -254,6 +254,7 @@ def reportResult (jobId, operation, status, result, email, doNotEmail, ctx):
         adminMsg += findUserMessage(msg)
         sendAdminEmail(subject, adminMsg, ctx.app)
 
+
 def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):
     subject = 'TumorMap error'
     msg = 'http code: ' + str(statusCode) + '\nerror: ' + errorMsg
@@ -263,12 +264,14 @@ def reportRouteError(statusCode, errorMsg, appCtx, stackTrace=None):
         subject = 'DEV: ' + subject
     sendAdminEmail(subject, msg, appCtx)
 
+
 def getProjMajor(mapId):
     try:
         majorId = mapId.split("/")[0]
     except IndexError:
         majorId = None
     return majorId
+
 
 def getProjMinor(mapId):
     try:
@@ -283,6 +286,7 @@ def mkTempFile():
     des, filepath = tempfile.mkstemp(dir=tempDir)
     return filepath
 
+
 def tmpDir():
     tmpDirName = os.path.join(
         os.environ.get("HUB_PATH"),
@@ -294,3 +298,12 @@ def tmpDir():
         os.makedirs(tmpDirName)
 
     return tmpDirName
+
+
+# Convert a string to integer or float.
+def stringToFloatOrInt(s, dataType):
+    val = float(s)
+    if dataType == 'Categorical' or dataType == 'Binary':
+        val = int(round(val))
+    return val
+
