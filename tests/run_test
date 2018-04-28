@@ -65,7 +65,6 @@ docker_safe=( \
     test_pairwiseAttrStats \
     test_process_categoricals \
     test_reflect \
-    test_spatial \
     test_sim6Layout \
     test_similarity \
     test_stats \
@@ -99,12 +98,15 @@ mac=( \
 
 if [ $TO_RUN == 'all' ]
     then RUN_THIS="${all[@]}"
+    ./test_layout_cli
 elif [ $TO_RUN == 'docker_safe' ]
     then RUN_THIS="${docker_safe[@]}"
+    ./test_layout_cli
 elif [ $TO_RUN == 'web' ]
     then RUN_THIS="${web[@]}"
 elif [ $TO_RUN == 'mac' ]
     then RUN_THIS="${mac[@]}"
+    ./test_layout_cli
 elif [ $TO_RUN == 'next' ]
     then RUN_THIS="${next[@]}"
 else

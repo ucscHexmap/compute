@@ -39,28 +39,6 @@ import compute_sparse_matrix
 
 class Test_layoutBasic(unittest.TestCase):
     
-    def test_bad_layout_format(s):
-        outDir = outDirBase + '_junk/'
-
-        opts = [
-            "--layoutInputFile", rawDataFile,
-            "--layoutInputFormat", 'junk',
-            "--layoutName", "layout",
-            "--distanceMetric", 'spearman',
-            "--outputDirectory", outDir,
-            "--noLayoutIndependentStats",
-            "--noLayoutAwareStats"]
-
-        util.removeOldOutFiles(outDir)
-        try:
-            rc = 0
-            rc = layout.main(opts)
-            s.assertTrue(rc, "ValueError: One of these layoutInputFormats " +
-                "must be specified: ['clusterData', 'fullSimilarity', " +
-                "'sparseSimilarity', 'xyPositions']")
-        except ValueError as e:
-            s.assertTrue(e, e)
-    
     def test_renaming_2_raw_layout(s):
         outDir = outDirBase + '_renaming_2_raw_layout/'
 
