@@ -1834,8 +1834,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
 def main(args):
     arg_obj = parse_args(args)
-    return makeMapUIfiles(arg_obj, args)
-
+    makeMapUIfiles(arg_obj, args)
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
 
