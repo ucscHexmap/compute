@@ -1,0 +1,13 @@
+#!/bin/bash
+python2.7 ../calc/layout.py \
+ --layoutInputFile ./in/layout/full_matrix.tab \
+ --names layout \
+ --scores ./in/layout/attributes.tab \
+ --directory ./out/layoutBasic_cli/
+
+if [ $? -ne 0 ]; then
+    echo "*********************CLI test failed.****************************"
+    # Have to do this because stderr is being redirected in the file.
+    tail -10 ./out/layoutBasic_cli/log
+fi
+

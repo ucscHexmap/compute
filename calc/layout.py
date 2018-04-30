@@ -99,7 +99,16 @@ def parse_args(args):
         default=False,
         help="If a feature matrix is given, this flag transposes it in order"
              " to perform row-wise similarity calculation")
-
+    parser.add_argument(
+        "--hexSideLength",
+        type=float,
+        default=None,
+        help="Controls the size of a single hexagon in the hexagonal "
+             "grid. Large hexagon side will cause more collisions "
+             "when binning, amounting to less empty space in the "
+             "final visualization. Smaller hexagon size creates more "
+             "empty space in the visualization."
+    )
     # WebAPI / CWL / CLI: Lesser used parameters:
     parser.add_argument("--reflectionMapType", type=str, default=None,
         help="generate another map with 90-degree rotated clustering data " +
@@ -792,7 +801,12 @@ def sideLength(maxX,maxY,minX,minY,n):
 
     return side
 
-def compute_hexagram_assignments(nodes, index, options, ctx):
+def compute_hexagram_assignments(
+        nodes,
+        index,
+        options,
+        ctx,
+):
     """
     Now that we are taking multiple similarity matrices as inputs, we must
     compute hexagram assignments for each similarity matrix. These assignments 
@@ -846,21 +860,34 @@ def compute_hexagram_assignments(nodes, index, options, ctx):
     # if we are using DRL assume that 1 is a good side length (it has worked so
     # far without complaint :)
 
-    #figure out whether we have an xy entry
-    xyEntry = False
-    try:
-        xyEntry = len(options.coordinates) > 0
-    except TypeError:
-        xyEntry = options.layoutInputFormat == "xyPositions"
 
-    if xyEntry: #some other method is providing xy data
-        # we'd like hexagons to be 5% of the taken up space
-        side_length = sideLength(max_x,max_y,min_x,min_y,count)
-        print "x-y input: hexagon side length chosen as " + str(side_length)
 
-    else: # we are using OpenOrd and this side length works well with the
-          # scaling
-        side_length = 1.0
+
+    # If the user has not chosen a hexagon side length then
+    # we do our best at guessing a good one.
+    defaultSideLengthNeeded = options.hexSideLength is None
+    if defaultSideLengthNeeded:
+        # If our input is an xy position file then we calculate
+        # a default side length. Otherwise we use 1.
+        xyPositionsFileUsed = False
+        try:
+            xyPositionsFileUsed = len(options.coordinates) > 0
+        except TypeError:
+            xyPositionsFileUsed = \
+                options.layoutInputFormat == "xyPositions"
+
+        if xyPositionsFileUsed:
+            # We'd like hexagons to be 5% of the taken up space
+            side_length = sideLength(max_x,max_y,min_x,min_y,count)
+            print "x-y input: hexagon side length chosen as " + \
+                  str(side_length)
+
+        else:
+            # 1 works mysteriously well with open ord algorithm.
+            side_length = 1.0
+    else: # The user gave a side length.
+        side_length = options.hexSideLength
+
     # This holds what will be a layer of how badly placed each hexagon is
     # A dict from node name to layer value
     placement_badnesses = {}
@@ -1834,8 +1861,7 @@ def makeMapUIfiles(options, cmd_line_list=None):
 
 def main(args):
     arg_obj = parse_args(args)
-    return makeMapUIfiles(arg_obj, args)
-
+    makeMapUIfiles(arg_obj, args)
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(main(sys.argv[1:]))
 
