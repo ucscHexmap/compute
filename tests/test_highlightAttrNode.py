@@ -33,9 +33,33 @@ data in: {
        "TCGA-01",
        "TCGA-02",
        ...
-   ],
+   ]
 }
-data out:
+data out: {
+    "project": "CKCC/v1",
+    "shortlist": [
+        "yourNodes",
+        "gender",
+        "subType",
+        ...
+    ],
+    "shortEntry.filter": {
+        "yourNodes": {
+            "by": "category",
+            "value": [1],
+        }
+    }
+    "dynamicAttrs": {
+        "yourNodes": {
+            "data": [
+               "TCGA-01": 1,
+               "TCGA-02": 1,
+               ...
+           ],
+           "dataType": "binary",
+        },
+    },
+}
 """
 class Test_highlightAttrNode(unittest.TestCase):
 
@@ -78,7 +102,7 @@ class Test_highlightAttrNode(unittest.TestCase):
                 'nodes': [
                     'S1',
                     'S2'
-                ]
+                ],
             })
         )
         try:
@@ -87,6 +111,7 @@ class Test_highlightAttrNode(unittest.TestCase):
             s.assertTrue('', 'no json data in response')
         #print "data['error']", data['error']
         #print "data['stackTrace']:", data['stackTrace']
+        #print 'data:', data
         s.assertTrue(rv.status_code == 200,
             'status code should be 200 but is ' + str(rv.status_code))
 
@@ -109,6 +134,7 @@ class Test_highlightAttrNode(unittest.TestCase):
             s.assertTrue('', 'no json data in response')
         #print "data['error']", data['error']
         #print "data['stackTrace']:", data['stackTrace']
+        #print 'data:', data
         s.assertTrue(rv.status_code == 200,
             'status code should be 200 but is ' + str(rv.status_code))
 
@@ -135,9 +161,9 @@ class Test_highlightAttrNode(unittest.TestCase):
             s.assertTrue('', 'no json data in response')
         #print "data['error']", data['error']
         #print "data['stackTrace']:", data['stackTrace']
+        #print 'data:', str(data)
         s.assertTrue(rv.status_code == 200,
             'status code should be 200 but is ' + str(rv.status_code))
-
 
     def test_post_bookmark_generated(s):
         rv = s.app.post('/highlightAttrNode',
@@ -161,7 +187,7 @@ class Test_highlightAttrNode(unittest.TestCase):
             s.assertTrue('', 'no json data in response')
         #print "data['error']", data['error']
         #print "data['stackTrace']:", data['stackTrace']
-        #print "data:", data
+        #"print "data:", data
         s.assertTrue(rv.status_code == 200,
             'status code should be 200 but is ' + str(rv.status_code))
         s.assertTrue('bookmark' in rv.data,
@@ -188,40 +214,35 @@ class Test_highlightAttrNode(unittest.TestCase):
         }
         state = viewData._highlightAttrNodeInner(data, appCtx)
         #print "state", state
-        s.assertTrue(state.keys() == ["project", "dynamicAttrs", "shortlist", "layoutName"],
-            'state keys should be ["project", "layoutName", "shortlist", "dynamicAttrs"], but are ' + \
-            str(state.keys()))
+        stateKeys = state.keys()
+        stateKeys.sort()
+        s.assertTrue(stateKeys == ["activeAttrs", "dynamicAttrs", "layoutName", "page", "project", "shortEntry.filter", "shortlist"],
+            'state keys should be ["activeAttrs", "dynamicAttrs", "layoutName", "page", "project", "shortEntry.filter", "shortlist"], but are ' + \
+            str(stateKeys))
             
-        s.assertTrue('project' in state,
-            'project should be in the state, but is not')
-        s.assertTrue(state['project'] == 'unitTest/layoutBasicExp',
-            'project should be "unitTest/layoutBasicExp" but is ' + \
+        s.assertTrue(state['project'] == 'unitTest/layoutBasicExp/',
+            'project should be "unitTest/layoutBasicExp/" but is ' + \
             state['project'])
             
-        s.assertTrue('layoutName' in state,
-            'layoutName should be in the state, but is not')
+        s.assertTrue(state['page'] == 'mapPage',
+            'project should be "mapPage" but is ' + state['page'])
+            
         s.assertTrue(state['layoutName'] == 'layout',
             'layoutName should be "layout" but is ' + state['layoutName'])
             
-        s.assertTrue('shortlist' in state,
-            'shortlist should be in the state, but is not')
         s.assertTrue(state['shortlist'] == ["yourNodes", "3_categories", "yes/No"],
             'shortlist should be ["yourNodes", "3_categories", "yes/No"] but is ' + \
             str(state['shortlist']))
 
-        s.assertTrue('dynamicAttrs' in state,
-            'dynamicAttrs should be in the state, but is not')
         s.assertTrue('yourNodes' in state["dynamicAttrs"],
             'yourNodes should be in state["dynamicAttrs"], but is not')
         s.assertTrue('dataType' in state['dynamicAttrs']['yourNodes'],
             'dataType should be in state["dynamicAttrs"]["yourNodes"], but is not')
         s.assertTrue('data' in state["dynamicAttrs"]["yourNodes"],
             'data should be in state["dynamicAttrs"]["yourNodes"], but is not')
-
         s.assertTrue(state["dynamicAttrs"]["yourNodes"]["dataType"] == "binary",
             'state["dynamicAttrs"]["yourNodes"]["dataType"] should be "binary", but is ' + \
             state["dynamicAttrs"]["yourNodes"]["dataType"])
-
         s.assertTrue('S1' in state["dynamicAttrs"]["yourNodes"]["data"],
             'S1 should be in state["dynamicAttrs"]["yourNodes"]["data"], but is not')
         s.assertTrue('S2' in state["dynamicAttrs"]["yourNodes"]["data"],
@@ -233,6 +254,18 @@ class Test_highlightAttrNode(unittest.TestCase):
         s.assertTrue(state["dynamicAttrs"]["yourNodes"]["data"]["S2"] == 1,
             'state["dynamicAttrs"]["yourNodes"]["data"]["S2"] should be 1, but is ' + \
             str(state["dynamicAttrs"]["yourNodes"]["data"]["S2"]))
+            
+        s.assertTrue('yourNodes' in state["shortEntry.filter"],
+            'yourNodes should be in state["shortEntry.filter"], but is not')
+        s.assertTrue(state["shortEntry.filter"]["yourNodes"]["by"] == "category",
+            'state["shortEntry.filter"]["yourNodes"]["by"] should be "category", but is ' + \
+            state["shortEntry.filter"]["yourNodes"]["by"])
+        s.assertTrue(state["shortEntry.filter"]["yourNodes"]["value"] == [1],
+            'state["shortEntry.filter"]["yourNodes"]["value"] should be [1], but is ' + \
+            str(state["shortEntry.filter"]["yourNodes"]["value"]))
+
+        s.assertTrue('3_categories' in state["activeAttrs"],
+            '3_categories should be in state["activeAttrs"], but is not')
 
 
     def test_good_map_nodes_state_generated(s):
@@ -244,41 +277,37 @@ class Test_highlightAttrNode(unittest.TestCase):
             ]
         }
         state = viewData._highlightAttrNodeInner(data, appCtx)
-        #print "state", state
-        s.assertTrue(state.keys() == ["project", "dynamicAttrs", "shortlist"],
-            'state keys should be ["project", "dynamicAttrs", "shortlist"], but are ' + \
-            str(state.keys()))
+        stateKeys = state.keys()
+        stateKeys.sort()
+        #print 'stateKeys:::::', stateKeys
+        s.assertTrue(stateKeys == ["activeAttrs", "dynamicAttrs", "page", "project", "shortEntry.filter", "shortlist"],
+            'state keys should be ["activeAttrs", "dynamicAttrs", "page", "project", "shortEntry.filter", "shortlist"], but are ' + \
+            str(stateKeys))
             
-        s.assertTrue('project' in state,
-            'project should be in the state, but is not')
-        s.assertTrue(state['project'] == 'unitTest/layoutBasicExp',
-            'project should be "unitTest/layoutBasicExp" but is ' + \
+        s.assertTrue(state['project'] == 'unitTest/layoutBasicExp/',
+            'project should be "unitTest/layoutBasicExp/" but is ' + \
             state['project'])
             
-        s.assertTrue('shortlist' in state,
-            'shortlist should be in the state, but is not')
+        s.assertTrue(state['page'] == 'mapPage',
+            'page should be "mapPage" but is ' + state['page'])
+            
         s.assertTrue(state['shortlist'] == ["yourNodes"],
             'shortlist should be ["yourNodes"] but is ' + \
             str(state['shortlist']))
 
-        s.assertTrue('dynamicAttrs' in state,
-            'dynamicAttrs should be in the state, but is not')
         s.assertTrue('yourNodes' in state["dynamicAttrs"],
             'yourNodes should be in state["dynamicAttrs"], but is not')
         s.assertTrue('dataType' in state['dynamicAttrs']['yourNodes'],
             'dataType should be in state["dynamicAttrs"]["yourNodes"], but is not')
         s.assertTrue('data' in state["dynamicAttrs"]["yourNodes"],
             'data should be in state["dynamicAttrs"]["yourNodes"], but is not')
-
         s.assertTrue(state["dynamicAttrs"]["yourNodes"]["dataType"] == "binary",
             'state["dynamicAttrs"]["yourNodes"]["dataType"] should be "binary", but is ' + \
             state["dynamicAttrs"]["yourNodes"]["dataType"])
-
         s.assertTrue('S1' in state["dynamicAttrs"]["yourNodes"]["data"],
             'S1 should be in state["dynamicAttrs"]["yourNodes"]["data"], but is not')
         s.assertTrue('S2' in state["dynamicAttrs"]["yourNodes"]["data"],
             'S2 should be in state["dynamicAttrs"]["yourNodes"]["data"], but is not')
-            
         s.assertTrue(state["dynamicAttrs"]["yourNodes"]["data"]["S1"] == 1,
             'state["dynamicAttrs"]["yourNodes"]["data"]["S1"] should be 1, but is ' + \
             str(state["dynamicAttrs"]["yourNodes"]["data"]["S1"]))
@@ -286,6 +315,8 @@ class Test_highlightAttrNode(unittest.TestCase):
             'state["dynamicAttrs"]["yourNodes"]["data"]["S2"] should be 1, but is ' + \
             str(state["dynamicAttrs"]["yourNodes"]["data"]["S2"]))
 
+        s.assertTrue('yourNodes' in state["activeAttrs"],
+            'yourNodes should be in state["activeAttrs"], but is not')
 
 
     def test_good_map_attr_state_generated(s):
@@ -298,21 +329,25 @@ class Test_highlightAttrNode(unittest.TestCase):
         }
         state = viewData._highlightAttrNodeInner(data, appCtx)
         #print "state", state
-        s.assertTrue(state.keys() == ["project","shortlist"],
-            'state keys should be ["project","shortlist"], but are ' + \
-            str(state.keys()))
+        stateKeys = state.keys()
+        stateKeys.sort()
+        s.assertTrue(stateKeys == ["activeAttrs", "page", "project","shortlist"],
+            'state keys should be ["activeAttrs", "page", "project","shortlist"], but are ' + \
+            str(stateKeys))
             
-        s.assertTrue('project' in state,
-            'project should be in the state, but is not')
-        s.assertTrue(state['project'] == 'unitTest/layoutBasicExp',
-            'project should be "unitTest/layoutBasicExp" but is ' + \
+        s.assertTrue(state['project'] == 'unitTest/layoutBasicExp/',
+            'project should be "unitTest/layoutBasicExp/" but is ' + \
             state['project'])
             
-        s.assertTrue('shortlist' in state,
-            'shortlist should be in the state, but is not')
+        s.assertTrue(state['page'] == 'mapPage',
+            'page should be "mapPage" but is ' + state['page'])
+            
         s.assertTrue(state['shortlist'] == ["3_categories", "yes/No"],
             'shortlist should be ["3_categories", "yes/No"] but is ' + \
             str(state['shortlist']))
+
+        s.assertTrue('3_categories' in state["activeAttrs"],
+            '3_categories should be in state["activeAttrs"], but is not')
 
 if __name__ == '__main__':
     unittest.main()
