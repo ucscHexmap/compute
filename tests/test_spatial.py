@@ -108,7 +108,7 @@ class Test_dynLayoutAware(unittest.TestCase):
         ])
         # mapData class needs these set to work properly.
         os.environ["DATA_ROOT"] = os.path.join(
-            os.environ["HUB_PATH"],
+            os.environ["HEX_CALC"],
             "tests/in/dataRoot"
         )
 

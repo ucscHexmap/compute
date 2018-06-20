@@ -289,7 +289,7 @@ def mkTempFile():
 
 def tmpDir():
     tmpDirName = os.path.join(
-        os.environ.get("HUB_PATH"),
+        os.environ.get("HEX_CALC"),
         "../computeDb",
         "tmp"
     )

@@ -27,7 +27,7 @@ export DRL_PATH=/cluster/home/swat/packages/drl-graph-layout/bin
 export FLASK_DEBUG=0
 
 # Path to the "compute" directory
-export HUB_PATH=/hive/groups/hexmap/prod/compute
+export HEX_CALC=/hive/groups/hexmap/prod/compute
 
 # https private key
 export KEY=/data/certs/tumormap.key
@@ -35,7 +35,7 @@ export KEY=/data/certs/tumormap.key
 # Only needed for some centos. Centos complains about missing a shared
 # library when calling uwsgi. The solution is to provide sym lynks
 # to make the file names conform. 
-#export LD_LIBRARY_PATH=$HUB_PATH/libPatch:$LD_LIBRARY_PATH
+#export LD_LIBRARY_PATH=$HEX_CALC/libPatch:$LD_LIBRARY_PATH
 
 # This path has to be above/equal to your 'compute' dir in the
 # file hierarchy.

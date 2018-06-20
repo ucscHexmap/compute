@@ -28,7 +28,7 @@ export DRL_PATH=/cluster/home/swat/packagesHexcalc/drl-graph-layout/bin
 export FLASK_DEBUG=0
 
 # Path to the "compute" directory
-export HUB_PATH=/data/compute
+export HEX_CALC=/data/compute
 
 # https private key
 export KEY=/data/certs/server.key
@@ -40,10 +40,10 @@ export KEY=/data/certs/server.key
 
 # This path has to be above/equal to your 'compute' dir in the
 # file hierarchy.
-export PYENV=$HUB_PATH/../env
+export PYENV=$HEX_CALC/../env
 
 # Path to the test data root. 
-export TEST_DATA_ROOT=$HUB_PATH/tests/in/dataRoot
+export TEST_DATA_ROOT=$HEX_CALC/tests/in/dataRoot
 
 # Define path to tete executable
 #export TETE_PATH=/cluster/home/swat/tete_copy/tete

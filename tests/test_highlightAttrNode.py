@@ -11,7 +11,7 @@ appCtxDict = {
     'dataRoot': 'in/dataRoot',
     'debug': os.environ.get('DEBUG', 0),
     'dev': int(os.environ.get('DEV', 0)),
-    'hubPath': os.environ.get('HUB_PATH'),
+    'hubPath': os.environ.get('HEX_CALC'),
     'unitTest': int(os.environ.get('UNIT_TEST', 0)),
     'viewServer': os.environ.get('VIEWER_URL', 'http://hexdev.sdsc.edu'),
 }
