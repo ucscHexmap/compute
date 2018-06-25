@@ -1,13 +1,11 @@
 .idea/*
 *.tar
 *.tgz
-run
 *pyc
 *save
-*.log
+log*
 tests/out
-www.log*
-www.pid
+pid
 nohup.out
 tmp/*
-config/setup
+
