@@ -15,8 +15,8 @@ fi
 # First argument is the path/to/config.sh
 source $CONFIG_FILE
 
-WWW_PATH=$HEX_CALC/www
-BASEARGS='--master --callable app --processes 2 --threads 100 --wsgi-file '$WWW_PATH/www.py' --pidfile '$HEX_CALC/www.pid
+WWW_PATH=$HEXCALC/www
+BASEARGS='--master --callable app --processes 2 --threads 100 --wsgi-file '$WWW_PATH/www.py' --pidfile '$HEXCALC/www.pid
 
 if [ $USE_HTTPS == 1 ]; then
     SOCKETARGS='--https-socket '$WWW_SOCKET,$CERT,$KEY,HIGH,$CA
@@ -27,5 +27,5 @@ fi
 if [ $BACK_OR_FOREGROUND == "FORE" ]; then
     uwsgi $BASEARGS $SOCKETARGS
 else
-    (nohup uwsgi $BASEARGS $SOCKETARGS &> $HEX_CALC/www.log &)
+    (nohup uwsgi $BASEARGS $SOCKETARGS &> $HEXCALC/www.log &)
 fi

@@ -16,7 +16,7 @@ from util_web import Context
 # TODO create a dir: out
 testDir = os.getcwd()
 quePath = os.path.join(os.getcwd() , 'out/jobQueue.db') # database file name
-serverQueuePath = os.path.join(os.environ['HEX_CALC'], '../computeDb/jobQueue.db')
+serverQueuePath = os.path.join(os.environ['HEXCALC'], '../computeDb/jobQueue.db')
 serverRoot = 'http://'
 appCtx = Context({})
 if os.environ['USE_HTTPS'] == '1':

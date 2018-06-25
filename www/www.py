@@ -32,7 +32,7 @@ def contextInit ():
     appCtx.dataRoot = os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING')
     appCtx.debug = os.environ.get('DEBUG', 0)
     appCtx.dev = int(os.environ.get('DEV', 0))
-    appCtx.hubPath = os.environ.get('HEX_CALC')
+    appCtx.hubPath = os.environ.get('HEXCALC')
     appCtx.unitTest = int(os.environ.get('UNIT_TEST', 0))
     appCtx.viewServer = os.environ.get('VIEWER_URL', 'https://tumormap.ucsc.edu')
 

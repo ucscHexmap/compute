@@ -192,7 +192,7 @@ def getTopBinSize(mapId, reflectJson):
 
 def getReflectJson():
     try:
-        hubPath = os.environ.get("HEX_CALC")
+        hubPath = os.environ.get("HEXCALC")
         reflectDbPath = os.path.join(
             hubPath,
             "..",
