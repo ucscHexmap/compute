@@ -27,8 +27,8 @@ export DRL_PATH=/cluster/home/swat/packagesHexcalc/drl-graph-layout/bin
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
 
-# Path to the "compute" directory
-export HEXCALC=/data/compute
+# Path to the install tar file.
+export INSTALL_TAR_PATH=/cluster/home/swat/dev/compute/install/install.tgz
 
 # https private key
 export KEY=/data/certs/server.key
@@ -60,6 +60,5 @@ export WWW_SOCKET=hexcalc.ucsc.edu:8332
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then
-    echo 'entering virtualenv:' $PYENV
     source $PYENV/bin/activate
 fi

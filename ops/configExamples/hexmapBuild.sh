@@ -26,9 +26,6 @@ export DRL_PATH=/cluster/home/swat/packages/drl-graph-layout/bin
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
 
-# Path to the "compute" directory
-export HEXCALC=/hive/groups/hexmap/prod/compute
-
 # https private key
 export KEY=/data/certs/tumormap.key
 

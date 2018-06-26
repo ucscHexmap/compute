@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Build a tarball for the compute server
+cd $HEXCALC/tests
+./run_test $1

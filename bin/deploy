@@ -1,12 +1,21 @@
 #!/bin/bash
+
 # Build a tarball for the compute server
-tar czf install.tgz \
+source $HEXCALC/ops/config.sh
+
+if [ -z $DEPLOY_TARGET_PATH ]; then
+    echo "Exited, the env var, DEPLOY_TARGET_PATH, must be defined"
+    exit 1
+fi
+rm $HEXCALC/ops/logsPrev/*
+cd $HEXCALC
+tar -czf ops/install.tgz \
     bin \
     build \
     calc \
-    config \
+    ops/configExamples \
     standalone \
     tests \
     www
-scp install.tgz hexmap-new:/cluster/home/swat/dev/compute
 
+scp $HEXCALC/ops/install.tgz $DEPLOY_TARGET_PATH

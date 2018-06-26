@@ -1,7 +1,12 @@
-run_server: run the http server
 
-killWww: kill a running http server
+Scripts in this directory:
 
-maketar: make a tar file to update another installation
-
-xtar: extract from a tar file on the target installation
+HTTP server scripts:
+    start
+    stop
+    restart
+showJobs: show potential user jobs running
+checkProc: check for any server processes running
+deploy: make a tar file to update another installation
+install: extract from a tar file on the target installation
+lint.sh: run lint

@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# Show the server processes running.
+source $HEXCALC/ops/config.sh
+
+echo "uwsgi processes for user $HEX_UID:"
+ps -c -u $HEX_UID | grep uwsgi

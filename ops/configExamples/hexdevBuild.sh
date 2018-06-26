@@ -9,7 +9,6 @@ export DEBUG=1
 export DEV=1
 export DRL_PATH=/cluster/home/swat/packages/drl-graph-layout/bin
 export FLASK_DEBUG=1
-export HEXCALC=/hive/groups/hexmap/dev/compute
 export KEY=/data/certs/hexdev.key
 export LD_LIBRARY_PATH=$HEXCALC/libPatchHexdev:$LD_LIBRARY_PATH
 export PYENV=/hive/groups/hexmap/dev/envHexdev

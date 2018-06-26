@@ -10,7 +10,6 @@ export DEV=1
 export FLASK_DEBUG=1
 export HEXMAP=
 export HUB_DBPATH=/home/duncan/hex/compute/db/map.db
-export HEXCALC=/home/duncan/hex/compute
 export KEY= #Needed for https
 export PYENV=/home/duncan/hex/env
 export TEST_DATA_ROOT=/home/duncan/hex/compute/tests/in/dataRoot

@@ -1,26 +1,28 @@
 
 export ADMIN_EMAIL=swat@soe.ucsc.edu
 export ALLOWABLE_VIEWERS=http://localhost:3333,https://localhost:3333
-export BACK_OR_FOREGROUND=FORE
+export BACK_OR_FOREGROUND=BACK
 #export CA=/data/certs/chain.crt
 #export CERT=/data/certs/hexdev.crt
-export DATA_ROOT=$HOME/data
+export DATA_ROOT=/Users/swat/data
 export DEBUG=1
 export DEV=1
-export DRL_PATH=$HOME/packages/drl-graph-layout/bin
+export DRL_PATH=/Users/swat/packages/drl-graph-layout/bin
 export FLASK_DEBUG=1
-export HEXCALC=$HOME/dev/compute
+export HEX_GID=staff
+export HEX_UID=swat
 #export KEY=/data/certs/hexdev.key
-export PYENV=$HOME/dev/env
+export PORT=80
+export PYENV=/Users/swat/dev/env
+export DEPLOY_TARGET_PATH=hexcalc:/cluster/home/swat/dev/compute/ops
 export TEST_DATA_ROOT=$DATA_ROOT
-#export TETE_PATH=/cluster/home/swat/tete_copy/tete
+#export TETE_PATH=/Users/swat/tete_copy/tete
 export UNIT_TEST=0
 export USE_HTTPS=0
 export VIEWER_URL=http://localhost:3333
-export WWW_SOCKET=127.0.0.1:5000
+export WWW_SOCKET=127.0.0.1:$PORT
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then
-    echo 'entering virtualenv:' $PYENV
     source $PYENV/bin/activate
 fi

@@ -1,28 +1,47 @@
 #!/bin/bash
-# extract from a tarball of the server support files, not www.
 
-# Don't allow install on anything other than production or dev.
-PWD=$(pwd)
-
-if [ $PWD == '/data/compute' ] || \
-    [ $PWD == '/cluster/home/swat/dev/compute' ] || \
-    [ $PWD == 'dmccolldev' ]; then
-
-    mv bin/run binRun
-    mv tests/run testsRun
-    rm -rf \
-        build \
-        calc \
-        config \
-        standalone \
-        tests \
-        www
-    tar -xf /cluster/home/swat/dev/compute/install.tgz
-    mv binRun bin/run
-    mv testsRun tests/run
-
-else
-    echo Sorry you cannot install to here and remove all of your current code!
-    echo Exiting
-    exit
+# Stop
+sudo $HEXCALC/stopAsRoot
+if [ $? != 0 ]; then
+   exit $?
 fi
+
+# Install new code from a tarball.
+source $HEXCALC/ops/config.sh
+
+if [ -z $INSTALL_TAR_PATH ]; then
+    echo "Exited, the env var, INSTALL_TAR_PATH, must be defined"
+    exit 1
+fi
+
+echo "untarring..."
+rm -rf \
+    $HEXCALC/bin \
+    $HEXCALC/build \
+    $HEXCALC/calc \
+    $HEXCALC/ops/configExamples \
+    $HEXCALC/standalone \
+    $HEXCALC/tests \
+    $HEXCALC/www
+
+tar -xf $INSTALL_TAR_PATH -C $HEXCALC
+
+
+# TODO tmp until proper sudo access
+cd $HEXCALC/bin
+ln -s $HEXCALC/startAsRoot startAsRoot
+ln -s $HEXCALC/stopAsRoot stopAsRoot
+
+
+# Loop until there are no server processes.
+for i in {1..5}
+do
+    $HEXCALC/bin/checkProc
+    if [ $? == 0 ]; then
+       break
+    fi
+    sleep 3
+done
+
+# Start
+sudo $HEXCALC/startAsRoot

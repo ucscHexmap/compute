@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Stop
+sudo $HEXCALC/stopAsRoot
+if [ $? != 0 ]; then
+   exit $?
+fi
+
+# Loop until there are no server processes.
+for i in {1..5}
+do
+    $HEXCALC/bin/checkProc
+    if [ $? == 0 ]; then
+       break
+    fi
+    sleep 3
+done
+
+# Start
+sudo $HEXCALC/startAsRoot

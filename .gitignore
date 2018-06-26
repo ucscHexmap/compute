@@ -1,11 +1,12 @@
-.idea/*
 *.tar
 *.tgz
 *pyc
 *save
-log*
+ops/log
+ops/logsPrev
+ops/config.sh
+ops/pid
 tests/out
-pid
 nohup.out
 tmp/*
 
