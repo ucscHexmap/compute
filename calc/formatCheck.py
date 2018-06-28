@@ -4,7 +4,6 @@ the layoutInputFile matches the users layoutInputFormat specification.
 """
 
 import numpy as np
-import utils
 
 def warnAboutFormat(df,expected_type):
     """
@@ -149,7 +148,11 @@ def _validHeaderOf3Col():
 
 
 def type_of_3col(header_array):
-    header_array = map(lambda x: x.lower(), header_array)
+    try:
+        header_array = map(lambda x: x.lower(), header_array)
+    except AttributeError:
+        return "NOT_VALID"
+
     valid_header_dict = _validHeaderOf3Col()
     for header in valid_header_dict.keys():
         if header_array == valid_header_dict[header]:
