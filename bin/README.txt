@@ -5,8 +5,8 @@ HTTP server scripts:
     start
     stop
     restart
-showJobs: show potential user jobs running
-checkProc: check for any server processes running
-deploy: make a tar file to update another installation
-install: extract from a tar file on the target installation
+runTest: run the unit tests
+showProc: show any server processes running
+deployWww: make a tar file to update another installation
+installWww: extract from a tar file on the target installation
 lint.sh: run lint

@@ -11,6 +11,7 @@
 CONFIG_FILE=$1
 TO_RUN=$2
 
+echo TO_RUN: $TO_RUN
 
 if [ -z "$CONFIG_FILE" ]; then
     echo "Path to configuration file as first arg necessary."
@@ -22,6 +23,8 @@ export DATA_ROOT=$TEST_DATA_ROOT
 if [ -z ${TO_RUN} ]; then
     TO_RUN=all
 fi
+
+echo TO_RUN: $TO_RUN
 
 export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
 export DEBUG=1

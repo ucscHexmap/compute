@@ -1,10 +1,20 @@
 #!/bin/bash
 
 # Restart the server.
-source $HEXCALC/ops/config.sh
 
-# Stop
+# Stop.
 $HEXCALC/bin/stop
 
-# Start
-sudo $HEXCALC/startAsRoot
+# If there are still user jobs running, don't stop or start.
+if [ $? == 1 ]; then
+    exit 1
+fi
+
+# If runnning on a protected port, run as root.
+if [ "$PORT" = "443" ] || [ "$PORT" = "80" ]; then
+    sudo $HEXCALC/startAsRoot
+else
+    $HEXCALC/bin/start
+fi
+
+

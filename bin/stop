@@ -15,7 +15,7 @@ source $HEXCALC/ops/config.sh
 $HEXCALC/bin/showJobs
 read -p "Are there any user jobs running in the above? " -n 1 -r
 echo
-if [[ $REPLY == ^[Yy]$ ]]; then
+if [ "$REPLY" = "y" ] || [ "$REPLY" = "Y" ]; then
 
     # Don't stop the server
     echo "User jobs must finish or be killed before running this script"
@@ -33,9 +33,10 @@ elif [ ! -z $PID ]; then
     kill -INT $PID
 else
     echo
-    echo "Nothing to stop as there is no process ID"
-    echo "file at ops/pid and no process ID supplied"
+    echo "Cannot stop with no PID file at ops/pid and no PID supplied"
     $HEXCALC/bin/showProc
+    echo "If there are any uwsgi processes running above, run this again with the PID as the first arg. Otherwise just start the server"
+    exit 1
 fi
 
 # Loop until there are no server processes.

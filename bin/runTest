@@ -2,4 +2,4 @@
 
 # Run tests.
 cd $HEXCALC/tests
-$HEXCALC/tests/run_test $HEXCALC/ops/config.sh
+$HEXCALC/tests/run_test $HEXCALC/ops/config.sh $1
