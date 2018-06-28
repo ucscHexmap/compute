@@ -24,7 +24,6 @@ fi
 
 # Stop the server
 # Use the process ID in the file.
-echo "stopping..."
 if [ -f "$HEXCALC/ops/pid" ]; then
     kill -INT `cat $HEXCALC/ops/pid`
     rm $HEXCALC/ops/pid
@@ -34,9 +33,20 @@ elif [ ! -z $PID ]; then
     kill -INT $PID
 else
     echo
-    echo "Exiting as there is no process ID file at ops/pid"
-    echo "and no process ID supplied"
+    echo "Nothing to stop as there is no process ID"
+    echo "file at ops/pid and no process ID supplied"
     $HEXCALC/bin/showProc
-    exit 1
 fi
+
+# Loop until there are no server processes.
+echo "Waiting for server processes to stop..."
+for i in {1..5}
+do
+    $HEXCALC/bin/checkProc
+    if [ $? == 0 ]; then
+       break
+    fi
+    sleep 3
+done
+
 exit 0

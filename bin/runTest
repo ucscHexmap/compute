@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# Build a tarball for the compute server
+# Run tests.
 cd $HEXCALC/tests
-./run_test $1
+$HEXCALC/tests/run_test $HEXCALC/ops/config.sh

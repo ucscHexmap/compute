@@ -1,16 +1,11 @@
 #!/bin/bash
 
-# Stop
-sudo $HEXCALC/stopAsRoot
-if [ $? != 0 ]; then
-   exit $?
-fi
-
 # Install new code from a tarball.
 source $HEXCALC/ops/config.sh
 
 if [ -z $INSTALL_TAR_PATH ]; then
     echo "Exited, the env var, INSTALL_TAR_PATH, must be defined"
+    echo "Do you want to run deployWww instead?"
     exit 1
 fi
 
@@ -26,22 +21,4 @@ rm -rf \
 
 tar -xf $INSTALL_TAR_PATH -C $HEXCALC
 
-
-# TODO tmp until proper sudo access
-cd $HEXCALC/bin
-ln -s $HEXCALC/startAsRoot startAsRoot
-ln -s $HEXCALC/stopAsRoot stopAsRoot
-
-
-# Loop until there are no server processes.
-for i in {1..5}
-do
-    $HEXCALC/bin/checkProc
-    if [ $? == 0 ]; then
-       break
-    fi
-    sleep 3
-done
-
-# Start
-sudo $HEXCALC/startAsRoot
+echo "Untar complete. Issue 'restart' to restart"

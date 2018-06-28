@@ -11,20 +11,11 @@
 CONFIG_FILE=$1
 TO_RUN=$2
 
-# If there is only on arg then we assume its the subset to run
-if [ "$#" -eq 1 ]; then
-    CONFIG_FILE=""
-    TO_RUN=$1
-fi
 
-# Attempt to use default configuration if the argument has not been supplied
-if [ -z "$CONFIG_FILE" ] && [ -f "$(pwd)/../config/setup" ]; then
-    CONFIG_FILE=$(pwd)/../config/setup
-elif [ -z "$CONFIG_FILE" ]; then
+if [ -z "$CONFIG_FILE" ]; then
     echo "Path to configuration file as first arg necessary."
     exit 1
 fi
-echo $CONFIG_FILE
 source $CONFIG_FILE
 
 export DATA_ROOT=$TEST_DATA_ROOT

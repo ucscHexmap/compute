@@ -2,10 +2,12 @@
 *.tgz
 *pyc
 *save
-ops/log
-ops/logsPrev
+ops/log*
 ops/config.sh
 ops/pid
+run
+startAsRoot
+stopAsRoot
 tests/out
 nohup.out
 tmp/*

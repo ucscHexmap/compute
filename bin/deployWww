@@ -5,9 +5,10 @@ source $HEXCALC/ops/config.sh
 
 if [ -z $DEPLOY_TARGET_PATH ]; then
     echo "Exited, the env var, DEPLOY_TARGET_PATH, must be defined"
+    echo "Do you want to run installWww instead?"
     exit 1
 fi
-rm $HEXCALC/ops/logsPrev/*
+
 cd $HEXCALC
 tar -czf ops/install.tgz \
     bin \

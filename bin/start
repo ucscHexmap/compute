@@ -12,7 +12,7 @@ source $HEXCALC/ops/config.sh
 # Base arguments for uwsgi.
 BASEARGS='--master --processes 2 --threads 100 --callable app --wsgi-file '$HEXCALC/www/www.py' --pidfile2 '$HEXCALC/ops/pid' --logto2 '$HEXCALC/ops/log
 PROTECTED_PORT=false
-if [ "$PORT" == "443" ] || [ "$PORT" == "80" ]; then
+if [ "$PORT" = "443" ] || [ "$PORT" = "80" ]; then
     PROTECTED_PORT=true
 fi
 
@@ -45,7 +45,7 @@ else
     LOG=$HEXCALC/ops/log
     touch $LOG
     mv $LOG $HEXCALC/ops/logsPrev/$TIME
-    rm -q $HEXCALC/nohup.out 2> /dev/null
+    rm -f $HEXCALC/nohup.out 2> /dev/null
 
     # Check for a server process.
     $HEXCALC/bin/checkProc
@@ -81,7 +81,8 @@ else
 
     # Start the server.
     echo starting...
-    (nohup uwsgi $BASEARGS $SOCKETARGS &)
+    rm -q $HEXCALC/nohup.out 2> /dev/null
+    nohup uwsgi $BASEARGS $SOCKETARGS & 2> /dev/null
 
     # Allow the processes to start, change the owner on some files & verify.
     sleep 5

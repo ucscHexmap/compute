@@ -27,8 +27,14 @@ export DRL_PATH=/cluster/home/swat/packagesHexcalc/drl-graph-layout/bin
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
 
+# Username for checking existence of server processes.
+export HEX_UID=hexmap
+
+# User group to own server processes on protected ports.
+export HEX_GID=protein
+
 # Path to the install tar file.
-export INSTALL_TAR_PATH=/cluster/home/swat/dev/compute/install/install.tgz
+export INSTALL_TAR_PATH=/cluster/home/swat/dev/compute/ops/install.tgz
 
 # https private key
 export KEY=/data/certs/server.key
@@ -37,6 +43,9 @@ export KEY=/data/certs/server.key
 # library when calling uwsgi. The solution is to provide sym lynks
 # to make the file names conform. 
 #export LD_LIBRARY_PATH=
+
+# Port on which the server will listen.
+export PORT=443
 
 # This path has to be above/equal to your 'compute' dir in the
 # file hierarchy.
@@ -55,7 +64,7 @@ export USE_HTTPS=1
 export VIEWER_URL=https://tumormap.ucsc.edu
 
 # Communication port
-export WWW_SOCKET=hexcalc.ucsc.edu:8332
+export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
 
 
 # If the python environment is present then open it up.

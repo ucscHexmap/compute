@@ -12,6 +12,7 @@ export FLASK_DEBUG=1
 export HEX_GID=staff
 export HEX_UID=swat
 #export KEY=/data/certs/hexdev.key
+#export PORT=5000
 export PORT=80
 export PYENV=/Users/swat/dev/env
 export DEPLOY_TARGET_PATH=hexcalc:/cluster/home/swat/dev/compute/ops
