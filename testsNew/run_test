@@ -1,22 +1,12 @@
 #!/bin/bash
 # Run a test after setting the path
-# $1: config file in compute/config, if left out will attempt to use
-# "$(pwd)/../config/setup"
-# $2: optional name of test(s) to run, defaults to 'all', one of:
+# $1: optional name of tests to run, defaults to 'all', one of:
 #     / all / docker_safe / web / <specific-test(s)> /
-#     where <specific-test(s)> may be one of:
-#       base file name, i.e.: test_layoutBasic
-#       a single test, i.e.: test_layoutBasic.Test_layoutBasic.test_full
-
-CONFIG_FILE=$1
-TO_RUN=$2
-
-
-if [ -z "$CONFIG_FILE" ]; then
-    echo "Path to configuration file as first arg necessary."
-    exit 1
-fi
-source $CONFIG_FILE
+#     where <specific-test(s)> is one of the forms:
+#       test_layoutBasic
+#       test_layoutBasic.Test_layoutBasic.test_full
+TO_RUN=$1
+source $HEXCALC/ops/config.sh
 
 export DATA_ROOT=$TEST_DATA_ROOT
 if [ -z ${TO_RUN} ]; then

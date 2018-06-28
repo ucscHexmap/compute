@@ -3,6 +3,74 @@
 
 import os, csv
 from util_web import ErrorResp, stringToFloatOrInt
+import util_web
+import validate_web as validate
+
+def _highlightAttrNodeInner(data, appCtx):
+    
+    # Validate data
+    validate.map(data, required=True)
+    validate.layout(data)
+    validate.attributes(data)
+    validate.nodes(data)
+    if not 'attributes' in data and not 'nodes' in data:
+        raise ErrorResp('One or both of the parameters, ' + \
+            '"attributes" and "nodes" must be provided.', 400)
+    
+    # Fill the required state for the bookmark.
+    state = { 'page': 'mapPage', 'project': data['map'] + '/' }
+
+    if 'layout' in data:
+        state['layoutName'] = data['layout']
+
+    if 'nodes' in data:
+    
+        # Create a dynamic attribute of the node list for the state.
+        attrData = {}
+        for node in data['nodes']:
+            attrData[node] = 1
+        state['dynamicAttrs'] = {
+            'yourNodes': {
+                'data': attrData,
+                'dataType': 'binary',
+            }
+        }
+        state['shortlist'] = ['yourNodes']
+
+        # Add the filter so the given nodes are highlighted on any attributes.
+        state['shortEntry.filter'] = {
+            'yourNodes': {
+                'by': 'category',
+                'value': [1],
+            }
+        }
+
+    if 'attributes' in data:
+    
+        # Add the provided attributes to the shortlist state.
+        if 'nodes' in data:
+            state['shortlist'] += data['attributes']
+        else:
+            state['shortlist'] = data['attributes']
+        
+        # Set the active attr state to the first attribute in the data.
+        state['activeAttrs'] = [data['attributes'][0]]
+    else:
+        
+        # Without attrs provided, set the active attr state to the new attr of
+        # nodes just created.
+        state['activeAttrs'] = [state['shortlist'][0]]
+
+    return state
+
+
+def highlightAttrNode(data, appCtx):
+
+    # Highlight a list of nodes and attributes on an existing map.
+    state = _highlightAttrNodeInner(data, appCtx)
+    
+    bookmark = util_web.createBookmark(state, appCtx.viewServer)
+    return bookmark
 
 
 def getAttrFilename(attrId, mapId, appCtx):
@@ -21,41 +89,6 @@ def getAttrFilename(attrId, mapId, appCtx):
         raise ErrorResp('With the attribute summary: ' + str(e), 500)
 
     return attrIndex
-
-
-'''future:
-def highlightAttrNode(data, appCtx):
-
-    # Highlight a list of nodes and attributes on an existing map.
-    
-    #
-
-
-    state generated:
-    {
-        'project': mapId,
-        'layoutIndex': layoutIndex,
-        'dynamic_attrs': {
-            'TCGA-01': {
-            }
-        }
-    }
-    data in:
-    {
-       "map": "CKCC/v1",
-       "layout": "mRNA",
-       "attributes": [
-           "gender",
-           "subType",
-           ...
-       ],
-       "nodes": [
-           "TCGA-01",
-           "TCGA-02",
-           ...
-       ],
-    }
-'''
 
 
 def getAttrList(mapId, appCtx):

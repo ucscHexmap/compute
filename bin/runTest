@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Run tests.
+cd $HEXCALC/tests
+$HEXCALC/tests/run_test $HEXCALC/ops/config.sh

@@ -32,13 +32,13 @@ fi
 # TODO the below path should be more strict by not including PATH from user's
 # environment
 echo "export PATH=$PYENV/bin:$PATH" >> $PYENV/bin/activate
-echo "export PYTHONPATH=$HUB_PATH/www:$HUB_PATH/calc:$HUB_PATH/db:$TETE_PATH:$DRLPATH" >> $PYENV/bin/activate
+echo "export PYTHONPATH=$HEXCALC/www:$HEXCALC/calc:$HEXCALC/db:$TETE_PATH:$DRLPATH" >> $PYENV/bin/activate
 
-cd $HUB_PATH
+cd $HEXCALC
 
 # Activate the python environment and install the requirements.
 source $PYENV/bin/activate
-pip install -r $HUB_PATH/build/requirements.txt
+pip install -r $HEXCALC/build/requirements.txt
 
 echo
 echo 'python:'

@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# Stop the server.
+PID=$1 # optional, useful when the PID file is not current for some reason.
+
+if [[ -z $HEXCALC ]]; then
+   echo "Environment variable HEXCALC must be defined to run this script."
+   echo "Do you want to run sudo stopAsRoot?"
+   exit 1
+fi
+
+source $HEXCALC/ops/config.sh
+
+# Check the python user jobs running.
+$HEXCALC/bin/showJobs
+read -p "Are there any user jobs running in the above? " -n 1 -r
+echo
+if [[ $REPLY == ^[Yy]$ ]]; then
+
+    # Don't stop the server
+    echo "User jobs must finish or be killed before running this script"
+    exit 1
+fi
+
+# Stop the server
+# Use the process ID in the file.
+if [ -f "$HEXCALC/ops/pid" ]; then
+    kill -INT `cat $HEXCALC/ops/pid`
+    rm $HEXCALC/ops/pid
+
+# Use the supplied process ID.
+elif [ ! -z $PID ]; then
+    kill -INT $PID
+else
+    echo
+    echo "Nothing to stop as there is no process ID"
+    echo "file at ops/pid and no process ID supplied"
+    $HEXCALC/bin/showProc
+fi
+
+# Loop until there are no server processes.
+echo "Waiting for server processes to stop..."
+for i in {1..5}
+do
+    $HEXCALC/bin/checkProc
+    if [ $? == 0 ]; then
+       break
+    fi
+    sleep 3
+done
+
+exit 0

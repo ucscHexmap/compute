@@ -1,0 +1,7 @@
+#!/bin/bash
+
+source $HEXCALC/ops/config.sh
+
+# Show the python jobs running.
+echo Possible user jobs running under server user, $HEX_UID:
+ps -c -u $HEX_UID | grep python

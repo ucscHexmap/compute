@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Show the server processes running.
+source $HEXCALC/ops/config.sh
+
+if ps -c -u $HEX_UID | grep wsgi >/dev/null 2>&1; then
+    # is running
+    exit 1
+else
+    # is not running
+    exit 0
+fi

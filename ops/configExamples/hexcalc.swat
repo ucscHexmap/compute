@@ -1,0 +1,28 @@
+
+BASE=/cluster/home/swat
+export ADMIN_EMAIL=swat@soe.ucsc.edu
+export ALLOWABLE_VIEWERS=https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229,http://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229
+export BACK_OR_FOREGROUND=BACK
+export CA=$BASE/certs/hexcalc/chain.crt
+export CERT=$BASE/certs/hexcalc/server.crt
+export DATA_ROOT=$BASE/dev/data
+export DEBUG=1
+export DEV=1
+export DRL_PATH=$BASE/packagesHexcalc/drl-graph-layout/bin
+export FLASK_DEBUG=1
+export HEX_UID=swat
+export HEX_GID=protein
+export INSTALL_TAR_PATH=$HEXCALC/ops/install.tgz
+export KEY=$BASE/certs/hexcalc/server.key
+export PORT=443
+#export PORT=5000
+export PYENV=$HEXCALC/../envHexcalc
+export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
+export USE_HTTPS=1
+export VIEWER_URL=https://tumormap.ucsc.edu:8222
+export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
+
+# If the python environment is present then open it up.
+if [ -e $PYENV/bin/activate ]; then
+    source $PYENV/bin/activate
+fi

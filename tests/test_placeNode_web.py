@@ -18,7 +18,7 @@ appCtxDict = {
     'dataRoot': 'in/dataRoot',
     'debug': os.environ.get('DEBUG', 0),
     'dev': int(os.environ.get('DEV', 0)),
-    'hubPath': os.environ.get('HUB_PATH'),
+    'hubPath': os.environ.get('HEXCALC'),
     'jobQueuePath': quePath,
     'jobStatusUrl': jobStatusUrl,
     'unitTest': int(os.environ.get('UNIT_TEST', 0)),
