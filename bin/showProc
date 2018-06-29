@@ -4,4 +4,4 @@
 source $HEXCALC/ops/config.sh
 
 echo "uwsgi processes for user $HEX_UID:"
-ps -c -u $HEX_UID | grep uwsgi
+pgrep -l -U $HEX_UID uwsgi

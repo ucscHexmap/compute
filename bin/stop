@@ -1,15 +1,20 @@
 #!/bin/bash
 
 # Stop the server.
-PID=$1 # optional, useful when the PID file is not current for some reason.
 
+# Check for the main env var.
 if [[ -z $HEXCALC ]]; then
    echo "Environment variable HEXCALC must be defined to run this script."
    echo "Do you want to run sudo stopAsRoot?"
    exit 1
 fi
 
-source $HEXCALC/ops/config.sh
+# Check for any server processes running.
+$HEXCALC/bin/checkProc
+if [ $? == 0 ]; then
+    echo "No server processes running, so nothing to stop."
+   exit 0
+fi
 
 # Check the python user jobs running.
 $HEXCALC/bin/showJobs
@@ -23,31 +28,25 @@ if [ "$REPLY" = "y" ] || [ "$REPLY" = "Y" ]; then
 fi
 
 # Stop the server
-# Use the process ID in the file.
-if [ -f "$HEXCALC/ops/pid" ]; then
-    kill -INT `cat $HEXCALC/ops/pid`
-    rm $HEXCALC/ops/pid
+source $HEXCALC/ops/config.sh
 
-# Use the supplied process ID.
-elif [ ! -z $PID ]; then
-    kill -INT $PID
-else
-    echo
-    echo "Cannot stop with no PID file at ops/pid and no PID supplied"
-    $HEXCALC/bin/showProc
-    echo "If there are any uwsgi processes running above, run this again with the PID as the first arg. Otherwise just start the server"
-    exit 1
-fi
+pkill -INT -o -U $HEX_UID uwsgi
 
 # Loop until there are no server processes.
-echo "Waiting for server processes to stop..."
+echo "stopping..."
 for i in {1..5}
 do
     $HEXCALC/bin/checkProc
-    if [ $? == 0 ]; then
+    RUNNING=$?
+    if [ $RUNNING == 0 ]; then
        break
     fi
     sleep 3
 done
+
+if [ $RUNNING == 1 ]; then
+    echo 'Error: giving up waiting for server to stop.'
+    exit 1
+fi
 
 exit 0

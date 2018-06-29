@@ -1,6 +1,8 @@
 #!/bin/bash
 
-# Start the server.
+# (Re)Start the server.
+
+# Check for the main env var.
 if [[ -z $HEXCALC ]]; then
    echo "Environment variable HEXCALC must be defined to run this script."
    echo "Do you want to run sudo startAsRoot?"
@@ -9,27 +11,53 @@ fi
 
 source $HEXCALC/ops/config.sh
 
-# Base arguments for uwsgi.
-BASEARGS='--master --processes 2 --threads 100 --callable app --wsgi-file '$HEXCALC/www/www.py' --pidfile2 '$HEXCALC/ops/pid' --logto2 '$HEXCALC/ops/log
 PROTECTED_PORT=false
 if [ "$PORT" = "443" ] || [ "$PORT" = "80" ]; then
     PROTECTED_PORT=true
 fi
+if [ $USER != "root" ] && [ "$PROTECTED_PORT" == true ]; then
+    echo "You must start the server as root on port 80 or 443."
+    exit 1
+elif [ $USER == "root" ] && [ "$PROTECTED_PORT" != true ]; then
+    echo "Exiting, you don't want to start as root on port $PORT."
+    exit 1
+fi
+
+# Stop.
+echo "Stopping any existing server processes."
+$HEXCALC/bin/stop
+STOP_ERROR=$?
+if [ $STOP_ERROR != 0 ]; then
+    echo "Restart exiting due to stop not completing."
+    exit 1
+fi
+
+# Check for any server processes running.
+$HEXCALC/bin/checkProc
+RUNNING=$?
+if [ $RUNNING == 1 ]; then
+    echo "There is a uwsgi server running. Stop the server before starting it."
+    $HEXCALC/bin/showProc
+    exit 0
+fi
+
+# Base arguments for uwsgi.
+BASEARGS='--master --processes 2 --threads 100 --callable app --wsgi-file '$HEXCALC/www/www.py' --uid '$HEX_UID' --gid '$HEX_GID
 
 # Socket arguments for uwsgi.
 if [ $USE_HTTPS == 1 ]; then
     if [ "$PROTECTED_PORT" = true ]; then
 
         # https, protected port
-        SOCKETARGS=' --shared-socket '$WWW_SOCKET' --https =0,'$CERT,$KEY,HIGH,$CA' --uid '$HEX_UID' --gid '$HEX_GID
+        SOCKETARGS='--shared-socket '$WWW_SOCKET' --https =0,'$CERT,$KEY,HIGH,$CA
     else
-        # https, unprotected port
+        # https, unprotected port, assuming non-root
         SOCKETARGS='--https-socket '$WWW_SOCKET,$CERT,$KEY,HIGH,$CA
     fi
 else
     if [ "$PROTECTED_PORT" = true ]; then
         # http, protected port
-        SOCKETARGS=' --shared-socket '$WWW_SOCKET' --http =0 --uid '$HEX_UID' --gid '$HEX_GID
+        SOCKETARGS='--shared-socket '$WWW_SOCKET' --http =0'
     else
         # http, unprotected port
         SOCKETARGS='--http-socket '$WWW_SOCKET
@@ -37,59 +65,45 @@ else
 fi
 
 if [ $BACK_OR_FOREGROUND == "FORE" ]; then
+
+    echo Starting in foreground
     uwsgi $BASEARGS $SOCKETARGS
-else
-
-    # Save previous log file.
-    TIME=$(date '+%F-%T')
-    LOG=$HEXCALC/ops/log
-    touch $LOG
-    mv $LOG $HEXCALC/ops/logsPrev/$TIME
-    rm -f $HEXCALC/nohup.out 2> /dev/null
-
-    # Check for a server process.
-    $HEXCALC/bin/checkProc
-    PROCESS_RUNNING=$?
-
-    # Check for an existing PID file.
-    if [ -f "$HEXCALC/ops/pid" ]; then
-        if [ "$PROCESS_RUNNING" = 1 ]; then
-
-            # There is a pid file and a process.
-            ps -c -u $HEX_UID | grep wsgi
-            echo "There is a process ID file at $HEXCALC/ops/pid, and a"
-            echo "server running. Stop the server before starting it."
-        else
-
-            # There is a pid file, but no process.
-            echo "There is a process ID file at $HEXCALC/ops/pid, but can't"
-            echo "find a process. If there is no server running, remove this"
-            echo "file then start the server"
-        fi
-        exit 1
-    else
-        if [ "$PROCESS_RUNNING" = 1 ]; then
-
-            # There is no pid file, but there is a process.
-            ps -c -u $HEX_UID | grep wsgi
-            echo "There is a server running, but no pid file."
-            echo "Kill the server with:"
-            echo "    stop <pid>"
-            exit 1
-        fi
-    fi
-
-    # Start the server.
-    echo starting...
-    rm -q $HEXCALC/nohup.out 2> /dev/null
-    nohup uwsgi $BASEARGS $SOCKETARGS & 2> /dev/null
-
-    # Allow the processes to start, change the owner on some files & verify.
-    sleep 5
-    if [ "$PROTECTED_PORT" = true ]; then
-        chown $HEX_UID:$HEX_GID  $HEXCALC/nohup.out
-        chown $HEX_UID:$HEX_GID $HEXCALC/ops/logsPrev/$TIME
-    fi
-    echo "uwsgi processes running:"
-    ps -c -u $HEX_UID | grep wsgi
+    exit 0
 fi
+
+# Save previous log file.
+TIME=$(date '+%F-%T')
+LOG=$HEXCALC/ops/log
+touch $LOG
+mv $LOG $HEXCALC/ops/logsPrev/$TIME
+rm -f $HEXCALC/nohup.out 2> /dev/null
+
+# Start the server.
+echo starting...
+rm -q $HEXCALC/nohup.out 2> /dev/null
+LOGARGS=' --logto2 '$HEXCALC/ops/log
+nohup uwsgi $BASEARGS $SOCKETARGS $LOGARGS & 2> /dev/null
+
+# Allow the processes to start, change the owner on some files & verify.
+# Loop until there is a server process.
+sleep 5
+for i in {1..5}
+do
+    $HEXCALC/bin/checkProc
+    RUNNING=$?
+    if [ $RUNNING == 1 ]; then
+        break
+    fi
+    sleep 3
+done
+
+if [ $RUNNING == 0 ]; then
+    echo 'Error: giving up waiting for server to start.'
+    exit 1
+fi
+
+if [ "$PROTECTED_PORT" = true ]; then
+    chown $HEX_UID:$HEX_GID $HEXCALC/nohup.out $HEXCALC/ops/logsPrev/$TIME
+fi
+$HEXCALC/bin/showProc
+exit 0
