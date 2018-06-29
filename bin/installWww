@@ -21,4 +21,4 @@ rm -rf \
 
 tar -xf $INSTALL_TAR_PATH -C $HEXCALC
 
-echo "Untar complete. Issue 'restart' to restart"
+echo "Untar complete. Issue 'start' to restart"
