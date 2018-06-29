@@ -4,6 +4,8 @@ import formatCheck as fc
 import utils
 import pandas as pd
 import compute_sparse_matrix as csm
+import io
+
 testDir = os.getcwd()
 inDir = os.path.join(testDir,'in/layout/' )   # The input data
 xyDir = os.path.join(testDir,'exp/layoutBasicXy/' )   # The input data
@@ -202,5 +204,30 @@ class Test_formatCheck(unittest.TestCase):
             passed = False
         s.assertTrue(passed, "duplicate_check registered false duplicates")
 
+    def test_readin_0_columns(s):
+        passed = False
+        try:
+            single_col = "hello\n1,\n2,\nhello"
+            fh = io.BytesIO(single_col.encode('UTF-8'))
+            utils.readPandas(fh)
+        except ValueError:
+            passed = True
+
+        s.assertTrue(passed, "Error not thrown when columns have 0"
+                             " dimensions.")
+
+    def test_readin_0_rows(s):
+        passed = False
+        try:
+            single_line = "hello\ta\tb,\th\tg"
+            fh = io.BytesIO(single_line.encode('UTF-8'))
+            utils.readPandas(fh)
+        except ValueError:
+            passed = True
+
+        s.assertTrue(passed, "Error not thrown when rows have 0"
+                             " dimensions.")
+
 if __name__ == '__main__':
     unittest.main()
+

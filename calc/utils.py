@@ -40,7 +40,8 @@ def readPandas(datafile):
         sep="\t",
     )
 
-    possible_header = df.iloc[0]
+    possible_header = df.iloc[0].tolist()
+    possible_header.append(df.index[0])
     if hasHeader(possible_header):
         df.columns = df.iloc[0]
         df.drop([df.index[0]], inplace=True)
@@ -48,7 +49,14 @@ def readPandas(datafile):
 
     # Put the filename as the index name
     df.index.name = datafile
+    dimension_check(df)
     return df
+
+def dimension_check(df):
+    if df.shape[1] == 0 or df.shape[0] == 0:
+        raise ValueError("The given data was read in as having 0 "
+                         "dimensions. Is it tab separated? If so, does"
+                         "it have more than one row or column?")
 
 
 def duplicates_check(list_):
@@ -96,7 +104,7 @@ def hasHeader(possible_header):
     isHeader = True
     n_cols = len(possible_header)
     if n_cols == 3:
-        if formatCheck.type_of_3colHA(possible_header) == "NOT_VALID":
+        if formatCheck.type_of_3col(possible_header) == "NOT_VALID":
             isHeader = False
 
     return isHeader
