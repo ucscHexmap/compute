@@ -1,6 +1,5 @@
 
 export ADMIN_EMAIL=swat@soe.ucsc.edu
-export ALLOWABLE_VIEWERS=https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229,http://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229
 export BACK_OR_FOREGROUND=BACK
 export CA=/data/certs/chain.crt
 export CERT=/data/certs/hexdev.crt

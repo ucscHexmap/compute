@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# (Re)tart the server.
+$HEXCALC/bin/start

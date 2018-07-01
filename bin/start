@@ -76,13 +76,13 @@ TIME=$(date '+%F-%T')
 LOG=$HEXCALC/ops/log
 touch $LOG
 mv $LOG $HEXCALC/ops/logsPrev/$TIME
-rm -f $HEXCALC/nohup.out 2> /dev/null
+rm -f $HEXCALC/nohup.out  >/dev/null 2>&1
 
 # Start the server.
 echo starting...
-rm -q $HEXCALC/nohup.out 2> /dev/null
+rm -q $HEXCALC/nohup.out  >/dev/null 2>&1
 LOGARGS=' --logto2 '$HEXCALC/ops/log
-nohup uwsgi $BASEARGS $SOCKETARGS $LOGARGS & 2> /dev/null
+nohup uwsgi $BASEARGS $SOCKETARGS $LOGARGS &
 
 # Allow the processes to start, change the owner on some files & verify.
 # Loop until there is a server process.

@@ -10,6 +10,7 @@ import createMap_web
 import job
 import jobTestHelper_web
 import placeNode_web
+import projectEdit
 import projectList
 import reflect_web
 import statsNoLayout_web
@@ -35,6 +36,7 @@ def contextInit ():
     appCtx.hubPath = os.environ.get('HEXCALC')
     appCtx.unitTest = int(os.environ.get('UNIT_TEST', 0))
     appCtx.viewServer = os.environ.get('VIEWER_URL', 'https://tumormap.ucsc.edu')
+    appCtx.viewServerAddrs = os.environ.get('VIEW_SERVER_ADDRS', '127.0.0.1')
 
     # Derived context.
     appCtx.databasePath = \
@@ -70,19 +72,14 @@ def loggingInit ():
         logLevel = 'INFO'
 
     logging.info('WWW server started with log level: ' + logLevel)
-    logging.info('Allowable viewers: ' + str(allowableViewers))
 
 
 # Initialize the app.
 def initialize():
 
-    # Other local vars.
-    global allowableViewers
-    allowableViewers = os.environ.get('ALLOWABLE_VIEWERS').split(',')
-
     # Make cross-origin AJAX possible
     CORS(app)
-
+    
     contextInit()
     loggingInit()
 
@@ -194,16 +191,6 @@ def upload(dataId):
 
 
 def dataRouteInner(dataId, ok404=False):
-    """
-    # For now, let anyone read.
-    # Only allow authorized view servers to pull data.
-    try:
-        origin = request.environ['HTTP_ORIGIN']
-    except Exception:
-        raise ErrorResp('http-origin not defined', 400)
-    if not origin in app.config['ALLOWABLE_VIEWERS']:
-        raise ErrorResp('Unauthorized http-origin: ' + origin, 400)
-    """
 
     # Not using flask's send_file() as it mangles files larger than 32k.
     # Not using flask's GET because we need to capture 404-file-not-found
@@ -242,6 +229,21 @@ def dataRoute(dataId):
 @app.route('/dataOk404/<path:dataId>', methods=['GET'])
 def dataRouteOk404(dataId):
     dataRouteInner(dataId, True)
+
+
+# Handle route to delete a map.
+@app.route('/deleteMap/mapId/<path:mapId>/email/<string:userEmail>',
+    methods=['GET'])
+@app.route('/deleteMap/mapId/<path:mapId>' + \
+    '/email/<string:userEmail>/role/<string:userRole>', methods=['GET'])
+def deleteMap(mapId, userEmail=None, userRole=[]):
+
+    # Verify this is from the allowed view server
+    if not request.environ['REMOTE_ADDR'] in appCtx.viewServerAddrs:
+        raise ErrorResp('', 404)
+    
+    raise SuccessResp(
+        projectEdit.delete(mapId, userEmail, _urlParmToList(userRole), appCtx))
 
 
 # Handle route: get attribute names by map ID.

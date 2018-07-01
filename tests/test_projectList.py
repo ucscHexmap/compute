@@ -38,7 +38,7 @@ class Test_projectList(unittest.TestCase):
     def test_getSubDirs(s):
         viewRoot = os.path.join(dataRoot, 'viewBasic')
         subDirs = projectList._getSubDirs(viewRoot)
-        s.assertTrue(subDirs == ['major1', 'major2', 'major3', userDir],
+        s.assertTrue(subDirs == ['major1', 'major2', 'major3', 'major4', userDir],
             'subDirs: ' + str(subDirs))
     
     def test_getProjectRoles (s):
@@ -128,77 +128,86 @@ class Test_projectList(unittest.TestCase):
         lst = projectList._rolesToList(roles)
         s.assertTrue(lst == [], 'lst: ' + str(lst))
 
-    def test_isUserAuthorizedPublic (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationPublic (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=email,
             userRole=[],
             major='major1',
             projRole=['public']
         )
-        s.assertTrue(userAuthd, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'view', 'userAuthd: ' + str(userAuthd))
 
-    def test_isUserAuthorizedNoUser (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationNoUser (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=None,
             userRole=[],
             major='major1',
             projRole=['nuts']
         )
-        s.assertTrue(userAuthd == False, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'not', 'userAuthd: ' + str(userAuthd))
 
-    def test_isUserAuthorizedUserProject (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationUserProject (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=email,
             userRole=[],
             major=userDir,
             projRole=[]
         )
-        s.assertTrue(userAuthd, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'edit')
 
-    def test_isUserAuthorizedUserProject (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationEditProjectMinor (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=email,
-            userRole=[],
-            major=userDir,
-            projRole=[]
+            userRole=['yoursEdit'],
+            major='major2',
+            projRole=['yours']
         )
-        s.assertTrue(userAuthd, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'edit')
 
-    def test_isUserAuthorizedNoUserRoles (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationEditProjectMajor (s):
+        userAuthd = projectList._userAuthorization(
+            userEmail=email,
+            userRole=['yoursEdit'],
+            major='major4',
+            projRole=['yours']
+        )
+        s.assertTrue(userAuthd == 'edit')
+
+    def test_userAuthorizationNoUserRoles (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=email,
             userRole=[],
             major='major1',
             projRole=['nuts']
         )
-        s.assertTrue(userAuthd == False, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'not', 'userAuthd: ' + str(userAuthd))
 
-    def test_isUserAuthorizedDevAccess (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationDevAccess (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=email,
             userRole=['dev'],
             major='major1',
             projRole=['nuts']
         )
-        s.assertTrue(userAuthd, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'view', 'userAuthd: ' + str(userAuthd))
 
-    def test_isUserAuthorizedWithRoleMatch (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationWithRoleMatch (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=email,
             userRole=['nuts'],
             major='major1',
             projRole=['nuts']
         )
-        s.assertTrue(userAuthd, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'view', 'userAuthd: ' + str(userAuthd))
 
-    def test_isUserAuthorizedNoRoleMatch (s):
-        userAuthd = projectList._isUserAuthorized(
+    def test_userAuthorizationNoRoleMatch (s):
+        userAuthd = projectList._userAuthorization(
             userEmail=email,
             userRole=['peanuts'],
             major='major1',
             projRole=['nuts']
         )
-        s.assertTrue(userAuthd == False, 'userAuthd: ' + str(userAuthd))
+        s.assertTrue(userAuthd == 'not', 'userAuthd: ' + str(userAuthd))
     
     def test_removeNonAuthdDirs (s):
         viewRoot = os.path.join(dataRoot, 'viewBasic')
@@ -268,7 +277,7 @@ class Test_projectList(unittest.TestCase):
                 appCtx.dataServer)
         #print 'r.status_code:', str(r.status_code)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = { 'authorized': True }
+        expected = { 'authorized': 'view' }
         dataDict = json.loads(r.data)
         #print 'dataDict:', dataDict
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
@@ -282,7 +291,7 @@ class Test_projectList(unittest.TestCase):
                 appCtx.dataServer)
         #print 'r.status_code:', str(r.status_code)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = { 'authorized': True }
+        expected = { 'authorized': 'view' }
         dataDict = json.loads(r.data)
         #print 'dataDict:', dataDict
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
@@ -296,11 +305,25 @@ class Test_projectList(unittest.TestCase):
                 appCtx.dataServer)
         #print 'r.status_code:', str(r.status_code)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = { 'authorized': True }
+        expected = { 'authorized': 'view' }
         dataDict = json.loads(r.data)
         #print 'dataDict:', dataDict
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
     
+    def test_auth_route_userOwned (s):
+        www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, userDir)
+        try:
+            r = s.app.get('/mapAuth/mapId/user_ucsc.edu/email/user@ucsc.edu')
+        except:
+            s.assertEqual('', 'Unable to connect to unit test data server: ' +
+                appCtx.dataServer)
+        #print 'r.status_code:', str(r.status_code)
+        s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
+        expected = { 'authorized': 'edit' }
+        dataDict = json.loads(r.data)
+        #print 'dataDict:', dataDict
+        s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
+
     def test_auth_route_noEmailNorKeyword (s):
         www.appCtx.viewDir = os.path.join(www.appCtx.dataRoot, 'viewBasic')
         try:
@@ -310,7 +333,7 @@ class Test_projectList(unittest.TestCase):
                 appCtx.dataServer)
         #print 'r.status_code:', str(r.status_code)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = { 'authorized': True }
+        expected = { 'authorized': 'view' }
         dataDict = json.loads(r.data)
         #print 'dataDict:', dataDict
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
@@ -334,7 +357,7 @@ class Test_projectList(unittest.TestCase):
                 appCtx.dataServer)
         #print 'r.status_code:', str(r.status_code)
         s.assertTrue(r.status_code == 200, 'r.status_code: ' + str(r.status_code))
-        expected = { 'authorized': False }
+        expected = { 'authorized': 'not' }
         dataDict = json.loads(r.data)
         #print 'dataDict:', dataDict
         s.assertTrue(expected == dataDict, 'dataDict: ' + str(dataDict))
@@ -368,6 +391,7 @@ class Test_projectList(unittest.TestCase):
             ['major1', ['major1a', 'major1b']],
             ['major2', ['major2a', 'major2b']],
             ['major3'],
+            ['major4'],
             [userDir]
         ]
         dataDict = json.loads(r.data)

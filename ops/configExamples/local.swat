@@ -1,6 +1,5 @@
 
 export ADMIN_EMAIL=swat@soe.ucsc.edu
-export ALLOWABLE_VIEWERS=http://localhost:3333,https://localhost:3333
 export BACK_OR_FOREGROUND=FORE
 #export CA=/data/certs/chain.crt
 #export CERT=/data/certs/hexdev.crt

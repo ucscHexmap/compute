@@ -10,15 +10,22 @@ if [ -z $INSTALL_TAR_PATH ]; then
 fi
 
 echo "untarring..."
-rm -rf \
+rm -r -f \
     $HEXCALC/bin \
     $HEXCALC/build \
     $HEXCALC/calc \
     $HEXCALC/ops/configExamples \
     $HEXCALC/standalone \
     $HEXCALC/tests \
-    $HEXCALC/www
+    $HEXCALC/www \
+    >/dev/null 2>&1
 
 tar -xf $INSTALL_TAR_PATH -C $HEXCALC
 
-echo "Untar complete. Issue 'start' to restart"
+PROTECTED_PORT=false
+if [ "$PORT" = "443" ] || [ "$PORT" = "80" ]; then
+    echo "Untar complete. Issue 'sudo startAsRoot' to (re)start server"
+else
+    echo "Untar complete. Issue 'start' to (re)start server"
+fi
+

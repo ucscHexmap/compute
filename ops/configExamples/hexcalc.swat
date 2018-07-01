@@ -1,7 +1,6 @@
 
 BASE=/cluster/home/swat
 export ADMIN_EMAIL=swat@soe.ucsc.edu
-export ALLOWABLE_VIEWERS=https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229,http://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229
 export BACK_OR_FOREGROUND=BACK
 export CA=$BASE/certs/hexcalc/chain.crt
 export CERT=$BASE/certs/hexcalc/server.crt
@@ -18,6 +17,7 @@ export PORT=8442
 export PYENV=$HEXCALC/../envHexcalc
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 export USE_HTTPS=1
+export VIEW_SERVER_ADDRS=132.249.245.115
 export VIEWER_URL=https://tumormap.ucsc.edu:8222
 export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
 

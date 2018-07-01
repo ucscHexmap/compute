@@ -44,45 +44,65 @@ def _isUserInRole (userRoles, projRoles):
 
     return False
 
-def _isUserAuthorized (userEmail, userRole, major, projRole):
+def _userAuthorization (userEmail, userRole, major, projRole):
 
-    # Is this user authorized to see this project?
+    # Is this user authorized to view or edit this project?
     #
     # @param userEmail: email of the user used in locating her projects or None
-    # @param userRole: the roles of this user as alist
+    # @param userRole: the roles of this user as a list
     # @param major: the first portion of the two-level map names
     # @param projRole: the roles of this project as a list
-    # @returns: True when the user is authorized to see this map group;
-    #           False otherwise
+    # @returns: 'view' when the user is authorized to see this map group;
+    #           'edit' when the user is authorized to edit this map group;
+    #           'not'' otherwise
 
-    ALL_ACCESS = ['dev', 'viewAll'];
+    VIEW_ACCESS = ['dev', 'viewAll'];
     
+    # When not logged in, only public projects may be viewed.
+    if userEmail == None:
+        if 'public' in projRole:
+            return 'view'
+        else:
+            return 'not'
+    
+    # A user can view and edit her personal maps.
+    if cleanFileName(userEmail) == major:
+        return 'edit'
+
+    # No role at this point means only public projects may be viewed.
+    if userRole == []:
+        if 'public' in projRole:
+            return 'view'
+        else:
+            return 'not'
+    
+    # Authorize edit if the user has the edit role for a role of this project.
+    for role in userRole:
+        #print 'projRole:', projRole
+        #print 'role:', role
+        roleI = role.find('Edit')
+        #print 'roleI:', roleI
+        if roleI > -1:
+            viewRole = role[0:roleI]
+            #print 'viewRole:', viewRole
+            if viewRole in projRole:
+                #print 'viewRole in projRole'
+                return 'edit'
+
     # Public projects with are viewable by anyone.
     if 'public' in projRole:
-        return True
-    
-    # When not logged in, only public projects may be seen.
-    if userEmail == None:
-        return False
-    
-    # A user can view her personal maps.
-    if cleanFileName(userEmail) == major:
-        return True
-    
-    # No role at this point means no authorization.
-    if userRole == []:
-        return False
+        return 'view'
 
-    # Authorize anything if the user has all access.
-    if _isUserInRole(userRole, ALL_ACCESS):
-        return True
+    # Authorize viewing if the user has all view access.
+    if _isUserInRole(userRole, VIEW_ACCESS):
+        return 'view'
 
-    # Authorize if the user is in the given role
+    # Authorize viewing if the user is in the given role
     if _isUserInRole(userRole, projRole):
-        return True
+        return 'view'
 
     # Not authorized
-    return False
+    return 'not'
 
 def _rolesToList(roles):
 
@@ -111,7 +131,7 @@ def _getProjectRoles (project, viewDir):
         # Bad json in the meta data.
         raise ErrorResp('bad json in meta data for map: ' + project)
         return []
-
+    
     return _rolesToList(roles)
 
 def _removeNonAuthdDirs (majors, userEmail, userRoles, viewDir):
@@ -120,7 +140,8 @@ def _removeNonAuthdDirs (majors, userEmail, userRoles, viewDir):
     goodDirs = []
     for major in majors:
         projRoles = _getProjectRoles(major, viewDir)
-        if _isUserAuthorized(userEmail, userRoles, major, projRoles):
+        auth = _userAuthorization(userEmail, userRoles, major, projRoles)
+        if auth != 'not':
             goodDirs.append(major)
 
     return goodDirs
@@ -139,7 +160,7 @@ def authorize (project, email, userRole, viewDir):
     major = project.split('/')[0]
     return {
         'authorized':
-            _isUserAuthorized (
+            _userAuthorization (
                 email,
                 userRole,
                 major,
@@ -171,7 +192,7 @@ def get (userEmail, userRoles, viewDir):
     
     # Get the major directories authorized by the roles.
     majors = _removeNonAuthdDirs(allMajors, userEmail, userRoles, viewDir)
-    
+
     # Build the project list from their major and minor components.
     projects = _addMinors(majors, viewDir)
     

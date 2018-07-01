@@ -1,9 +1,6 @@
 
 export ADMIN_EMAIL=hexmap@ucsc.edu
 
-# Which viewers are allowed to request certain data.
-export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229
-
 # Whether the server runs with nohup, or runs directly on your terminal.
 #"FORE" or "BACK"
 export BACK_OR_FOREGROUND=BACK
@@ -59,6 +56,9 @@ export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 
 # HTTPS=1 if https is desired. Otherwise server boots to HTTP.
 export USE_HTTPS=1 
+
+# View servers allowed to send delete map requests.
+export VIEW_SERVER_ADDRS=132.249.245.115
 
 # Bookmarks are created on the view server from this server.
 export VIEWER_URL=https://tumormap.ucsc.edu

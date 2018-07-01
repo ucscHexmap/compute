@@ -35,7 +35,7 @@ appCtxDict = {
 appCtx = Context(appCtxDict)
 appCtxUnicode = json.loads(json.dumps(appCtxDict))
 
-ctx1NoAppUnicode = json.loads(json.dumps({'prop1': 1}))
+ctx1NoAppUnicode = json.loads(json.dumps({'email': 'user1', 'prop1': 1}))
 ctxdict = {'app': appCtx}
 ctx1 = Context(ctxdict)
 ctx1.prop1 = 1
@@ -45,7 +45,7 @@ ctx3 = Context(ctxdict)
 ctx3.prop3 = 3
 
 # Tasks to execute as stored in the queue.
-task1 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":' + str(appCtx.dev) + ',"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
+task1 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":' + str(appCtx.dev) + ',"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"email":"user1","prop1":1},"operation":"jobTestHelper","parms":{"parms1":"parms1"}}'
 task2 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop2":2},"operation":"operation2","parms":"parms2"}'
 task3 = '{"ctx":{"app":{"adminEmail":"admin@x.y","dev":1,"jobQueuePath":"' + quePath + '","jobStatusUrl":"' + jobStatusUrl + '","unitTest":true},"prop3":3},"operation":"operation3","parms":"parms3"}'
 

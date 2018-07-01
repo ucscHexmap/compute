@@ -118,7 +118,7 @@ def authGroup(data):
 
 def cleanFileName (dirty):
 
-    # Make a directory or file name out of some string
+    # Convert a string to a clean string that may be used as a file name.
     # Valid characters:
     #     a-z, A-Z, 0-9, dash (-), dot (.), underscore (_)
     # All other characters are replaced with underscores.

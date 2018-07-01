@@ -1,9 +1,6 @@
 
 export ADMIN_EMAIL=hexmap@ucsc.edu
 
-# Which viewers are allowed to request certain data.
-export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu:8222,https://hexdev.sdsc.edu:8229
-
 # Whether the server runs with nohup, or runs directly on your terminal.
 #"FORE" or "BACK"
 export BACK_OR_FOREGROUND=BACK

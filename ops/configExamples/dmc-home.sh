@@ -1,6 +1,5 @@
 
 export ADMIN_EMAIL=dmccoll@ucsc.edu
-export ALLOWABLE_VIEWERS=https://tumormap.ucsc.edu,https://hexdev.sdsc.edu,http://localhost:3333
 export BACK_OR_FOREGROUND=FORE #"FORE" or "BACK"
 export CA= #Needed for https
 export CERT= #Needed for https
