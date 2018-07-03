@@ -305,6 +305,17 @@ def jobStatusRoute(jobId):
     raise SuccessResp(job.getStatus(jobId, appCtx.jobQueuePath))
 
 
+# Handle route to save a portion of a colormap.
+@app.route('/updateColor', methods=['POST'])
+def updateColor():
+
+    # Verify this is from the allowed view server
+    if not request.environ['REMOTE_ADDR'] in appCtx.viewServerAddrs:
+        raise ErrorResp('', 404)
+    
+    raise SuccessResp(projectEdit.updateColor(validatePost(), appCtx))
+
+
 # Handle highlight attrs & nodes route
 @app.route('/highlightAttrNode', methods=['POST'])
 def highlightAttrNodeRoute():
