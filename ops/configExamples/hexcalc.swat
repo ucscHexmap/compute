@@ -1,18 +1,19 @@
 
-BASE=/cluster/home/swat
+CERTS=/cluster/home/swat/certs/hexcalc
+
 export ADMIN_EMAIL=swat@soe.ucsc.edu
 export BACK_OR_FOREGROUND=BACK
-export CA=$BASE/certs/hexcalc/chain.crt
-export CERT=$BASE/certs/hexcalc/server.crt
-export DATA_ROOT=$BASE/dev/data
+export CA=$CERTS/chain.crt
+export CERT=$CERTS/server.crt
+export DATA_ROOT=$HOME/dev/data
 export DEBUG=1
 export DEV=1
-export DRL_PATH=$BASE/packagesHexcalc/drl-graph-layout/bin
+export DRL_PATH=$HOME/packagesHexcalc/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HEX_UID=swat
 export HEX_GID=protein
 export INSTALL_TAR_PATH=$HEXCALC/ops/install.tgz
-export KEY=$BASE/certs/hexcalc/server.key
+export KEY=$CERTS/server.key
 export PORT=8442
 export PYENV=$HEXCALC/../envHexcalc
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot

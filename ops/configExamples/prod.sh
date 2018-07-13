@@ -1,4 +1,8 @@
 
+TOOLS=/cluster/home/swat
+ROOT=/data
+CERTS=$ROOT/certs
+
 export ADMIN_EMAIL=hexmap@ucsc.edu
 
 # Whether the server runs with nohup, or runs directly on your terminal.
@@ -6,20 +10,19 @@ export ADMIN_EMAIL=hexmap@ucsc.edu
 export BACK_OR_FOREGROUND=BACK
 
 # https certificate authority chain
-export CA=/data/certs/chain.crt
+export CA=$CERTS/chain.crt
 
 # https public certificate
-export CERT=/data/certs/server.crt
+export CERT=$CERTS/server.crt
 
 # Points to the map data that will be served.
-#export DATA_ROOT=/hive/groups/hexmap/prod/data
-export DATA_ROOT=/data/data
+export DATA_ROOT=$ROOT/data
 
 # Logging debug level when 1, when 0 production logging level
 export DEBUG=0
 
 # Add DRL to the path.
-export DRL_PATH=/cluster/home/swat/packagesHexcalc/drl-graph-layout/bin
+export DRL_PATH=$TOOLS/packagesHexcalc/drl-graph-layout/bin
 
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
@@ -31,10 +34,10 @@ export HEX_UID=hexmap
 export HEX_GID=protein
 
 # Path to the install tar file.
-export INSTALL_TAR_PATH=/cluster/home/swat/dev/compute/ops/install.tgz
+export INSTALL_TAR_PATH=$TOOLS/dev/compute/ops/install.tgz
 
 # https private key
-export KEY=/data/certs/server.key
+export KEY=$CERTS/server.key
 
 # Only needed for some centos. Centos complains about missing a shared
 # library when calling uwsgi. The solution is to provide sym lynks
@@ -50,9 +53,6 @@ export PYENV=$HEXCALC/../env
 
 # Path to the test data root. 
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
-
-# Define path to tete executable
-#export TETE_PATH=/cluster/home/swat/tete_copy/tete
 
 # HTTPS=1 if https is desired. Otherwise server boots to HTTP.
 export USE_HTTPS=1 
