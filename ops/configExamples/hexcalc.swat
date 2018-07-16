@@ -1,14 +1,15 @@
 
-CERTS=/cluster/home/swat/certs/hexcalc
+TOOLS=/data/home/swat
+CERTS=$TOOLS/certs/hexcalc
 
 export ADMIN_EMAIL=swat@soe.ucsc.edu
 export BACK_OR_FOREGROUND=BACK
 export CA=$CERTS/chain.crt
 export CERT=$CERTS/server.crt
-export DATA_ROOT=$HOME/dev/data
+export DATA_ROOT=$TOOLS/dev/data
 export DEBUG=1
 export DEV=1
-export DRL_PATH=$HOME/packagesHexcalc/drl-graph-layout/bin
+export DRL_PATH=$TOOLS/packagesHexcalc/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HEX_UID=swat
 export HEX_GID=protein

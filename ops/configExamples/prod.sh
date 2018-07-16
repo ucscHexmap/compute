@@ -1,5 +1,4 @@
 
-TOOLS=/cluster/home/swat
 ROOT=/data
 CERTS=$ROOT/certs
 
@@ -22,7 +21,7 @@ export DATA_ROOT=$ROOT/data
 export DEBUG=0
 
 # Add DRL to the path.
-export DRL_PATH=$TOOLS/packagesHexcalc/drl-graph-layout/bin
+export DRL_PATH=$ROOT/packages/drl-graph-layout/bin
 
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
@@ -34,7 +33,7 @@ export HEX_UID=hexmap
 export HEX_GID=protein
 
 # Path to the install tar file.
-export INSTALL_TAR_PATH=$TOOLS/dev/compute/ops/install.tgz
+export INSTALL_TAR_PATH=/data/home/swat/dev/compute/ops/install.tgz
 
 # https private key
 export KEY=$CERTS/server.key
@@ -47,7 +46,7 @@ export KEY=$CERTS/server.key
 # Port on which the server will listen.
 export PORT=443
 
-# This path has to be above/equal to your 'compute' dir in the
+# This path needs to be above/equal to your 'compute' dir in the
 # file hierarchy.
 export PYENV=$HEXCALC/../env
 
@@ -57,13 +56,13 @@ export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 # HTTPS=1 if https is desired. Otherwise server boots to HTTP.
 export USE_HTTPS=1 
 
-# View servers allowed to send delete map requests.
+# View servers allowed to edit maps.
 export VIEW_SERVER_ADDRS=132.249.245.115
 
-# Bookmarks are created on the view server from this server.
+# Bookmarks are created by this view server.
 export VIEWER_URL=https://tumormap.ucsc.edu
 
-# Communication port
+# Communication port.
 export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
 
 
