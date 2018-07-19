@@ -1,6 +1,7 @@
 
 ROOT=/data
 CERTS=$ROOT/certs
+TOOLS=/data/home/swat
 
 export ADMIN_EMAIL=hexmap@ucsc.edu
 
@@ -21,7 +22,7 @@ export DATA_ROOT=$ROOT/data
 export DEBUG=0
 
 # Add DRL to the path.
-export DRL_PATH=$ROOT/packages/drl-graph-layout/bin
+export DRLPATH=$ROOT/packages/drl-graph-layout/bin
 
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
@@ -33,7 +34,7 @@ export HEX_UID=hexmap
 export HEX_GID=protein
 
 # Path to the install tar file.
-export INSTALL_TAR_PATH=/data/home/swat/dev/compute/ops/install.tgz
+export INSTALL_TAR_PATH=$TOOLS/dev/compute/ops/install.tgz
 
 # https private key
 export KEY=$CERTS/server.key

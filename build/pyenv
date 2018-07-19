@@ -1,10 +1,17 @@
 #!/bin/bash
 # Make your virtualenv as specified by $PYENV path
-# $1: the full path to the config file.
-# $2: the optional path to the localpy bin dir, defaults to $HOME/.local/bin
-source $1
+# $1: the optional path to the localpy bin dir, defaults to $HOME/.local/bin
 
-LOCALPY_BIN=$2
+# Check for the main env var.
+if [[ -z $HEXCALC ]]; then
+   echo "Environment variable HEXCALC must be defined to run this script."
+   echo "Do you want to run sudo startAsRoot?"
+   exit 1
+fi
+
+source $HEXCALC/ops/config.sh
+
+LOCALPY_BIN=$1
 if [ $(uname -s) == "Darwin" ]; then  # On macOS this is always here
     LOCALPY_BIN=/usr/bin
 elif [ -z ${LOCALPY_BIN} ]; then # use the default
@@ -31,7 +38,7 @@ fi
 # Add calc, www, and db dirs to the python path in the virtual environment
 # TODO the below path should be more strict by not including PATH from user's
 # environment
-echo "export PATH=$PYENV/bin:$PATH" >> $PYENV/bin/activate
+echo "export PATH=$PYENV/bin:$DRLPATH:$PATH" >> $PYENV/bin/activate
 echo "export PYTHONPATH=$HEXCALC/www:$HEXCALC/calc:$HEXCALC/db:$TETE_PATH:$DRLPATH" >> $PYENV/bin/activate
 
 cd $HEXCALC
