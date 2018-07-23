@@ -80,7 +80,6 @@ rm -f $HEXCALC/nohup.out  >/dev/null 2>&1
 
 # Start the server.
 echo starting...
-rm -q $HEXCALC/nohup.out  >/dev/null 2>&1
 LOGARGS=' --logto2 '$HEXCALC/ops/log
 nohup uwsgi $BASEARGS $SOCKETARGS $LOGARGS &
 
@@ -99,7 +98,6 @@ done
 
 if [ $RUNNING == 0 ]; then
     echo 'Error: giving up waiting for server to start.'
-    exit 1
 fi
 
 if [ "$PROTECTED_PORT" = true ]; then

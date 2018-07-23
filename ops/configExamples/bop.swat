@@ -1,10 +1,8 @@
+# change for switch from hexmap-new to tap:
+# VIEWER_URL
+# WWW_SOCKET
 
 TOOLS=/soe/swat
-HOST=bop.soe.usce.edu
-#HOST=hexcalc.ucsc.edu
-export HEX_GID=staff
-export VIEW_SERVER_ADDRS=TBD
-
 CERTS=$TOOLS/certs/hexcalc
 
 export ADMIN_EMAIL=swat@soe.ucsc.edu
@@ -17,16 +15,18 @@ export DEV=1
 export DRLPATH=$TOOLS/packagesHexcalc/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HEX_UID=swat
-#export HEX_GID=sysbio
+export HEX_GID=sysbio
 export INSTALL_TAR_PATH=$HEXCALC/ops/install.tgz
 export KEY=$CERTS/server.key
 export PORT=8442
 export PYENV=$HEXCALC/../env
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 export USE_HTTPS=0
-export VIEW_SERVER_ADDRS=132.249.245.115
+export VIEW_SERVER_ADDRS=128.114.47.67
+export VIEWER_URL=https://tap.soe.ucsc.edu:8222
 #export VIEWER_URL=https://tumormap.ucsc.edu:8222
-export WWW_SOCKET=$HOST:$PORT
+export WWW_SOCKET=bop.soe.usce.edu:$PORT
+#export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then
