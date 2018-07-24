@@ -28,7 +28,7 @@ export DRLPATH=$ROOT/packages/drl-graph-layout/bin
 export FLASK_DEBUG=0
 
 # Username under which the data server will run, for checking existence of
-server processes.
+# server processes.
 export HEX_UID=hexmap
 
 # User group to own server processes on protected ports.
