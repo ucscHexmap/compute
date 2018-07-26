@@ -16,6 +16,7 @@ export TETE_PATH=/cluster/home/swat/tete_copy/tete
 export USE_HTTPS=1
 export VIEWER_URL=https://hexdev.sdsc.edu:8222
 export WWW_SOCKET=hexdev.sdsc.edu:8332
+export DATA_HOST_PORT=$WWW_SOCKET
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then

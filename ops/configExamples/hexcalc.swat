@@ -22,6 +22,7 @@ export USE_HTTPS=1
 export VIEW_SERVER_ADDRS=132.249.245.115
 export VIEWER_URL=https://tumormap.ucsc.edu:8222
 export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
+export DATA_HOST_PORT=$WWW_SOCKET
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then

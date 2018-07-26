@@ -28,6 +28,7 @@ export VIEWER_URL=https://tap.soe.ucsc.edu:8222
 #export VIEWER_URL=https://tumormap.ucsc.edu:8222
 export WWW_SOCKET=bop.soe.ucsc.edu:$PORT
 #export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
+export DATA_HOST_PORT=hexcalc.ucsc.edu:$PORT
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then

@@ -17,6 +17,7 @@ export TETE_PATH=$HOME/pypackages/tete
 export USE_HTTPS=0 #Set to one if HTTPS desired. Otherwise server boots to HTTP
 export VIEWER_URL=http://localhost:3333
 export WWW_SOCKET=127.0.0.1:$PORT
+export DATA_HOST_PORT=$WWW_SOCKET
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then

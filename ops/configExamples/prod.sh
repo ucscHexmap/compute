@@ -65,7 +65,7 @@ export VIEWER_URL=https://tumormap.ucsc.edu
 
 # Communication port.
 export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
-
+export DATA_HOST_PORT=$WWW_SOCKET
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then
