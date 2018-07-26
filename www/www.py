@@ -45,7 +45,9 @@ def contextInit ():
         os.path.join(appCtx.databasePath, 'jobQueue.db'))
     appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
     appCtx.viewDir = os.path.join(appCtx.dataRoot, 'view')
-    url = os.environ['WWW_SOCKET']
+    url = os.environ['DATA_HOST_PORT']
+    #url = os.environ['WWW_SOCKET']
+
     if os.environ['USE_HTTPS'] == '1':
         appCtx.dataServer = 'https://' + url
     else:
