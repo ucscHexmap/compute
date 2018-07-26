@@ -9,7 +9,8 @@ export ADMIN_EMAIL=swat@soe.ucsc.edu
 export BACK_OR_FOREGROUND=BACK
 export CA=$CERTS/chain.crt
 export CERT=$CERTS/server.crt
-export DATA_ROOT=$TOOLS/dev/data
+export DATA_ROOT=/home/hexmap/data/data
+#export DATA_ROOT=$TOOLS/dev/data
 export DEBUG=1
 export DEV=1
 export DRLPATH=$TOOLS/packagesHexcalc/drl-graph-layout/bin
@@ -25,7 +26,7 @@ export USE_HTTPS=0
 export VIEW_SERVER_ADDRS=128.114.47.67
 export VIEWER_URL=https://tap.soe.ucsc.edu:8222
 #export VIEWER_URL=https://tumormap.ucsc.edu:8222
-export WWW_SOCKET=bop.soe.usce.edu:$PORT
+export WWW_SOCKET=bop.soe.ucsc.edu:$PORT
 #export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
 
 # If the python environment is present then open it up.

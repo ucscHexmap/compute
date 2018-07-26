@@ -1,10 +1,15 @@
 
 Scripts in this directory:
 
-HTTP server operations:
-    start
-    stop
-    restart
+Server operations:
+    cd $HEXCALC
+    bin/start
+    bin/stop
+    bin/restart
+
+Or for server operations for protected ports:
+    sudo $HEXCALC/bin/start
+    sudo $HEXCALC/bin/stop
 
 deployWww: make a tar file to update another installation
 
