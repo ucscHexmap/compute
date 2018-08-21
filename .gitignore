@@ -2,7 +2,8 @@
 *.tgz
 *pyc
 *save
-ops/log*
+ops/log
+ops/logsPrev/20*
 ops/config.sh
 ops/pid
 run

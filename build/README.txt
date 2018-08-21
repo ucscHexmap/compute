@@ -1,6 +1,5 @@
-Use these scripts to build the python environment. The localy python should
-only be needed once while the pyenv is built upon each change in python
-libraries or versions.
+Use these scripts to build the python environment. localpy should be needed once
+per pyenv build due to library or version changes.
 
 Order of execution:
 
@@ -13,15 +12,13 @@ rm-localpy <install-dir>
 Remove a local python install if needed to clean up a bad install.
 <install-dir> a full path to the python install directory.
 
-pyenv <config-file> <localpy-bin-dir>
+pyenv
 Build a python virtual environment for this project.
-<config-file> should be the full path to your config file in compute/config.
-<localpy-bin-dir> the full path to the localpy bin dir.
 
 --------------------------------------------------------------
 
 MACOS NOTES:
-Install some critical tools before you do anything else.
+Install wget and openssl before you do anything else.
 for MacOS 10.12.6 Sierra:
 - install macPorts from:
     https://github.com/macports/macports-base/releases/download/v2.4.2/MacPorts-2.4.2-10.12-Sierra.pkg

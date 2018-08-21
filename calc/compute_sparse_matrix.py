@@ -18,7 +18,7 @@ import sklearn.metrics.pairwise as sklp
 import scipy.stats
 import pandas as pd
 import numpy as np
-from utils import truncateNP
+#from utils import truncateNP
 from utils import duplicates_check
 from utils import readPandas
 
@@ -360,7 +360,9 @@ def compute_similarities(dt, sample_labels, metric_type, num_jobs,
     # handle floats differently.
     # In essence, this function represents our distrust in the last decimal of the floating point
     # representation.
-    x_corr = truncateNP(x_corr,11)
+    # Commented out as this is giving memory errors for some users with large
+    # data (50,000 x 50,000).
+    #x_corr = truncateNP(x_corr,11)
 
     if not(log == None):
         print >> log, "Resulting similarity matrix: "+str(len(x_corr))+" x "+str(len(x_corr[0]))

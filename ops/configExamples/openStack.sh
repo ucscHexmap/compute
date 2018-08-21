@@ -19,5 +19,6 @@ S=/data/certs/cellAtlas
 CA=$S/chain.crt
 CERT=$S/cellatlas.crt
 WWW_SOCKET=swat-calc:8332
+export DATA_HOST_PORT=$WWW_SOCKET
 KEY=$S/cellatlas.key
 PID_PATH=$WWW_PATH/../www.pid

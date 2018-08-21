@@ -18,7 +18,7 @@ export DATA_ROOT=/hive/groups/hexmap/prod/data
 export DEBUG=0
 
 # Add DRL to the path.
-export DRL_PATH=/cluster/home/swat/packages/drl-graph-layout/bin
+export DRLPATH=/cluster/home/swat/packages/drl-graph-layout/bin
 
 # Controls amount of chatter on server output.
 export FLASK_DEBUG=0
@@ -49,6 +49,7 @@ export VIEWER_URL=https://tumormap.ucsc.edu
 
 # Communication port
 export WWW_SOCKET=tumormap.ucsc.edu:8332
+export DATA_HOST_PORT=$WWW_SOCKET
 
 
 # If the python environment is present then open it up.

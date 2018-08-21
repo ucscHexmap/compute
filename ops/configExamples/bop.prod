@@ -1,7 +1,13 @@
 
-ROOT=/data
+ROOT=/home/hexmap/data
+TOOLS=/soe/swat
+export VIEW_SERVER_ADDRS=128.114.47.67
+#export VIEWER_URL=https://tap.soe.ucsc.edu
+export PORT=443
+#export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
+export WWW_SOCKET=bop.soe.ucsc.edu:$PORT
+
 CERTS=$ROOT/certs
-TOOLS=/data/home/swat
 
 export ADMIN_EMAIL=hexmap@ucsc.edu
 
@@ -32,9 +38,9 @@ export FLASK_DEBUG=0
 export HEX_UID=hexmap
 
 # User group to own server processes on protected ports.
-export HEX_GID=protein
+export HEX_GID=sysbio
 
-# Path to the install tar file when doing upgrades from a development data server.
+# Path to the install tar file when doing  upgrades from a development data server.
 export INSTALL_TAR_PATH=$TOOLS/dev/compute/ops/install.tgz
 
 # https private key
@@ -45,7 +51,7 @@ export KEY=$CERTS/server.key
 #export LD_LIBRARY_PATH=
 
 # Port on which the server will listen.
-export PORT=443
+#export PORT=443
 
 # This path needs to be above or equal to your 'compute' dir in the
 # file hierarchy.
@@ -55,17 +61,18 @@ export PYENV=$HEXCALC/../env
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 
 # HTTPS=1 if https is desired. Otherwise server boots to HTTP.
-export USE_HTTPS=1 
+export USE_HTTPS=1
 
 # View servers allowed to edit maps.
-export VIEW_SERVER_ADDRS=132.249.245.115
+#export VIEW_SERVER_ADDRS=132.249.245.115
 
 # Bookmarks are created by this view server.
 export VIEWER_URL=https://tumormap.ucsc.edu
 
 # Communication port.
-export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
-export DATA_HOST_PORT=$WWW_SOCKET
+#export WWW_SOCKET=bop.soe.ucsc.edu:$PORT
+#export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
+export DATA_HOST_PORT=hexcalc.ucsc.edu:$PORT
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then

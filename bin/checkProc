@@ -1,8 +1,6 @@
 #!/bin/bash
 
-# Show the server processes running.
-source $HEXCALC/ops/config.sh
-
+# Check for the server processes running.
 if pgrep -U $HEX_UID uwsgi >/dev/null 2>&1; then
     # is running
     exit 1

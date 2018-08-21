@@ -1,28 +1,34 @@
+# change for switch from hexmap-new to tap:
+# VIEWER_URL
+# WWW_SOCKET
 
-TOOLS=/data/home/swat
+TOOLS=/soe/swat
 CERTS=$TOOLS/certs/hexcalc
 
 export ADMIN_EMAIL=swat@soe.ucsc.edu
 export BACK_OR_FOREGROUND=BACK
 export CA=$CERTS/chain.crt
 export CERT=$CERTS/server.crt
-export DATA_ROOT=$TOOLS/dev/data
+export DATA_ROOT=/home/hexmap/data/data
+#export DATA_ROOT=$TOOLS/dev/data
 export DEBUG=1
 export DEV=1
 export DRLPATH=$TOOLS/packagesHexcalc/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HEX_UID=swat
-export HEX_GID=protein
+export HEX_GID=sysbio
 export INSTALL_TAR_PATH=$HEXCALC/ops/install.tgz
 export KEY=$CERTS/server.key
 export PORT=8442
 export PYENV=$HEXCALC/../env
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
-export USE_HTTPS=1
-export VIEW_SERVER_ADDRS=132.249.245.115
-export VIEWER_URL=https://tumormap.ucsc.edu:8222
-export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
-export DATA_HOST_PORT=$WWW_SOCKET
+export USE_HTTPS=0
+export VIEW_SERVER_ADDRS=128.114.47.67
+export VIEWER_URL=https://tap.soe.ucsc.edu:8222
+#export VIEWER_URL=https://tumormap.ucsc.edu:8222
+export WWW_SOCKET=bop.soe.ucsc.edu:$PORT
+#export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
+export DATA_HOST_PORT=hexcalc.ucsc.edu:$PORT
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then

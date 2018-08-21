@@ -70,8 +70,11 @@ def delete (project, userEmail, userRole, appCtx):
             # we only want to remove that one map and not the group dir.
             # Account for the meta.json file that must be present to obtain
             # edit authorization.
-            if minor and len(os.listdir(dir)) > 2:
-                dir = path.join(dir, minor)
+            hasMeta = os.path.isfile(dir + 'meta.json')
+            length = len(os.listdir(dir))
+            if minor:
+                if (hasMeta and length > 2) or (not hasMeta and length > 1):
+                    dir = path.join(dir, minor)
             shutil.rmtree(dir)
         except:
             pass
