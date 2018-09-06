@@ -1,6 +1,6 @@
 #!/usr/bin/env python2.7
 
-# This tests the job functionality without going through the server.
+# This tests the job functionality without going through HTTP.
 
 import os
 import datetime

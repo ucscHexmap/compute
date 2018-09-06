@@ -55,7 +55,7 @@ def readPandas(datafile):
 def dimension_check(df):
     if df.shape[1] == 0 or df.shape[0] == 0:
         raise ValueError("The given data was read in as having 0 "
-                         "dimensions. Is it tab separated? If so, does"
+                         "dimensions. Is it tab separated? If so, does "
                          "it have more than one row or column?")
 
 
