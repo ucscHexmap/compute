@@ -58,7 +58,7 @@ export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 export USE_HTTPS=1 
 
 # View servers allowed to edit maps.
-export VIEW_SERVER_ADDRS=132.249.245.115
+export VIEW_SERVER_ADDRS=128.114.198.35
 
 # Bookmarks are created by this view server.
 export VIEWER_URL=https://tumormap.ucsc.edu
