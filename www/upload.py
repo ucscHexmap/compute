@@ -5,79 +5,125 @@ import os, traceback, datetime, json, importlib, logging
 from util_web import Context, ErrorResp
 from uploadDb import UploadDb
 
-# TODO can use set the db path just once and not include it in all of the
-# below calls?
+def _getSubDirs (path):
 
-def add (email, group, name, size, uploadPath, db):
-
-    # Add a file's information.
-    #
-    # @param      email: an email address as owner of files and results
-    # @param      group: an access group or clean email/username
-    # @param       name: user's basename of file
-    # @param       size: size in bytes
-    # @param uploadPath: absolute path to the upload directory
-    # @param         db: database instance
-    # @returns: uploadId
-    print 'db:', db
-    print 'email, group, name, size:', email, group, name, size
-    uploadId = UploadDb(db).add(email, group, name, size, uploadPath)
-    return { uploadId: uploadId }
+    # Get immediate sub directories, removing any hidden dirs.
+    allSubDirs = next(os.walk(path))[1]
+    subDirs = filter(lambda x: x[0] != '.', allSubDirs)
+    return list(subDirs)
 
 
-def getAll (uploadPath, db):
+def _getFilesDirs (path):
 
-    # Get all upload information of files in the upload area.
-    #
-    # @param uploadPath: absolute path to the upload directory
-    # @param         db: database instance
-    # @returns: an array of uploadInfo in an object
-    return { 'uploadInfo': UploadDb(db).getAll(uploadPath) }
-
-
-def getGroupFiles (group, uploadPath, db):
-
-    # Retrieve the file information for a group or user.
-    #
-    # @param      group: the access group or clean email/username
-    # @param uploadPath: absolute path to the upload directory
-    # @param         db: database instance
-    # @returns: a dict of information for this groups files.
-    return UploadDb(db).getGroupFiles(group, uploadPath)
+    # Get immediate sub directories and files, removing any hidden dirs/files.
+    allFilesDirs = next(os.walk(path))
+    dirs = filter(lambda x: x[0] != '.', allFilesDirs[1])
+    files = filter(lambda x: x[0] != '.', allFilesDirs[2])
+    return list(files) + list(dirs)
 
 
-def getPublicFiles (uploadPath, db):
+def _getFiles (path):
 
-    # Retrieve the file information for a group or user.
-    #
-    # @param      group: the access group or clean email/username
-    # @param uploadPath: absolute path to the upload directory
-    # @param         db: database instance
-    # @returns: a dict of information for this groups files.
-    return UploadDb(db).getPublicFiles(uploadPath)
+    # Get immediate sub files, removing any hidden files.
+    allFiles = next(os.walk(path))[2]
+    files = filter(lambda x: x[0] != '.', allFiles)
+    return list(files)
 
 
-def updateFormat (id, format, uploadPath, db):
-
-    # Update a file's format.
-    #
-    # @param         id: an access group or clean email/username
-    # @param     format: file format
-    # @param uploadPath: absolute path to the upload directory
-    # @param         db: database instance
-    # @returns: nothing
+def _getEmail(major):
     
-    UploadDb(db).updateFormat(id, format, uploadPath)
+    # Construct an email address if possible.
+    # a_b.c -> a@b.c
+    email = None
+    index = major.find('_', 1, len(major)-3)
+    if index > 0:
+        email = major.replace('_', '@', 1)
+    return email
 
 
-def updateStatus (id, status, uploadPath, db):
+def _getFileData(uploadPath, major, file, minor=None):
 
-    # Update a file upload status.
-    #
-    # @param         id: an access group or clean email/username
-    # @param     status: a valid status
-    # @param uploadPath: absolute path to the upload directory
-    # @param         db: database instance
-    # @returns: nothing
+    # Build the data for one file.
+    # Get the file stats.
+    stat = os.stat(os.path.join(uploadPath, major, minor, filePath))
     
-    UploadDb(db).updateFormat(id, status, uploadPath)
+    # TODO: basename is not really a basename any more due to the minor dir.
+    name = os.path.join(minor, filePath)
+
+    data = [
+        major,                   # authGroup
+        name,                    # baseName
+        strftime("%Y-%m-%d", stat.st_mtime), # date
+        _getEmail(major),        # email
+        UploadDb(dbPath).tbd,    # format
+        name,                    # name
+        stat.st_size,            # size
+        UploadDb(dbPath).success # status
+    ]
+    return data
+
+
+def _getAllData (uploadPath):
+
+    # Get the data for all uploaded files.
+    # @param uploadPath: absolute path to the upload directory
+    # @returns: data for all uploaded files.
+
+    # Get the major directory names.
+    majors = _getSubDirs(uploadPath)
+    
+    # Loop through the majors.
+    for major in majors:
+
+        # Get immediate dirs and files of the major dir.
+        filesDirs = _getFilesDirs(os.path.join(rootDir, major))
+        
+        # Add data for the files in this major dir.
+        for file in filesDirs[2]:
+            data.append(_getFileData(uploadPath, major, file))
+
+        # Add data for the files in each of the subdirs of the major dir.
+        for minor in filesDirs[1]:
+            files = _getFiles(os.path.join(rootDir, major, minor))
+            for file in files:
+                data.append(_getFileData(uploadPath, major, file, minor))
+
+    return data
+
+
+def _loadDb (uploadPath, dbPath):
+
+    # Populate the data for all uploaded files into a new database.
+    # @param uploadPath: absolute path to the upload directory
+    # @param     dbPath: database path
+    # @returns: nothing
+    data = _getAllData(uploadPath)
+
+    # TODO: update the database
+
+
+def _verifyDb (uploadPath, dbPath):
+
+    # Compare the actual file data to the database.
+    # @param uploadPath: absolute path to the upload directory
+    # @param     dbPath: database path
+    # @returns: nothing
+    data = _getAllData(uploadPath)
+
+    # TODO: compare to the database.
+
+
+def initialize (uploadPath, dbPath):
+
+    # Initialize the database. If the db file exists, it's contents are compared
+    # to the files in the upload directory. If the db does not exist it is built
+    # from the upload directory.
+    #
+    # @param uploadPath: absolute path to the upload directory
+    # @param     dbPath: database path
+    # @returns: nothing
+    if UploadDb(dbPath).hasData():
+        _verifyDb(uploadPath, dbPath)
+    else:
+        _loadDb(uploadPath, dbPath)
+

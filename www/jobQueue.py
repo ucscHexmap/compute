@@ -78,11 +78,13 @@ class JobQueue(object):
     
         # Get the sqlite connection for this thread where isolation_level=None
         # tells sqlite to commit automatically after each db update.
+        # Updates and deletes call this directly.
         return sqlite3.connect(s.queuePath, timeout=60, isolation_level=None)
     
     def _getConn (s):
     
         # Get the sqlite connection for this thread..
+        # Any reads look at the cache first.
         id = get_ident()
         if id not in s._connection_cache:
             s._connection_cache[id] = s.getConnection()

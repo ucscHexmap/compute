@@ -122,18 +122,18 @@ def cleanFileName (dirty):
     # Valid characters:
     #     a-z, A-Z, 0-9, dash (-), dot (.), underscore (_)
     # All other characters are replaced with underscores.
-
     if not dirty:
         return None
     
     clean = ''
-    if not re.search(fileRegEx, dirty) == None:
+    if re.search(fileRegEx, dirty) == None:
+        clean = dirty
+    else:
         for i in range(0, len(dirty)):
             if re.search(fileRegEx, dirty[i]) == None:
                 clean += dirty[i]
             else:
                 clean += '_'
-
     return clean
 
 
