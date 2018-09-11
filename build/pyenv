@@ -12,7 +12,10 @@ fi
 source $HEXCALC/ops/config.sh
 
 LOCALPY_BIN=$1
-if [ $(uname -s) == "Darwin" ]; then  # On macOS this is always here
+if [ $(uname -s) == "Darwin" ]; then
+
+    # On macOS this is always here.
+    # Virt envs are difficult on mac, just use the system python.
     LOCALPY_BIN=/usr/bin
 elif [ -z ${LOCALPY_BIN} ]; then # use the default
     LOCALPY_BIN=$HOME/.local/bin
@@ -22,11 +25,11 @@ fi
 # problems/confusion
 PATH=$LOCALPY_BIN:$PATH
 
-echo 'LOCALPY_BIN'
+echo 'LOCALPY_BIN:'
 echo $LOCALPY_BIN
-echo 'pip'
+echo 'pip:'
 which pip
-echo virtualenv
+echo 'virtualenv:'
 which virtualenv
 
 mkdir $PYENV
@@ -39,7 +42,7 @@ fi
 # TODO the below path should be more strict by not including PATH from user's
 # environment
 echo "export PATH=$PYENV/bin:$DRLPATH:$PATH" >> $PYENV/bin/activate
-echo "export PYTHONPATH=$HEXCALC/www:$HEXCALC/calc:$HEXCALC/db:$TETE_PATH:$DRLPATH" >> $PYENV/bin/activate
+echo "export PYTHONPATH=$HEXCALC/www:$HEXCALC/www/adapters:$HEXCALC/www/job:$HEXCALC/www/project:$HEXCALC/www/upload:$HEXCALC/calc:$HEXCALC/db:$TETE_PATH:$DRLPATH" >> $PYENV/bin/activate
 
 cd $HEXCALC
 

@@ -311,7 +311,9 @@ def jobStatusRoute(jobId):
 @app.route('/updateColor', methods=['POST'])
 def updateColor():
 
-    # Verify this is from the allowed view server
+    # Verify this is from the allowed view server.
+    # TODO why not use the view server name and certificate here,
+    # rather than the IP addr?
     if not request.environ['REMOTE_ADDR'] in appCtx.viewServerAddrs:
         raise ErrorResp('', 404)
     

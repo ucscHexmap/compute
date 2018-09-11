@@ -41,13 +41,6 @@ retryLimit = 10
 class Test_jobHttp(unittest.TestCase):
 
     def postQuery(s, operation, data):
-        '''
-        return s.app.post(
-            serverRoot + '/query/' + operation,
-            data=json.dumps(data),
-            headers={'Content-type': 'application/json'}
-        )
-        '''
         return requests.post(
             serverRoot + '/query/' + operation,
             data = json.dumps(data),
@@ -57,6 +50,7 @@ class Test_jobHttp(unittest.TestCase):
             #headers = { 'Content-type': 'application/json',  'retryLimit': str(retryLimit) }
         )
     
+    
     def get(s, route):
         return requests.get(
             serverRoot + route,
@@ -64,6 +58,7 @@ class Test_jobHttp(unittest.TestCase):
             #cert = (appCtx.sslCert, appCtx.sslKey),
             headers = { 'Content-type': 'application/json' },
         )
+
 
     def setUp(s):
         try:
@@ -74,6 +69,7 @@ class Test_jobHttp(unittest.TestCase):
         www.app.config['UNIT_TEST'] = True
         s.app = www.app.test_client()
         s.que = JobQueue(quePath)
+
 
     def test_dataServerConnection(s):
         try:
@@ -90,6 +86,7 @@ class Test_jobHttp(unittest.TestCase):
         s.assertEqual(r.status_code, 200)
         s.assertEqual('just testing data server', rData)
     
+    
     def test_getStatusInJobQueue(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.inJobQueueSt})
         r = s.get('/jobStatus/jobId/1')
@@ -100,8 +97,18 @@ class Test_jobHttp(unittest.TestCase):
         s.assertEqual('InJobQueue', rData['status'])
         s.assertFalse('result' in rData)
 
+
+    def test_getStatusInvalidJobId(s):
+        r = s.get('/jobStatus/jobId/1')
+        rData = json.loads(r.text)
+        #print 'r.status_code:', r.status_code
+        #print "json.loads(r.text):", json.loads(r.text)
+        s.assertTrue(r.status_code == 400)
+        s.assertEqual({'error': 'unknown job ID of: 1'}, rData)
+
+
     """
-    # Timing is too much of an issue to run this one.
+    # Timing is too much of an issue to run these.
     def test_getStatusRunning(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.runningSt})
         time.sleep(wait)
@@ -112,7 +119,8 @@ class Test_jobHttp(unittest.TestCase):
         s.assertEqual(r.status_code, 200)
         s.assertEqual(s.que.runningSt, rData['status'])
         s.assertFalse('result' in rData)
-    """
+    
+    
     def test_getStatusSuccess(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.successSt})
         time.sleep(wait)
@@ -123,6 +131,7 @@ class Test_jobHttp(unittest.TestCase):
         s.assertTrue(r.status_code == 200)
         s.assertEqual(s.que.successSt, rData['status'])
         s.assertFalse('result' in rData)
+    
     
     def test_getStatusSuccessResult(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.successSt + 'Result'})
@@ -139,8 +148,7 @@ class Test_jobHttp(unittest.TestCase):
         s.assertTrue('result' in rData)
         s.assertEqual(result1, rData['result'])
 
-    """
-    # Timing is too much of an issue to run this one.
+
     def test_getStatusError(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt})
         time.sleep(wait)
@@ -151,7 +159,8 @@ class Test_jobHttp(unittest.TestCase):
         s.assertTrue(r.status_code == 200)
         s.assertEqual(s.que.errorSt, rData['status'])
         s.assertFalse('result' in rData)
-    """
+    
+    
     def test_getStatusErrorResult(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt + 'Result'})
         time.sleep(wait)
@@ -164,6 +173,7 @@ class Test_jobHttp(unittest.TestCase):
         s.assertTrue('result' in rData)
         s.assertEqual(errorMsg1, rData['result'])
 
+
     def test_getStatusErrorTrace(s):
         s.postQuery('jobTestHelper', {'testStatus': s.que.errorSt + 'Trace'})
         time.sleep(wait)
@@ -175,14 +185,8 @@ class Test_jobHttp(unittest.TestCase):
         s.assertEqual(s.que.errorSt, rData['status'])
         s.assertTrue('result' in rData)
         s.assertEqual(errorMsg1trace, rData['result'])
-
-    def test_getStatusInvalidJobId(s):
-        r = s.get('/jobStatus/jobId/1')
-        rData = json.loads(r.text)
-        #print 'r.status_code:', r.status_code
-        #print "json.loads(r.text):", json.loads(r.text)
-        s.assertTrue(r.status_code == 400)
-        s.assertEqual({'error': 'unknown job ID of: 1'}, rData)
+    """
+    
 
 if __name__ == '__main__':
     unittest.main()

@@ -25,8 +25,8 @@ fi
 export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
 export DEBUG=1
 
-# Test only the *_web.py files
-web=( \
+# Test only the web files
+docker_unsafe=( \
     test_basic_web \
     test_createMap_web \
     test_http \
@@ -62,7 +62,7 @@ docker_safe=( \
 )
 
 # Combine the lists above to get ALL of the tests
-all=( "${web[@]}" "${DEPRECATED[@]}" "${docker_safe[@]}" )
+all=( "${docker_unsafe[@]}" "${docker_safe[@]}" )
 
 # tests that normally pass on a mac
 mac=( \

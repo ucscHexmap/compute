@@ -15,6 +15,9 @@ Remove a local python install if needed to clean up a bad install.
 pyenv
 Build a python virtual environment for this project.
 
+To modify only the PYTHONPATH of the virtual env, edit $PYENV/bin/activate to
+replace the last line defining PYTHONPATH with the new path.
+
 --------------------------------------------------------------
 
 MACOS NOTES:
