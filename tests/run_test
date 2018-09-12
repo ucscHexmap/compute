@@ -1,9 +1,7 @@
 #!/bin/bash
 # Run a test after setting the path
-# $1: config file in compute/config, if left out will attempt to use
-# "$(pwd)/../config/setup"
-# $2: optional name of test(s) to run, defaults to 'all', one of:
-#     / all / docker_safe / web / mac / <specific-test(s)> /
+# $1: optional name of test(s) to run, defaults to 'all', one of:
+#     / all / docker_safe / web / <specific-test(s)> /
 #     where <specific-test(s)> may be one of:
 #       base file name, i.e.: test_layoutBasic
 #       a single test, i.e.: test_layoutBasic.Test_layoutBasic.test_full
@@ -25,8 +23,8 @@ fi
 export UNIT_TEST=1  # Suppress all log messages so we only see test messages.
 export DEBUG=1
 
-# Test only the web files
-docker_unsafe=( \
+# Test the files that do not run under docker.
+web=( \
     test_basic_web \
     test_createMap_web \
     test_http \
@@ -62,28 +60,10 @@ docker_safe=( \
 )
 
 # Combine the lists above to get ALL of the tests
-all=( "${docker_unsafe[@]}" "${docker_safe[@]}" )
+all=( "${web[@]}" "${docker_safe[@]}" )
 
-# tests that normally pass on a mac
-mac=( \
-    test_basic_web \
-    test_createMap_web \
-    test_formatCheck \
-    test_http \
-    test_job \
-    test_jobHttp \
-    test_layoutMetaData \
-    test_layoutZeroReplace \
-    test_overlayNode_web \
-    test_placeNode_web \
-    test_placeNode2_web \
-    test_process_categoricals \
-    test_projectList \
-    test_similarity \
-)
-
-# this really needs selenium rather than manually building maps from the UI
-    #test_createMapUi \
+# This test is too funky to run regularly.
+#test_createMapUi \
 
 if [ $TO_RUN == 'all' ]
     then RUN_THIS="${all[@]}"
@@ -93,14 +73,28 @@ elif [ $TO_RUN == 'docker_safe' ]
     ./test_layout_cli
 elif [ $TO_RUN == 'web' ]
     then RUN_THIS="${web[@]}"
-elif [ $TO_RUN == 'mac' ]
-    then RUN_THIS="${mac[@]}"
-    ./test_layout_cli
 elif [ $TO_RUN == 'next' ]
     then RUN_THIS="${next[@]}"
 else
     RUN_THIS=$TO_RUN
 fi
 
-# Run the tests
+# Run the tests in this directory.
+echo Running tests under compute/test
 python2.7 -m unittest $RUN_THIS
+
+# Run the tests under compute/www.
+# Note an __init__.py needs to exist in each directory
+# in the path to the directory containing the tests.
+if [ $TO_RUN == 'all' ] || [ $TO_RUN == 'web' ]; then
+    echo Running tests under compute/www
+    python2.7 -m unittest discover --start-directory $HEXCALC/www
+fi
+
+# Run the tests under compute/calc and compute/standalone.
+if [ $TO_RUN == 'all' ] || [ $TO_RUN == 'docker_safe' ]; then
+    echo Running tests under compute/calc
+    python2.7 -m unittest discover --start-directory $HEXCALC/calc
+    echo Running tests under compute/standalone
+    python2.7 -m unittest discover --start-directory $HEXCALC/standalone
+fi
