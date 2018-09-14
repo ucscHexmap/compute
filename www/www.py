@@ -24,6 +24,15 @@ import validate_web as validate
 # Set up the flask application.
 app = Flask(__name__)
 
+try:
+    # These don't work for unit tests, but so far not needed there anyway.
+    # They may be needed for testing uploadHttp.
+    from www.upload.uploadRoutes import uploadRoutes
+    app.register_blueprint(uploadRoutes)
+except:
+    pass
+#from www.upload.uploadRoutes import uploadRoutes
+#app.register_blueprint(uploadRoutes)
 
 # Set up the application context used by all threads.
 def contextInit ():
@@ -156,40 +165,6 @@ def unhandledException(e):
     reportRouteError(response.status_code, rdict['error'], appCtx,
         rdict['stackTrace'])
     return response
-
-
-# Handle route to upload files
-@app.route('/upload/<path:dataId>', methods=['POST'])
-def upload(dataId):
-        
-    # If the client does not include a file property in the post
-    # there is nothing to upload. So bail.
-    if 'file' not in request.files:
-        raise ErrorResp('No file property provided for upload', 400)
-    
-    file = request.files['file']
-
-    # If a browser user does not select a file, the browser submits an
-    # empty file property. So bail.
-    if file.filename == '':
-        raise ErrorResp('No file provided for upload', 400)
-        
-    filename = secure_filename(file.filename)
-    path = os.path.join(appCtx.dataRoot, dataId)
-    
-    # Make the directories if they are not there.
-    try:
-        os.makedirs(path[:path.rfind('/')], 0770)
-    except Exception:
-        pass
-    
-    # Save the file
-    try:
-        file.save(path)
-    except Exception:
-        raise ErrorResp('Unable to save file.', 500)
-    
-    raise SuccessResp('upload of ' + filename + ' complete')
 
 
 def dataRouteInner(dataId, ok404=False):
@@ -477,6 +452,7 @@ def reflectionRequest():
 
     raise SuccessResp(responseDict)
 
+
 # Handle the retrieve reflect attribute route.
 @app.route('/reflect/attrId/<string:attrId>', methods=['GET'])
 def getRefAttr(attrId):
@@ -492,5 +468,6 @@ def getRefAttr(attrId):
 @app.route('/test', methods=['POST', 'GET'])
 def testRoute():
     raise SuccessResp('just testing data server')
+
 
 initialize()

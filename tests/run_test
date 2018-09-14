@@ -79,7 +79,10 @@ else
     RUN_THIS=$TO_RUN
 fi
 
-# Run the tests in this directory.
+# Run the tests from this directory.
+cd $HEXCALC/tests
+
+# Run the tests in global tests directory.
 echo Running tests under compute/test
 python2.7 -m unittest $RUN_THIS
 
