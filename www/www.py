@@ -4,7 +4,6 @@
 import os, traceback, logging, json
 from flask import Flask, request, jsonify, Response
 from flask_cors import CORS
-from werkzeug.utils import secure_filename
 
 import createMap_web
 import job

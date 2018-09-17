@@ -4,6 +4,7 @@
 from flask import Blueprint
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
     reportRouteError
+from validate_web import validate
 
 uploadRoutes = Blueprint('uploadRoutes', __name__)
 
@@ -31,7 +32,7 @@ def upload(dataId):
     if file.filename == '':
         raise ErrorResp('No file provided for upload', 400)
     
-    filename = secure_filename(file.filename)
+    filename = validate.cleanFileName (file.filename)
     path = os.path.join(appCtx.dataRoot, dataId)
     
     # Make the directories if they are not there.

@@ -3,9 +3,8 @@
 
 import os, traceback, datetime, json, importlib, logging
 from datetime import date
-from util_web import Context, ErrorResp
+from util_web import Context, ErrorResp, sendAdminEmail
 from uploadDb import UploadDb
-from util_web import sendAdminEmail
 
 def _getSubDirs (path):
 
@@ -43,30 +42,40 @@ def _getEmail(major):
     return email
 
 
-def _getFileData(major, file, uploadPath, dbPath, minor=None):
+def _getPath(major, name, minor=None, uploadPath=None):
+    #print '#### major, name, minor, uploadPath:', major, name, minor, uploadPath
+    path = major
+    if uploadPath != None:
+        path = os.path.join(uploadPath, major)
+    if minor != None:
+        path = os.path.join(path, minor)
+    return os.path.join(path, name)
+
+
+def _getFileData(major, name, uploadPath, dbPath, minor=None):
 
     # Build the data for one file.
     # Get the file stats.
-    path = os.path.join(uploadPath, major)
-    if minor == None:
-        path = os.path.join(path, file)
-        name = file
-    else:
-        path = os.path.join(path, minor, file)
-        # TODO: basename is not really a basename any more due to the minor dir.
-        name = os.path.join(minor, file)
+    path = _getPath(major, name, minor, uploadPath)
 
     # Get the file stats.
     stat = os.stat(path)
 
+    # Try to find the authGroup.
+    email = _getEmail(major)
+    authGroup = None
+    if email:
+        authGroup = major
+
     db = UploadDb(dbPath)
     data = [
-        major,            # authGroup
+        authGroup,        # authGroup
         date.fromtimestamp(stat.st_mtime).isoformat(), # date
-        _getEmail(major), # email
+        email, # email
         db.tbd,           # format
         name,             # name
-        name,             # safeName
+        major,            # major section of file path dir
+        minor,            # minor section of file path dir
         stat.st_size,     # size
         db.success        # status
     ]
@@ -115,7 +124,7 @@ def _loadDb (uploadPath, dbPath):
     UploadDb(dbPath).loadInitial(data)
 
 
-def _compareActualFileToDb (a, d, db):
+def _compareOneFileToDb (a, d, db):
 
     # Compare a file's actual info to the database.
     #
@@ -126,8 +135,9 @@ def _compareActualFileToDb (a, d, db):
     # @returns: updated diff list
 
     # For each property value in the db info for this file...
-    rowDiff = [d[db.authGroupI] + '/' + d[db.safeNameI] + \
-        ': prop: actual, db:']
+    path = _getPath(d[db.majorI], d[db.nameI], d[db.minorI])
+
+    rowDiff = [path + ': prop: actual, db:']
     for j, aVal in enumerate(a):
         i = j+1 # don't compare to db id, which actual file doesn't have
         if d[i] != aVal:
@@ -143,7 +153,7 @@ def _compareActualFileToDb (a, d, db):
     return []
 
 
-def _compareAllActualToDb (actualInfo, dbInfo, db):
+def _compareEachFileToDb (actualInfo, dbInfo, db):
 
     # Compare the actual file info to the database.
     #
@@ -155,24 +165,23 @@ def _compareAllActualToDb (actualInfo, dbInfo, db):
     # Find each actual file in the db.
     diff = []
     for a in actualInfo:
+        aPath = _getPath(a[db.majorI-1], a[db.nameI-1], a[db.minorI-1])
 
         # Find this actual file in the db.
         # The actual info indexing is one less than the db due to no ID.
         found = None
         for d in dbInfo:
-            if d[db.authGroupI] == a[db.authGroupI-1] and \
-                d[db.safeNameI] == a[db.safeNameI-1]:
-                
+            dPath = _getPath(d[db.majorI], d[db.nameI], d[db.minorI])
+            if aPath == dPath:
                 found = d
                 break
         #print 'd:', d
         if found:
-            diff.extend(_compareActualFileToDb(a, found, db))
+            diff.extend(_compareOneFileToDb(a, found, db))
         else:
 
             # Record the fact there is no matching db row.
-            diff.append(a[db.authGroupI-1] + '/' + a[db.safeNameI-1] + \
-                ': file not in DB')
+            diff.append(aPath + ': file not in DB')
     
     return diff
 
@@ -189,18 +198,17 @@ def _dbEntriesWithoutFiles (actualInfo, dbInfo, db):
     # Find db info where there is no file.
     diff = []
     for d in dbInfo:
+        dPath = _getPath(d[db.majorI], d[db.nameI], d[db.minorI])
 
         # Find this db info's actual file.
         found = False
         for a in actualInfo:
-            if (d[db.authGroupI] == a[db.authGroupI-1] and \
-                d[db.safeNameI] == a[db.safeNameI-1]):
-                
+            aPath = _getPath(a[db.majorI-1], a[db.nameI-1], a[db.minorI-1])
+            if dPath == aPath:
                 found = True
                 break
         if not found:
-            diff.append(d[db.authGroupI] + '/' + d[db.safeNameI] + \
-                ': DB entry without actual file')
+            diff.append(dPath + ': DB entry without actual file')
 
     return diff
 
@@ -216,7 +224,7 @@ def _compareActualAndDb (uploadPath, dbPath):
     db = UploadDb(dbPath)
     dbInfo = db.getAll()
     actualInfo = _getAllData(uploadPath, dbPath)
-    diff = _compareAllActualToDb(actualInfo, dbInfo, db)
+    diff = _compareEachFileToDb(actualInfo, dbInfo, db)
     diff.extend(_dbEntriesWithoutFiles(actualInfo, dbInfo, db))
 
     return diff
@@ -234,6 +242,7 @@ def mailDiff (diff, appCtx):
     for d in diff:
         body += (d + '\n')
     sendAdminEmail(subject, body, appCtx)
+
 
 def initialize (appCtx):
 

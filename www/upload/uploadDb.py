@@ -36,21 +36,23 @@ class UploadDb(object):
         'email',
         'format',
         'name',
-        'safeName',
+        'major',
+        'minor',
         'size',
         'status'
     ]
     
     # Column index constants.
     idI = 0        # unique upload info identifier
-    authGroupI = 1 # an access group or clean email/username
+    authGroupI = 1 # an access group role
     dateI = 2      # date in ISO format: yyyy-mm-dd
     emailI = 3     # an email address as owner of files and results
     formatI = 4    # file format, one of the above format constants
     nameI = 5      # user's base name of the file
-    safeNameI = 6  # file-safe name we assign
-    sizeI = 7      # size in bytes
-    statusI = 8    # status of the upload, one of the above
+    majorI = 6     # major segment of map path
+    minorI = 7     # minor segment of map path
+    sizeI = 8      # size in bytes
+    statusI = 9    # status of the upload, one of the above
 
     # Sqlite database templates.
     _dbCreate = (
@@ -62,7 +64,8 @@ class UploadDb(object):
         '  email text,'
         '  format text,'
         '  name text,'
-        '  safeName text,'
+        '  major text,'
+        '  minor text,'
         '  size integer,'
         '  status text'
         ')'
@@ -86,8 +89,8 @@ class UploadDb(object):
     )
     _dbPush = (
         'INSERT INTO db '
-        '(authGroup, date, email, format, name, safeName, size, status) '
-        'VALUES (?,?,?,?,?,?,?,?)'
+        '(authGroup, date, email, format, name, major, minor, size, status) '
+        'VALUES (?,?,?,?,?,?,?,?,?)'
     )
     _dbRemoveById = (
         'DELETE FROM db '
@@ -150,9 +153,9 @@ class UploadDb(object):
             return info
 
 
-    def addOne (s, authGroup, name, size, email=None):
+    def addOne (s, authGroup, name, major, minor, size, email=None):
     
-        # Add one file's information.
+        # Add one file's information that is not owned by an individual user.
         with s._getConnectionCache() as conn:
             curs = conn.cursor()
             curs.execute(s._dbPush, (
@@ -160,10 +163,12 @@ class UploadDb(object):
                 s._today(),
                 email,
                 s.tbd,
-                name,
                 validate_web.cleanFileName(name),
+                major,
+                minor,
                 size,
-                s.uploading))
+                s.uploading
+            ))
             return curs.lastrowid
 
 
@@ -258,7 +263,8 @@ class UploadDb(object):
                     r[s.emailI-1],
                     r[s.formatI-1],
                     r[s.nameI-1],
-                    r[s.safeNameI-1],
+                    r[s.majorI-1],
+                    r[s.minorI-1],
                     r[s.sizeI-1],
                     r[s.statusI-1],
                 ))
