@@ -23,16 +23,6 @@ import validate_web as validate
 # Set up the flask application.
 app = Flask(__name__)
 
-try:
-    # These don't work for unit tests, but so far not needed there anyway.
-    # They may be needed for testing uploadHttp.
-    from www.upload.uploadRoutes import uploadRoutes
-    app.register_blueprint(uploadRoutes)
-except:
-    pass
-#from www.upload.uploadRoutes import uploadRoutes
-#app.register_blueprint(uploadRoutes)
-
 # Set up the application context used by all threads.
 def contextInit ():
     global appCtx
@@ -64,6 +54,12 @@ def contextInit ():
     return appCtx
 
 
+def blueprintInit ():
+    if not appCtx.unitTest:
+        from www.upload.uploadRoutes import uploadRoutes
+        app.register_blueprint(uploadRoutes)
+
+
 # Set up logging
 def loggingInit ():
     logFormat = '%(asctime)s %(levelname)s: %(message)s'
@@ -91,6 +87,7 @@ def initialize():
     CORS(app)
     
     contextInit()
+    blueprintInit()
     loggingInit()
 
     # Create the database path if it does not exist.

@@ -8,7 +8,7 @@ from util_web import SuccessResp
 
 uploadRoutes = Blueprint('uploadRoutes', __name__)
 
-
+"""
 # Handle route to upload files by an individual with an email.
 basic =
     '/upload' + \
@@ -23,12 +23,12 @@ def upload(userEmail, token, authGroup, major, minor=None):
         userEmail, token, authGroup, major, minor, request)
     print '### upload/email/...()'
     raise SuccessResp('upload of ' + uploadedFileName + ' complete')
-
+"""
 
 # Handle deprecated route to upload files.
 @uploadRoutes.route('/upload/<path:dataId>', methods=['POST'])
 def upload(dataId):
-    (id, filename) = uploadFile.oldApi(dataId, request)
+    filename = uploadFile.oldApi(dataId, request)
     raise SuccessResp('upload of ' + filename + ' complete')
 
 
