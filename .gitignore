@@ -2,6 +2,8 @@
 *.tgz
 *pyc
 *save
+.idea
+notes.txt
 ops/log
 ops/logsPrev/20*
 ops/config.sh

@@ -21,11 +21,4 @@ replace the last line defining PYTHONPATH with the new path.
 --------------------------------------------------------------
 
 MACOS NOTES:
-Install wget and openssl before you do anything else.
-for MacOS 10.12.6 Sierra:
-- install macPorts from:
-    https://github.com/macports/macports-base/releases/download/v2.4.2/MacPorts-2.4.2-10.12-Sierra.pkg
-- use root to install the libraries since some files require root access:
-    su root
-    port install wget
-    port install openssl
+For python, pip and virtualenv installs, see localpy script.

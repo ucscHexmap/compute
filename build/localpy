@@ -4,30 +4,33 @@
 LOCALPY=$1
 
 # Build python.
-if [ $(uname -s) == "Darwin" ]; then  # On macOS we use the system python
-    PATH=/usr/bin:$PATH
-else
-    mkdir $LOCALPY
-    cd $LOCALPY
-    wget https://www.python.org/ftp/python/2.7.11/Python-2.7.11.tgz
-    tar xf Python-2.7.11.tgz
-    cd Python-2.7.11
-    ./configure --prefix=$LOCALPY
-    make && make install
-    PATH=$LOCALPY/bin:$PATH # Point to the new local python executables
+if [ $(uname -s) == "Darwin" ]; then
+    echo for mac, follow instructions in this script
+    exit
+    # download the mac python installer:
+    # https://www.python.org/downloads/mac-osx/
+    # curl -O https://bootstrap.pypa.io/get-pip.py
+    # python get-pip.py --user
+    # virtualenv should have been installed with one of the above installs
 fi
+
+mkdir $LOCALPY
+cd $LOCALPY
+wget https://www.python.org/ftp/python/2.7.11/Python-2.7.11.tgz
+tar xf Python-2.7.11.tgz
+cd Python-2.7.11
+./configure --prefix=$LOCALPY
+make && make install
+PATH=$LOCALPY/bin:$PATH # Point to the new local python executables
 
 # Build pip.
 wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py -O - | python - --user
 
 # Add the bin directory to the path.
-if [ $(uname -s) != "Darwin" ]; then
-    PATH=$HOME/.local/bin:$PATH
-fi
+PATH=$HOME/.local/bin:$PATH
 
 # Install virtual env.
 pip install --user virtualenv
-
 
 echo
 echo 'python built in:'

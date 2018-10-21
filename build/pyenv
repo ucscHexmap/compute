@@ -11,22 +11,23 @@ fi
 
 source $HEXCALC/ops/config.sh
 
-LOCALPY_BIN=$1
-if [ $(uname -s) == "Darwin" ]; then
+LOCALPY_BIN=$1 # optional
 
-    # On macOS this is always here.
-    # Virt envs are difficult on mac, just use the system python.
-    LOCALPY_BIN=/usr/bin
-elif [ -z ${LOCALPY_BIN} ]; then # use the default
-    LOCALPY_BIN=$HOME/.local/bin
+# On macOS the path is already set up and no need for LOCAL_BIN to be defined.
+if [ $(uname -s) != "Darwin" ]; then
+    if [ -z ${LOCALPY_BIN} ]; then # use the default
+
+        LOCALPY_BIN=$HOME/.local/bin
+        # Start off pointing to only the newly installed python to minimize path
+        # problems/confusion
+        PATH=$LOCALPY_BIN:$PATH
+    fi
+
+    echo 'LOCALPY_BIN:'
+    echo $LOCALPY_BIN
 fi
 
-# Start off pointing to only the newly installed python to minimize path
-# problems/confusion
-PATH=$LOCALPY_BIN:$PATH
 
-echo 'LOCALPY_BIN:'
-echo $LOCALPY_BIN
 echo 'pip:'
 which pip
 echo 'virtualenv:'
@@ -49,6 +50,14 @@ cd $HEXCALC
 # Activate the python environment and install the requirements.
 source $PYENV/bin/activate
 pip install -r $HEXCALC/build/requirements.txt
+
+# Mac OS 10.14 Mohave also needed pcre built:
+# download pcre source
+# following README:
+# ./configure --prefix=/opt/local
+# make
+# sudo mkdir -P /opt/local
+# sudo make install
 
 echo
 echo 'python:'
