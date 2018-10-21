@@ -3,7 +3,7 @@
 
 import os, traceback, datetime, json, importlib, logging
 from datetime import date
-from util_web import Context, ErrorResp, sendAdminEmail
+from util_web import Context, ErrorResp, sendAdminEmail, makeFullPath
 from uploadDb import UploadDb
 
 def _getSubDirs (path):
@@ -42,21 +42,11 @@ def _getEmail(major):
     return email
 
 
-def _getPath(major, name, minor=None, uploadPath=None):
-    #print '#### major, name, minor, uploadPath:', major, name, minor, uploadPath
-    path = major
-    if uploadPath != None:
-        path = os.path.join(uploadPath, major)
-    if minor != None:
-        path = os.path.join(path, minor)
-    return os.path.join(path, name)
-
-
 def _getFileData(major, name, uploadPath, dbPath, minor=None):
 
     # Build the data for one file.
     # Get the file stats.
-    path = _getPath(major, name, minor, uploadPath)
+    path = makeFullPath(major, name, minor, uploadPath)
 
     # Get the file stats.
     stat = os.stat(path)
@@ -135,7 +125,7 @@ def _compareOneFileToDb (a, d, db):
     # @returns: updated diff list
 
     # For each property value in the db info for this file...
-    path = _getPath(d[db.majorI], d[db.nameI], d[db.minorI])
+    path = makeFullPath(d[db.majorI], d[db.nameI], d[db.minorI])
 
     rowDiff = [path + ': prop: actual, db:']
     for j, aVal in enumerate(a):
@@ -165,13 +155,13 @@ def _compareEachFileToDb (actualInfo, dbInfo, db):
     # Find each actual file in the db.
     diff = []
     for a in actualInfo:
-        aPath = _getPath(a[db.majorI-1], a[db.nameI-1], a[db.minorI-1])
+        aPath = makeFullPath(a[db.majorI-1], a[db.nameI-1], a[db.minorI-1])
 
         # Find this actual file in the db.
         # The actual info indexing is one less than the db due to no ID.
         found = None
         for d in dbInfo:
-            dPath = _getPath(d[db.majorI], d[db.nameI], d[db.minorI])
+            dPath = makeFullPath(d[db.majorI], d[db.nameI], d[db.minorI])
             if aPath == dPath:
                 found = d
                 break
@@ -198,12 +188,12 @@ def _dbEntriesWithoutFiles (actualInfo, dbInfo, db):
     # Find db info where there is no file.
     diff = []
     for d in dbInfo:
-        dPath = _getPath(d[db.majorI], d[db.nameI], d[db.minorI])
+        dPath = makeFullPath(d[db.majorI], d[db.nameI], d[db.minorI])
 
         # Find this db info's actual file.
         found = False
         for a in actualInfo:
-            aPath = _getPath(a[db.majorI-1], a[db.nameI-1], a[db.minorI-1])
+            aPath = makeFullPath(a[db.majorI-1], a[db.nameI-1], a[db.minorI-1])
             if dPath == aPath:
                 found = True
                 break

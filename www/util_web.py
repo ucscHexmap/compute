@@ -42,6 +42,13 @@ class Context (object):
         return str(self.__dict__)
 
 
+appCtx = Context({})
+
+
+def getAppCtx ():
+    return appCtx
+
+
 def _getLayerDataTypes (mapId, ctx):
     filename = os.path.join(
         ctx.app.dataRoot, 'view', mapId, 'Layer_Data_Types.tab')
@@ -112,10 +119,7 @@ def createBookmark (state, viewServer, ctx=None):
 
 
 def sendMail (fromAddr, toAddrIn, subject, body):
-    #import smtplib
-    #from email.MIMEMultipart import MIMEMultipart
-    #from email.MIMEText import MIMEText
-    
+
     # Force the toAddr to be a list.
     toAddr = toAddrIn
     if isinstance(toAddrIn, str):
@@ -306,4 +310,24 @@ def stringToFloatOrInt(s, dataType):
     if dataType == 'Categorical' or dataType == 'Binary':
         val = int(round(val))
     return val
+
+
+def makeFullPath (major, name, minor=None, rootPath=None):
+
+    # Make a file path from given components.
+    #
+    # @param major: major directory
+    # @param name: base name of the file
+    # @param minor: optional minor directory
+    # @param rootPath: full path to the root
+    
+    #print '#### major, name, minor, uploadPath:', major, name, minor, uploadPath
+    path = major
+    if rootPath != None:
+        path = os.path.join(rootPath, major)
+    if minor != None:
+        path = os.path.join(path, minor)
+    return os.path.join(path, name)
+
+
 

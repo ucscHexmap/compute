@@ -17,7 +17,7 @@ import statsLayout_web
 import viewData
 
 from util_web import SuccessResp, SuccessRespNoJson, ErrorResp, Context, \
-    reportRouteError
+    reportRouteError, getAppCtx
 import validate_web as validate
 
 # Set up the flask application.
@@ -36,7 +36,7 @@ except:
 # Set up the application context used by all threads.
 def contextInit ():
     global appCtx
-    appCtx = Context({})
+    appCtx = getAppCtx()
     appCtx.adminEmail = os.environ.get('ADMIN_EMAIL')
     appCtx.dataRoot = os.environ.get('DATA_ROOT', 'DATA_ROOT_ENV_VAR_MISSING')
     appCtx.debug = os.environ.get('DEBUG', 0)
@@ -51,7 +51,7 @@ def contextInit ():
         os.environ.get('DATABASE_PATH', appCtx.hubPath + '/../computeDb')
     appCtx.jobQueuePath = os.path.abspath(
         os.path.join(appCtx.databasePath, 'jobQueue.db'))
-    appCtx.jobProcessPath = appCtx.hubPath + '/www/jobProcess.py'
+    appCtx.jobProcessPath = appCtx.hubPath + '/www/job/jobProcess.py'
     appCtx.viewDir = os.path.join(appCtx.dataRoot, 'view')
     url = os.environ['DATA_HOST_PORT']
     #url = os.environ['WWW_SOCKET']

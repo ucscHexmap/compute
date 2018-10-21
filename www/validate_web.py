@@ -116,6 +116,13 @@ def authGroup(data):
     _validateString('authGroup', data)
 
 
+def byteSize (data):
+    name = 'byteSize'
+    _validateInteger (name, data)
+    if name not in data:
+        raise ErrorResp('byteSize parameter is required')
+
+
 def cleanFileName (dirty):
 
     # Convert a string to a clean string that may be used as a file name.
@@ -142,7 +149,11 @@ def colorAttribute (data, required=False):
 
 
 def email(data):
-    _validateString('email', data, False, True)
+    _validateString('email', data, required=False, arrayAllowed=True)
+
+
+def emailSingleRequired(data):
+    _validateString('email', data, required=True)
 
 
 def layout(data, required=False):
@@ -155,6 +166,10 @@ def layoutInput (data, required=False):
 
 def layoutInputName(data, required):
     _validateString('layoutInputName', data, required, True)
+
+
+def major(data):
+    _validateString('major', data, required=True)
 
 
 def map(data, required):
@@ -171,6 +186,10 @@ def map(data, required):
         _validateFileName(val, 'map', allowSlash=True)
 
 
+def minor(data):
+    _validateString('minor', data)
+
+
 def neighborCount (data):
     name = 'neighborCount'
     _validateInteger (name, data)
@@ -181,6 +200,10 @@ def neighborCount (data):
 
 def nodes(data, required=False):
     _validateString('nodes', data, required, arrayAllowed=True)
+
+
+def token(data):
+    _validateString('token', data, required=True)
 
 
 def viewServer(data):
