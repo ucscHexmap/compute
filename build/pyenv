@@ -43,7 +43,25 @@ fi
 # TODO the below path should be more strict by not including PATH from user's
 # environment
 echo "export PATH=$PYENV/bin:$DRLPATH:$PATH" >> $PYENV/bin/activate
-echo "export PYTHONPATH=$HEXCALC/www:$HEXCALC/www/adapters:$HEXCALC/www/job:$HEXCALC/www/project:$HEXCALC/www/upload:$HEXCALC/calc:$HEXCALC/db:$TETE_PATH:$DRLPATH" >> $PYENV/bin/activate
+
+# Maintaining the paths in www is a pain. One alternative is to precede imports
+# with the directory of the module in all imports, like 'import job.jobDb'.
+# This makes it more difficult to move files around.
+# Or maybe making a real package would help.
+echo "export PYTHONPATH=\
+$HEXCALC/www:\
+$HEXCALC/www/adapters:\
+$HEXCALC/www/cellDb:\
+$HEXCALC/www/job:\
+$HEXCALC/www/project:\
+$HEXCALC/www/upload:\
+$HEXCALC/www/util:\
+$HEXCALC/calc:\
+$HEXCALC/db:\
+$TETE_PATH:\
+$DRLPATH\
+" >> $PYENV/bin/activate
+
 
 cd $HEXCALC
 

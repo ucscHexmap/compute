@@ -1,2 +1,4 @@
 Please use the run_test script so your PYTHONPATH is always correctly set.
 
+You may also run compute/bin/runTest which pulls in your config.
+
