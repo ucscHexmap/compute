@@ -9,7 +9,13 @@ if [ -z $INSTALL_TAR_PATH ]; then
     exit 1
 fi
 
-echo "untarring..."
+FILE=compute.tgz
+LOCALTAR=$HEXCALC/ops/$FILE
+FROMTAR=$INSTALL_TAR_PATH/$FILE
+echo "scp'g from $FROMTAR to $LOCALTAR..."
+scp $FROMTAR $LOCALTAR
+
+echo "removing old code..."
 rm -r -f \
     $HEXCALC/bin \
     $HEXCALC/build \
@@ -20,9 +26,11 @@ rm -r -f \
     $HEXCALC/www \
     >/dev/null 2>&1
 
-tar -xf $INSTALL_TAR_PATH -C $HEXCALC
+echo "untarring..."
+tar -xf $LOCALTAR -C $HEXCALC
+#tar -xf $INSTALL_TAR_PATH -C $HEXCALC
 
-PROTECTED_PORT=false
+#PROTECTED_PORT=false
 if [ "$PORT" = "443" ] || [ "$PORT" = "80" ]; then
     echo "Untar complete. Issue 'sudo startAsRoot' to (re)start server"
 else

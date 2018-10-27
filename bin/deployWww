@@ -9,8 +9,10 @@ if [ -z $DEPLOY_TARGET_PATH ]; then
     exit 1
 fi
 
+echo tarring up the install
+FILE=$HEXCALC/ops/compute.tgz
 cd $HEXCALC
-tar -czf ops/install.tgz \
+tar -czf $FILE \
     bin \
     build \
     calc \
@@ -19,4 +21,7 @@ tar -czf ops/install.tgz \
     tests \
     www
 
-scp $HEXCALC/ops/install.tgz $DEPLOY_TARGET_PATH
+# TODO put in commands to scp from courtyard to hexcalc
+scp $FILE $DEPLOY_TARGET_PATH
+echo if the scp timed out, do:
+echo "scp $FILE $DEPLOY_TARGET_PATH"

@@ -5,41 +5,45 @@ import os, traceback, csv
 from cellDatasetDb import CellDatasetDb
 
 
-def addMany(data, dbPath):
+def getDbPath(appCtx):
+    return os.path.join(appCtx.databasePath, 'datasetDb.db')
+
+
+def addMany(data, appCtx):
 
     # Add many rows to the database.
     # @param data: the new data as an array of arrays, one array per row
     #              in the form [name, organ, species, sampleCount, ...]
-    # @param dbPath: the database path
+    # @param appCtx: the application context
     # @returns: nothing
-    CellDatasetDb(dbPath).addMany(data)
+    CellDatasetDb(getDbPath(appCtx)).addMany(data)
 
 
-def addManyFromFile(filePath, dbPath, replace=False):
+def addManyFromFile(filePath, appCtx, replace=False):
 
     # Add many rows from a file to the database.
-    # @param filePath: the path to the file (TODO: full path?)
+    # @param filePath: the full path to the file
     #                  where the file is TSV with one row per dataset
     #                  in the form [name, organ, species, sampleCount, ...]
-    # @param dbPath: the database path
+    # @param appCtx: the application context
     # @param replace: True to replace all rows, False to append.
     # @returns: nothing
     if replace:
-        deleteAll(dbPath)
-    CellDatasetDb(dbPath).addManyFromFile(filePath)
+        deleteAll(appCtx)
+    CellDatasetDb(getDbPath(appCtx)).addManyFromFile(filePath)
 
 
-def deleteAll(dbPath):
+def deleteAll(appCtx):
 
     # Clear the database of all data.
-    # @param dbPath: the database path
+    # @param appCtx: the application context
     # @returns: nothing
-     CellDatasetDb(dbPath).deleteAll()
+     CellDatasetDb(getDbPath(appCtx)).deleteAll()
 
 
-def getAll(dbPath):
+def getAll(appCtx):
 
     # Dump all dataset info that is in the database.
-    # @param dbPath: the database path
+    # @param appCtx: the application context
     # @returns: an array of dataset metadata in an object
-    return {'datasetInfo': CellDatasetDb(dbPath).getAll()}
+    return CellDatasetDb(getDbPath(appCtx)).getAll()

@@ -2,20 +2,20 @@
 # The cell database HTTP routes.
 
 from flask import request, Blueprint
-import cellDatasetDb
-from util_web import SuccessResp
+import cellDataset
+from util_web import SuccessResp, getAppCtx
 
 cellDbRoutes = Blueprint('cellDbRoutes', __name__)
-
+appCtx = getAppCtx()
 
 # Handle the route to get all of the cell dataaset data from the DB.
-@uploadRoutes.route('/cell/dataset/getAll', methods=['GET'])
+@cellDbRoutes.route('/cell/dataset/getAll', methods=['GET'])
 def getAll():
-    data = cellDatasetDb.getAll(appCtx)
-    raise SuccessResp('upload of ' + filename + ' complete')
+    data = cellDataset.getAll(appCtx)
+    raise SuccessResp(data)
 
 
 # Handle the route to test.
-@uploadRoutes.route('/cellDbTest', methods=['POST', 'GET'])
+@cellDbRoutes.route('/cellDbTest', methods=['POST', 'GET'])
 def testRoute():
     raise SuccessResp('just testing cellDb on data server')

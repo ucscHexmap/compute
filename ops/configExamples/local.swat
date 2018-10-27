@@ -1,7 +1,4 @@
 
-#TARGET_HOME=bop:/soe/swat
-TARGET_HOME=hexcalc:/data/home/swat
-
 export ADMIN_EMAIL=swat@soe.ucsc.edu
 export BACK_OR_FOREGROUND=FORE
 export DATA_ROOT=/Users/swat/data
@@ -13,7 +10,7 @@ export HEX_GID=staff
 export HEX_UID=swat
 export PORT=5000
 export PYENV=/Users/swat/dev/env
-export DEPLOY_TARGET_PATH=$TARGET_HOME/dev/compute/ops
+export DEPLOY_TARGET_PATH=plaza:ops
 export TEST_DATA_ROOT=$DATA_ROOT
 #export TETE_PATH=/Users/swat/tete_copy/tete
 export UNIT_TEST=0

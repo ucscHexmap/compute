@@ -1,6 +1,6 @@
 # The base class for database access.
 
-import os, sqlite3, traceback
+import os, sqlite3, traceback, csv
 
 try:
     from thread import get_ident
@@ -26,6 +26,7 @@ class DbBase(object):
         'LIMIT 1'
     )
 
+
     def _getConnection(s):
 
         # Get the sqlite connection for this thread where isolation_level=None
@@ -42,6 +43,46 @@ class DbBase(object):
             s._connection_cache[id] = s._getConnection()
 
         return s._connection_cache[id]
+
+
+    def __init__(s, dbPath):
+
+        # Connect to the database, creating if need be.
+        s.dbPath = dbPath
+        s._connection_cache = {}
+        with s._getConnectionCache() as conn:
+            conn.execute(s._dbCreate)
+
+
+    def _pushOne(s, row, conn):
+        cursor = conn.cursor()
+        cursor.execute(s._dbPush, row)
+        return cursor
+
+
+    def addMany(s, data):
+        # Load more than one row of data to the database.
+        with s._getConnectionCache() as conn:
+            for row in data:
+                s._pushOne(row, conn)
+
+
+    def addManyFromFile(s, filePath):
+
+        # Load data from a tsv file .
+        with s._getConnectionCache() as conn:
+            with open(filePath, 'r') as f:
+                f = csv.reader(f, delimiter='\t')
+                for row in f:
+                    s._pushOne(row, conn)
+
+
+    def addOne(s, row):
+
+        # Add one row.
+        with s._getConnectionCache() as conn:
+             cursor = s._pushOne(row, conn)
+        return cursor.lastrowid
 
 
     def deleteAll(s):
@@ -75,7 +116,7 @@ class DbBase(object):
             info = None
             for row in get:
                 info = row
-            return info
+        return info
 
 
     def hasData(s):
@@ -85,4 +126,6 @@ class DbBase(object):
             cursor = conn.execute(s._dbGetFirstRow)
             for row in cursor:
                 return True
-            return False
+        return False
+
+
