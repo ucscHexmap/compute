@@ -3,14 +3,9 @@
 # This tests the dataset database functionality.
 
 import os
-from datetime import date
-import json
-
 import unittest
-import testUtil as util
 from util_web import Context
-from cellDatasetDb import CellDatasetDb
-import cellDataset as dataset
+import cellDbDataset as table
 
 
 testDir = os.path.join(os.environ.get('HEXCALC'), 'www/cellDb/tests')
@@ -18,9 +13,7 @@ appCtxDict = {
     'databasePath': os.path.join(testDir, 'out'),
 }
 appCtx = Context(appCtxDict)
-dbPath = os.path.join(appCtx.databasePath, 'datasetDb.db')
-
-isoToday = date.today().isoformat()
+dbPath = os.path.join(appCtx.databasePath, 'cell.db')
 
 data = [
     ['Immune Bone', 'immune bone', 'human', 378000, 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd'],
@@ -31,7 +24,7 @@ data = [
 ]
 
 
-class Test_cellDatasetDb(unittest.TestCase):
+class Test_cellDbDataset(unittest.TestCase):
 
 
     def setUp(self):
@@ -39,7 +32,7 @@ class Test_cellDatasetDb(unittest.TestCase):
             os.remove(dbPath)
         except:
             pass
-        self.db = CellDatasetDb(dbPath)
+        self.db = table.CellDbDataset(dbPath)
 
 
     def test_addMany_db(s):
@@ -55,7 +48,7 @@ class Test_cellDatasetDb(unittest.TestCase):
 
 
     def test_addMany_api(s):
-        dataset.addMany(data, appCtx)
+        table.addMany(data, appCtx)
         r = s.db.getAll()
         # print 'r:', r
         for i, row in enumerate(r):
@@ -80,7 +73,7 @@ class Test_cellDatasetDb(unittest.TestCase):
 
     def test_addManyFromFile_api(s):
         s.db.addMany(data)
-        dataset.addManyFromFile(
+        table.addManyFromFile(
             os.path.join(testDir, 'in/datasetAddFromFile.tsv'), appCtx)
         r = s.db.getAll()
         # print 'r:', r
@@ -95,7 +88,7 @@ class Test_cellDatasetDb(unittest.TestCase):
 
     def test_addManyFromFileReplace_api(s):
         s.db.addMany(data)
-        dataset.addManyFromFile(
+        table.addManyFromFile(
             os.path.join(testDir, 'in/datasetAddFromFile.tsv'), appCtx, True)
         r = s.db.getAll()
         #print 'r:', r
@@ -135,7 +128,7 @@ class Test_cellDatasetDb(unittest.TestCase):
 
     def test_deleteAll_api(s):
         s.db.addMany(data)
-        dataset.deleteAll(appCtx)
+        table.deleteAll(appCtx)
         r = s.db.hasData()
         s.assertEqual(False, r)
 
@@ -148,7 +141,7 @@ class Test_cellDatasetDb(unittest.TestCase):
 
     def test_getAll_api(s):
         s.db.addMany(data)
-        r = dataset.getAll(appCtx)
+        r = table.getAll(appCtx)
         #print 'test_getAll:r:', r
         for i, row in enumerate(r):
             for j, col in enumerate(row):

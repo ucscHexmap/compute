@@ -3,13 +3,10 @@
 # This tests the cell database administrative functionality.
 
 import os
-from datetime import date
-import json
 
 import unittest
-import testUtil as util
 from util_web import Context
-from cellDatasetDb import CellDatasetDb
+import cellDbDataset as table
 import cellDbAdmin as admin
 
 
@@ -19,9 +16,7 @@ appCtxDict = {
     'unitTest': True,
 }
 appCtx = Context(appCtxDict)
-dbPath = os.path.join(appCtx.databasePath, 'datasetDb.db')
-
-isoToday = date.today().isoformat()
+dbPath = os.path.join(appCtx.databasePath, 'cell.db')
 
 data = [
     ['Immune Bone', 'immune bone', 'human', 378000, 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd', 'd'],
@@ -40,7 +35,7 @@ class Test_cellDbAdmin(unittest.TestCase):
             os.remove(dbPath)
         except:
             pass
-        self.db = CellDatasetDb(dbPath)
+        self.db = table.CellDbDataset(dbPath)
 
 
     def test_addDatasets(s):

@@ -8,7 +8,7 @@ from util_web import SuccessResp, getAppCtx
 cellDbRoutes = Blueprint('cellDbRoutes', __name__)
 appCtx = getAppCtx()
 
-# Handle the route to get all of the cell dataaset data from the DB.
+# Handle the route to get all of the cell dataset data from the DB.
 @cellDbRoutes.route('/cell/dataset/getAll', methods=['GET'])
 def getAll():
     data = cellDataset.getAll(appCtx)
