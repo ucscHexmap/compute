@@ -1,4 +1,7 @@
-# The base class for database access.
+
+# The base class for database table access.
+# This handles simple single table operations where the columns do not need to
+# be known.
 
 import os, sqlite3, traceback, csv
 
@@ -8,24 +11,7 @@ except ImportError:
     from dummy_thread import get_ident
 
 
-class DbBase(object):
-
-    # Sqlite database templates.
-    _dbDeleteAll = (
-        'DELETE FROM db'
-    )
-    _dbGetAll = (
-        'SELECT * FROM db'
-    )
-    _dbGetById = (
-        'SELECT * FROM db '
-        'WHERE id = ?'
-    )
-    _dbGetFirstRow = (
-        'SELECT * FROM db '
-        'LIMIT 1'
-    )
-
+class DbTable(object):
 
     def _getConnection(s):
 
@@ -45,15 +31,6 @@ class DbBase(object):
         return s._connection_cache[id]
 
 
-    def __init__(s, dbPath):
-
-        # Connect to the database, creating if need be.
-        s.dbPath = dbPath
-        s._connection_cache = {}
-        with s._getConnectionCache() as conn:
-            conn.execute(s._dbCreate)
-
-
     def _pushOne(s, row, conn):
         cursor = conn.cursor()
         cursor.execute(s._dbPush, row)
@@ -61,7 +38,7 @@ class DbBase(object):
 
 
     def addMany(s, data):
-        # Load more than one row of data to the database.
+        # Load more than one row of data into the table.
         with s._getConnectionCache() as conn:
             for row in data:
                 s._pushOne(row, conn)
@@ -87,16 +64,16 @@ class DbBase(object):
 
     def deleteAll(s):
 
-        # Delete the entire database. Usually to reload data.
+        # Delete the entire table. Usually to reload data.
         with s._getConnectionCache() as conn:
-            conn.execute(s._dbDeleteAll)
+            conn.execute('DELETE FROM ' + s.table)
 
 
     def getAll(s, file=None):
 
-        # Get all file information. Return it or write it to a file.
+        # Get all of the rows in the table.
         with s._getConnectionCache() as conn:
-            result = conn.execute(s._dbGetAll)
+            result = conn.execute('SELECT * FROM ' + s.table)
             if file:
                 with open('dump.sql', 'w') as f:
                     for row in result:
@@ -112,7 +89,8 @@ class DbBase(object):
 
         # Get the entire row for the given ID.
         with s._getConnectionCache() as conn:
-            get = conn.execute(s._dbGetById, (id,))
+            get = conn.execute(
+                'SELECT * FROM ' + s.table + ' WHERE id = ' + str(id))
             info = None
             for row in get:
                 info = row
@@ -121,9 +99,9 @@ class DbBase(object):
 
     def hasData(s):
 
-        # Return true if there is at least one row in the db.
+        # Return true if there is at least one row in the table.
         with s._getConnectionCache() as conn:
-            cursor = conn.execute(s._dbGetFirstRow)
+            cursor = conn.execute('SELECT * FROM ' + s.table + ' LIMIT 1')
             for row in cursor:
                 return True
         return False
