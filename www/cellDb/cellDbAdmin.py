@@ -6,11 +6,16 @@
 
 import os, argparse, sys
 import appContext
-import cellDbDataset
 
 operations = [
+    'addClusters',
+    'getAllClusters',
+    'addClusterAttrs',
+    'getAllClusterAttrs',
     'addDatasets',
     'getAllDatasets',
+    'addSampleAttrs',
+    'getAllSampleAttrs',
     'addTrajectories',
     'getAllTrajectories',
 ]
@@ -90,14 +95,26 @@ def main():
     cellDbInit.init(appCtx)
 
     # Get the handles to all of the tables.
+    cluster = cellDbInit.Cluster()
+    clusterAttr = cellDbInit.ClusterAttr()
     dataset = cellDbInit.Dataset()
+    sampleAttr = cellDbInit.SampleAttr()
     trajectory = cellDbInit.Trajectory()
 
-    if op == 'addDatasets': add(inFile, dataset, appCtx, replace)
+    if op == 'addClusters': add(inFile, cluster, appCtx, replace)
+    elif op == 'getAllClusters': getAll(appCtx, cluster)
+
+    elif op == 'addClusterAttrs': add(inFile, clusterAttr, appCtx, replace)
+    elif op == 'getAllClusterAttrs': getAll(appCtx, clusterAttr)
+
+    elif op == 'addDatasets': add(inFile, dataset, appCtx, replace)
     elif op == 'getAllDatasets': getAll(appCtx, dataset)
 
+    elif op == 'addSampleAttrs': add(inFile, sampleAttr, appCtx, replace)
+    elif op == 'getAllSampleAttrs': getAll(appCtx, sampleAttr)
+
     elif op == 'addTrajectories': add(inFile, trajectory, appCtx, replace)
-    elif op == 'getAllTrajectories': getAll(appCtx, traj)
+    elif op == 'getAllTrajectories': getAll(appCtx, trajectory)
 
 
 if __name__ == '__main__':

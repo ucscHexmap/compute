@@ -1,12 +1,12 @@
 
-# The cell trajectory database table access class.
+# The cell cluster database table access class.
 
 import os, traceback, csv
 from cellDbTableBase import CellDbTableBase
 
-class CellDbTrajectory(CellDbTableBase):
+class CellDbCluster(CellDbTableBase):
 
-    table = 'trajectory'
+    table = 'cluster'
     dbFileName = 'cell.db'
 
     # Sqlite database table templates.

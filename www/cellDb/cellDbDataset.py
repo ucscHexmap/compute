@@ -1,4 +1,4 @@
-# The cell dataset database table access.
+# The cell dataset database table access class.
 
 import os, traceback, csv
 from cellDbTableBase import CellDbTableBase

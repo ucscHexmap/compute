@@ -1,12 +1,12 @@
 
-# The cell trajectory database table access class.
+# The cell cluster database table access class.
 
 import os, traceback, csv
 from cellDbTableBase import CellDbTableBase
 
-class CellDbTrajectory(CellDbTableBase):
+class CellDbClusterAttr(CellDbTableBase):
 
-    table = 'trajectory'
+    table = 'clusterAttr'
     dbFileName = 'cell.db'
 
     # Sqlite database table templates.
@@ -15,12 +15,12 @@ class CellDbTrajectory(CellDbTableBase):
         '('
         '  id INTEGER PRIMARY KEY AUTOINCREMENT, '
         '  name text,'
-        '  digitId integer,'
+        '  value text,'
         '  datasetId integer'
         ')'
     )
     _dbPush = (
         'INSERT INTO ' + table + ' '
-        '(name, digitId, datasetId) '
+        '(name, value, datasetId) '
         'VALUES (?,?,?)'
     )
