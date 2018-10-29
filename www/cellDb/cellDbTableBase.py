@@ -11,7 +11,16 @@ except ImportError:
     from dummy_thread import get_ident
 
 
-class DbTable(object):
+class CellDbTableBase(object):
+
+    def __init__(s, dbPath):
+
+         # Connect to the database, creating if need be.
+         s.dbPath = dbPath
+         s._connection_cache = {}
+         with s._getConnectionCache() as conn:
+             conn.execute(s._dbCreate)
+
 
     def _getConnection(s):
 
@@ -38,15 +47,25 @@ class DbTable(object):
 
 
     def addMany(s, data):
-        # Load more than one row of data into the table.
+
+        # Add many rows to the table.
+        # @param data: the new data as an array of arrays, one array per row
+        #              in the form [<value>, <value>, <value>, ...]
+        # @returns: nothing
         with s._getConnectionCache() as conn:
             for row in data:
                 s._pushOne(row, conn)
 
 
-    def addManyFromFile(s, filePath):
+    def addManyFromFile(s, filePath, replace=False):
 
-        # Load data from a tsv file .
+        # Add many rows from a file to the table.
+        # @param filePath: the full path to the file
+        #                  where the file is TSV with one row per dataset
+        # @param replace: True to replace all rows, False to append
+        # @returns: nothing
+        if replace:
+            s.deleteAll()
         with s._getConnectionCache() as conn:
             with open(filePath, 'r') as f:
                 f = csv.reader(f, delimiter='\t')
@@ -64,14 +83,16 @@ class DbTable(object):
 
     def deleteAll(s):
 
-        # Delete the entire table. Usually to reload data.
+        # Clear the table of all data, usually to reload the table.
+        # @returns: nothing
         with s._getConnectionCache() as conn:
             conn.execute('DELETE FROM ' + s.table)
 
 
     def getAll(s, file=None):
 
-        # Get all of the rows in the table.
+        # Get all rows that are in the table.
+        # @returns: an array of table rows in an object if not written to file
         with s._getConnectionCache() as conn:
             result = conn.execute('SELECT * FROM ' + s.table)
             if file:
@@ -105,5 +126,4 @@ class DbTable(object):
             for row in cursor:
                 return True
         return False
-
 

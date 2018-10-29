@@ -5,7 +5,8 @@
 import os
 import unittest
 from util_web import Context
-import cellDbDataset as table
+import cellDbInit
+import cellDbDataset
 
 
 testDir = os.path.join(os.environ.get('HEXCALC'), 'www/cellDb/tests')
@@ -32,25 +33,14 @@ class Test_cellDbDataset(unittest.TestCase):
             os.remove(dbPath)
         except:
             pass
-        self.db = table.CellDbDataset(dbPath)
+        cellDbInit.init(appCtx)
+        self.db = cellDbInit.Dataset()
 
 
     def test_addMany_db(s):
         s.db.addMany(data)
         r = s.db.getAll()
         # print 'test_addMany:r:', r
-        for i, row in enumerate(r):
-            for j, col in enumerate(row):
-                if j == 0:
-                    s.assertEqual(i + 1, col)
-                else:
-                    s.assertEqual(data[i][j - 1], col)
-
-
-    def test_addMany_api(s):
-        table.addMany(data, appCtx)
-        r = s.db.getAll()
-        # print 'r:', r
         for i, row in enumerate(r):
             for j, col in enumerate(row):
                 if j == 0:
@@ -71,25 +61,10 @@ class Test_cellDbDataset(unittest.TestCase):
                     s.assertEqual(data[i][j - 1], col)
 
 
-    def test_addManyFromFile_api(s):
+    def test_addManyFromFileReplace_db(s):
         s.db.addMany(data)
-        table.addManyFromFile(
-            os.path.join(testDir, 'in/datasetAddFromFile.tsv'), appCtx)
-        r = s.db.getAll()
-        # print 'r:', r
-        s.assertEqual(6, len(r))
-        for i, row in enumerate(r[3:]):
-            for j, col in enumerate(row):
-                if j == 0:
-                    s.assertEqual(i + 4, col)
-                else:
-                    s.assertEqual(data[i][j - 1], col)
-
-
-    def test_addManyFromFileReplace_api(s):
-        s.db.addMany(data)
-        table.addManyFromFile(
-            os.path.join(testDir, 'in/datasetAddFromFile.tsv'), appCtx, True)
+        s.db.addManyFromFile(
+            os.path.join(testDir, 'in/datasetAddFromFile.tsv'), True)
         r = s.db.getAll()
         #print 'r:', r
         s.assertEqual(3, len(r))
@@ -126,29 +101,10 @@ class Test_cellDbDataset(unittest.TestCase):
         s.assertEqual(False, r)
 
 
-    def test_deleteAll_api(s):
-        s.db.addMany(data)
-        table.deleteAll(appCtx)
-        r = s.db.hasData()
-        s.assertEqual(False, r)
-
-
     def test_hasData_db(s):
         r = s.db.addOne(data[0])
         hasData = s.db.hasData()
         s.assertEqual(True, hasData)
-
-
-    def test_getAll_api(s):
-        s.db.addMany(data)
-        r = table.getAll(appCtx)
-        #print 'test_getAll:r:', r
-        for i, row in enumerate(r):
-            for j, col in enumerate(row):
-                if j == 0:
-                    s.assertEqual(i+1, col)
-                else:
-                    s.assertEqual(data[i][j-1], col)
 
 
     if __name__ == '__main__':

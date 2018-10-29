@@ -4,14 +4,18 @@
 # Before running this be sure to
 # source $HEXCALC/ops/config.sh
 
-import argparse, sys
+import os, argparse, sys
 import appContext
-import cellDbDataset as dataset
+import cellDbDataset
 
 operations = [
     'addDatasets',
     'getAllDatasets',
+    'addTrajectories',
+    'getAllTrajectories',
 ]
+
+dbFileName = 'cell.db'
 
 
 def parse_args():
@@ -49,23 +53,23 @@ def yesNo(question):
         return False
 
 
-def addDatasets(inFile, appCtx, replace=False):
+def add(inFile, table, appCtx, replace=False):
     if replace:
 
         # When testing we don't ask the 'are you sure' question.
         if appCtx.unitTest or yesNo(
-            'Do you want to complete destroy the datasets database content?'):
+            'Do you want to complete destroy the table content?'):
 
-            dataset.deleteAll(appCtx)
+            table.deleteAll()
         else:
-            print('Datasets database left untouched')
+            print('Table left untouched')
             exit
 
-    dataset.addManyFromFile(inFile, appCtx)
+    table.addManyFromFile(inFile)
 
 
-def getAllDatasets(appCtx):
-    r = dataset.getAll(appCtx)
+def getAll(table, appCtx):
+    r = table.getAll()
     if not appCtx.unitTest:
         print r
     return r
@@ -83,9 +87,17 @@ def main():
     # Get the global application context
     global appCtx
     appCtx = appContext.init()
+    cellDbInit.init(appCtx)
 
-    if op == 'addDatasets': addDatasets(inFile, appCtx, replace)
-    elif op == 'getAllDatasets': getDatasets(appCtx)
+    # Get the handles to all of the tables.
+    dataset = cellDbInit.Dataset()
+    trajectory = cellDbInit.Trajectory()
+
+    if op == 'addDatasets': add(inFile, dataset, appCtx, replace)
+    elif op == 'getAllDatasets': getAll(appCtx, dataset)
+
+    elif op == 'addTrajectories': add(inFile, trajectory, appCtx, replace)
+    elif op == 'getAllTrajectories': getAll(appCtx, traj)
 
 
 if __name__ == '__main__':
