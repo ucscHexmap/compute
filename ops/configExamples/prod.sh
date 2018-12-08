@@ -1,6 +1,6 @@
 
 ROOT=/data
-CERTS=$ROOT/certs
+#CERTS=$ROOT/certs
 TOOLS=/data/home/swat
 
 export ADMIN_EMAIL=hexmap@ucsc.edu
@@ -10,10 +10,10 @@ export ADMIN_EMAIL=hexmap@ucsc.edu
 export BACK_OR_FOREGROUND=BACK
 
 # https certificate authority chain
-export CA=$CERTS/chain.crt
+#export CA=$CERTS/chain.crt
 
 # https public certificate
-export CERT=$CERTS/server.crt
+#export CERT=$CERTS/server.crt
 
 # Points to the map data that will be served.
 export DATA_ROOT=$ROOT/data
@@ -35,17 +35,13 @@ export HEX_UID=hexmap
 export HEX_GID=protein
 
 # Path to the install tar file when doing upgrades from a development data server.
-export INSTALL_TAR_PATH=$TOOLS/dev/compute/ops/install.tgz
+export INSTALL_TAR_PATH=$TOOLS/dev/compute/ops
 
 # https private key
-export KEY=$CERTS/server.key
-
-# Only needed for some installations missing a shared library when calling
-# uwsgi. The solution is to provide sym links to make the file names conform.
-#export LD_LIBRARY_PATH=
+#export KEY=$CERTS/server.key
 
 # Port on which the server will listen.
-export PORT=443
+export PORT=4000
 
 # This path needs to be above or equal to your 'compute' dir in the
 # file hierarchy.
@@ -55,7 +51,7 @@ export PYENV=$HEXCALC/../env
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 
 # HTTPS=1 if https is desired. Otherwise server boots to HTTP.
-export USE_HTTPS=1 
+export USE_HTTPS=0
 
 # View servers allowed to edit maps.
 export VIEW_SERVER_ADDRS=128.114.198.35
@@ -63,9 +59,9 @@ export VIEW_SERVER_ADDRS=128.114.198.35
 # Bookmarks are created by this view server.
 export VIEWER_URL=https://tumormap.ucsc.edu
 
-# Communication port.
-export WWW_SOCKET=hexcalc.ucsc.edu:$PORT
-export DATA_HOST_PORT=$WWW_SOCKET
+# IP socket and user view of server URL.
+export WWW_SOCKET=127.0.0.1:$PORT
+export DATA_SERVER=https://hexcalc.ucsc.edu
 
 # If the python environment is present then open it up.
 if [ -e $PYENV/bin/activate ]; then

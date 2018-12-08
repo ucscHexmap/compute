@@ -29,8 +29,8 @@ def blueprintInit ():
     if not appCtx.unitTest:
         from www.upload.uploadRoutes import uploadRoutes
         app.register_blueprint(uploadRoutes)
-        from www.cellDb.cellDbRoutes import cellDbRoutes
-        app.register_blueprint(cellDbRoutes)
+        #from www.cellDb.cellDbRoutes import cellDbRoutes
+        #app.register_blueprint(cellDbRoutes)
 
 
 # Set up logging
