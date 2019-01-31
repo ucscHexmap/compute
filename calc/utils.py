@@ -37,6 +37,7 @@ def readPandas(datafile):
         index_col=0,
         comment=comment_char,
         header=None,
+        dtype=object,
         sep="\t",
     )
 
