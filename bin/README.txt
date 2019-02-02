@@ -3,7 +3,8 @@ Scripts in this directory:
 
 Server operations:
     cd $HEXCALC
-    bin/start (also restarts, there is no stop script)
+    bin/start (also restarts)
+    bin/stop
 
 Or for server operations for protected ports:
     sudo $HEXCALC/bin/start
