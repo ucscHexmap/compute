@@ -12,6 +12,7 @@ export HUB_DBPATH=/home/duncan/hex/compute/db/map.db
 export KEY= #Needed for https
 export PORT=5000
 export PYENV=/home/duncan/hex/env
+export DEPLOY_TARGET_PATH=plaza.gi.ucsc.edu:
 export TEST_DATA_ROOT=/home/duncan/hex/compute/tests/in/dataRoot
 export TETE_PATH=$HOME/pypackages/tete
 export USE_HTTPS=0 #Set to one if HTTPS desired. Otherwise server boots to HTTP

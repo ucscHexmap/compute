@@ -21,7 +21,7 @@ tar -czf $FILE \
     tests \
     www
 
-# TODO put in commands to scp from courtyard to hexcalc
+# scp to a gateway of the VPN.
 scp $FILE $DEPLOY_TARGET_PATH
 echo if the scp timed out, do:
 echo "scp $FILE $DEPLOY_TARGET_PATH"

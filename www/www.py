@@ -186,7 +186,8 @@ def dataRouteOk404(dataId):
 def deleteMap(mapId, userEmail=None, userRole=[]):
 
     # Verify this is from the allowed view server
-    if not request.environ['REMOTE_ADDR'] in appCtx.viewServerAddrs:
+    if not request.environ['REMOTE_ADDR'] in appCtx.viewServerAddrs and \
+        not request.environ['HTTP_X_FORWARDED_FOR'] in appCtx.viewServerAddrs:
         raise ErrorResp('', 404)
     
     raise SuccessResp(
@@ -259,7 +260,8 @@ def updateColor():
     # Verify this is from the allowed view server.
     # TODO why not use the view server name and certificate here,
     # rather than the IP addr?
-    if not request.environ['REMOTE_ADDR'] in appCtx.viewServerAddrs:
+    if not request.environ['REMOTE_ADDR'] in appCtx.viewServerAddrs and \
+        not request.environ['HTTP_X_FORWARDED_FOR'] in appCtx.viewServerAddrs:
         raise ErrorResp('', 404)
     
     raise SuccessResp(projectEdit.updateColor(validatePost(), appCtx))

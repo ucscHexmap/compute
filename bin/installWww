@@ -8,10 +8,15 @@ if [ -z $INSTALL_TAR_PATH ]; then
     echo "Do you want to run deployWww instead?"
     exit 1
 fi
+if [ -z $INSTALL_UID ]; then
+    echo "Exited, the env var, INSTALL_UID, must be defined as the user doing the install."
+    echo "Do you want to run one of these? deployWww, installBySwat, installByDmccoll"
+    exit 1
+fi
 
 FILE=compute.tgz
 LOCALTAR=$HEXCALC/ops/$FILE
-FROMTAR=$INSTALL_TAR_PATH/$FILE
+FROMTAR=$INSTALL_UID@plaza.gi.ucsc.edu:$FILE
 echo "scp'g from $FROMTAR to $LOCALTAR..."
 scp $FROMTAR $LOCALTAR
 
