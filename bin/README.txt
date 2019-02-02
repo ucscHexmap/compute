@@ -3,17 +3,16 @@ Scripts in this directory:
 
 Server operations:
     cd $HEXCALC
-    bin/start
-    bin/stop
-    bin/restart
+    bin/start (also restarts, there is no stop script)
 
 Or for server operations for protected ports:
     sudo $HEXCALC/bin/start
-    sudo $HEXCALC/bin/stop
 
 deployWww: make a tar file to update another installation
 
-installWww: extract from a tar file on the target installation
+installByDmccoll: extract from a tar file on the target installation by dmccoll
+
+installBySwat: extract from a tar file on the target installation by swat
 
 lint.sh: runs lint
 
