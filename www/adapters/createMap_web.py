@@ -19,10 +19,10 @@ def formatGeneratedUrls(ctx):
     msg = 'data may now be accessed without uploading for future maps with:\n\n'
     if hasattr(ctx, 'layoutInputUrls'):
         for url in ctx.layoutInputUrls:
-            msg = 'Your layout input ' + msg + url + '\n\n'
+            msg += 'Your layout input ' + msg + url + '\n\n'
     if hasattr(ctx, 'colorAttributeUrls'):
         for url in ctx.colorAttributeUrls:
-            msg = 'Your color attributes ' + msg + url + '\n\n'
+            msg += 'Your color attributes ' + msg + url + '\n\n'
     return msg
 
 
