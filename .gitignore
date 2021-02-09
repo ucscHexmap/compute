@@ -6,13 +6,14 @@
 env
 notes.txt
 ops/log
-ops/logsPrev/20*
+ops/logsPrev
 ops/config.sh
 ops/pid
+ops/hexmapData
+ops/data
 run
 startAsRoot
 stopAsRoot
 tests/out
 nohup.out
 tmp/*
-

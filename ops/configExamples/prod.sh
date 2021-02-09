@@ -34,12 +34,6 @@ export HEX_UID=hexmap
 # User group to own server processes on protected ports.
 export HEX_GID=protein
 
-# Path to the install tar file when doing upgrades from a development data server.
-export INSTALL_TAR_PATH=swat@plaza.gi.ucsc.edu:ops
-
-# https private key
-#export KEY=$CERTS/server.key
-
 # Port on which the server will listen.
 export PORT=4000
 

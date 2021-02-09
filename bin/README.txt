@@ -6,15 +6,6 @@ Server operations:
     bin/start (also restarts)
     bin/stop
 
-Or for server operations for protected ports:
-    sudo $HEXCALC/bin/start
-
-deployWww: make a tar file to update another installation
-
-installByDmccoll: extract from a tar file on the target installation by dmccoll
-
-installBySwat: extract from a tar file on the target installation by swat
-
 lint.sh: runs lint
 
 runTest: run the unit tests

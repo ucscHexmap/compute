@@ -4,6 +4,7 @@ per pyenv build due to library or version changes.
 Order of execution:
 
 localpy <install-dir>
+If you already have python v2 installed, skip to "pyenv".
 Build a local python which is specific to system libs already installed.
 <install-dir> a full path to the python install directory.
 You may need to install openssl if you get a warning that it is missing.
@@ -22,3 +23,4 @@ replace the last line defining PYTHONPATH with the new path.
 
 MACOS NOTES:
 For python, pip and virtualenv installs, see localpy script.
+

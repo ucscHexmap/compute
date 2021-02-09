@@ -1,7 +1,7 @@
 
 export ADMIN_EMAIL=swat@soe.ucsc.edu
 export BACK_OR_FOREGROUND=FORE
-export DATA_ROOT=/Users/swat/data
+export DATA_ROOT=/Users/swat/dev/hexmap-data/ops/data
 export DEBUG=1
 export DEV=1
 export DRLPATH=/Users/swat/packages/drl-graph-layout/bin
@@ -9,8 +9,7 @@ export FLASK_DEBUG=1
 export HEX_GID=staff
 export HEX_UID=swat
 export PORT=5000
-export PYENV=/Users/swat/dev/compute/env
-export DEPLOY_TARGET_PATH=plaza.gi.ucsc.edu:
+export PYENV=/Users/swat/dev/hexmap-data/ops/env
 export TEST_DATA_ROOT=$DATA_ROOT
 export UNIT_TEST=0
 export USE_HTTPS=0

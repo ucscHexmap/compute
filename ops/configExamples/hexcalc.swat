@@ -13,7 +13,6 @@ export DRLPATH=$TOOLS/packagesHexcalc/drl-graph-layout/bin
 export FLASK_DEBUG=1
 export HEX_UID=swat
 export HEX_GID=protein
-export INSTALL_TAR_PATH=swat@plaza.gi.ucsc.edu:ops
 export KEY=$CERTS/server.key
 export PORT=8442
 export PYENV=$HEXCALC/../env

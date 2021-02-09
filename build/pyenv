@@ -34,7 +34,8 @@ echo 'virtualenv:'
 which virtualenv
 
 mkdir $PYENV
-virtualenv $PYENV 
+virtualenv -p $(which python2) $PYENV
+#virtualenv $PYENV
 
 if [ $? != 0 ]; then
    exit $?
