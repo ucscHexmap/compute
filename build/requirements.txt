@@ -4,7 +4,7 @@ networkx==1.11
 scipy==1.0.0
 statsmodels==0.6.1
 Flask==0.12
-Flask-Cors==3.0.3
+Flask-Cors==3.0.9
 uwsgi==2.0.15
 peewee==2.10.1
 scikit-learn==0.19.1
