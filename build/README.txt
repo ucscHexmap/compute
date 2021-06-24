@@ -10,14 +10,11 @@ Build a local python which is specific to system libs already installed.
 You may need to install openssl if you get a warning that it is missing.
 
 rm-localpy <install-dir>
-Remove a local python install if needed to clean up a bad install.
+If needed to clean up a bad install, remove this local install with:
 <install-dir> a full path to the python install directory.
 
 pyenv
 Build a python virtual environment for this project.
-
-To modify only the PYTHONPATH of the virtual env, edit $PYENV/bin/activate to
-replace the last line defining PYTHONPATH with the new path.
 
 --------------------------------------------------------------
 

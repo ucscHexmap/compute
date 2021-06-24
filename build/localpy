@@ -7,11 +7,14 @@ LOCALPY=$1
 if [ $(uname -s) == "Darwin" ]; then
     echo for mac, follow instructions in this script
     exit
-    # download the mac python installer:
-    # https://www.python.org/downloads/mac-osx/
-    # curl -O https://bootstrap.pypa.io/get-pip.py
-    # python get-pip.py --user
+    # download and run the mac python installer:
+    # go to https://www.python.org/downloads/mac-osx/
+    #   curl -O https://bootstrap.pypa.io/get-pip.py
+    #   python get-pip.py --user
     # virtualenv should have been installed with one of the above installs
+    #
+    # Alternatively, use brew to install python and openssl
+
 fi
 
 mkdir $LOCALPY
@@ -30,7 +33,7 @@ wget --no-check-certificate https://bootstrap.pypa.io/get-pip.py -O - | python -
 PATH=$HOME/.local/bin:$PATH
 
 # Install virtual env.
-pip install --user virtualenv
+python2 -m pip install --user virtualenv
 
 echo
 echo 'python built in:'

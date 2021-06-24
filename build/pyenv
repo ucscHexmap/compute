@@ -5,7 +5,6 @@
 # Check for the main env var.
 if [[ -z $HEXCALC ]]; then
    echo "Environment variable HEXCALC must be defined to run this script."
-   echo "Do you want to run sudo startAsRoot?"
    exit 1
 fi
 
@@ -27,19 +26,13 @@ if [ $(uname -s) != "Darwin" ]; then
     echo $LOCALPY_BIN
 fi
 
-
-echo 'pip:'
-which pip
-echo 'virtualenv:'
-which virtualenv
-
 mkdir $PYENV
-virtualenv -p $(which python2) $PYENV
-#virtualenv $PYENV
-
+python2 -m virtualenv $PYENV
 if [ $? != 0 ]; then
+   echo exiting on error while building the virtualenv
    exit $?
 fi
+
 # Add calc, www, and db dirs to the python path in the virtual environment
 # TODO the below path should be more strict by not including PATH from user's
 # environment

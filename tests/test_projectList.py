@@ -19,12 +19,7 @@ appCtxDict = {
     'dataRoot': os.path.join(dataRoot, 'viewBasic'),
     'viewServer': os.environ['VIEWER_URL'],
 }
-appCtx = Context(appCtxDict)
-url = os.environ['WWW_SOCKET']
-if os.environ['USE_HTTPS'] == '1':
-    appCtx.dataServer = 'https://' + url
-else:
-    appCtx.dataServer = 'http://' + url
+appCtx.dataServer = 'http://' + os.environ['WWW_SOCKET']
 
 class Test_projectList(unittest.TestCase):
 

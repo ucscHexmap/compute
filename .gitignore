@@ -11,6 +11,7 @@ ops/config.sh
 ops/pid
 ops/hexmapData
 ops/data
+ops/hexmap-data.xcworkspace
 run
 startAsRoot
 stopAsRoot

@@ -45,23 +45,12 @@ fi
 BASEARGS='--master --processes 2 --threads 100 --callable app --wsgi-file '$HEXCALC/www/www.py' --uid '$HEX_UID' --gid '$HEX_GID
 
 # Socket arguments for uwsgi.
-if [ $USE_HTTPS == 1 ]; then
-    if [ "$PROTECTED_PORT" = true ]; then
-
-        # https, protected port
-        SOCKETARGS='--shared-socket '$WWW_SOCKET' --https =0,'$CERT,$KEY,HIGH,$CA
-    else
-        # https, unprotected port, assuming non-root
-        SOCKETARGS='--https-socket '$WWW_SOCKET,$CERT,$KEY,HIGH,$CA
-    fi
+if [ "$PROTECTED_PORT" = true ]; then
+    # http, protected port
+    SOCKETARGS='--shared-socket '$WWW_SOCKET' --http =0'
 else
-    if [ "$PROTECTED_PORT" = true ]; then
-        # http, protected port
-        SOCKETARGS='--shared-socket '$WWW_SOCKET' --http =0'
-    else
-        # http, unprotected port
-        SOCKETARGS='--http-socket '$WWW_SOCKET
-    fi
+    # http, unprotected port
+    SOCKETARGS='--http-socket '$WWW_SOCKET
 fi
 
 if [ $BACK_OR_FOREGROUND == "FORE" ]; then

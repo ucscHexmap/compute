@@ -44,9 +44,6 @@ export PYENV=$HEXCALC/../env
 # Path to the test data root. 
 export TEST_DATA_ROOT=$HEXCALC/tests/in/dataRoot
 
-# HTTPS=1 if https is desired. Otherwise server boots to HTTP.
-export USE_HTTPS=0
-
 # View servers allowed to edit maps.
 export VIEW_SERVER_ADDRS=128.114.198.35
 

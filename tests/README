@@ -1,4 +1,5 @@
-Please use the run_test script so your PYTHONPATH is always correctly set.
 
-You may also run compute/bin/runTest which pulls in your config.
+Use the run_test script to set up your environment before running the
+tests requested.
 
+You may also run hexmap-calc/bin/runTest which pulls in your config for you.

@@ -1,7 +1,6 @@
 #!/bin/bash
 # Run a test after setting the path
-# $1 your config file
-# $2: optional name of test(s) to run, defaults to 'all', one of:
+# $1: optional name of test(s) to run, defaults to 'all', one of:
 #     / all / docker_safe / web / <specific-test(s)> /
 #     where <specific-test(s)> may be one of:
 #       base file name, i.e.: test_layoutBasic
@@ -9,8 +8,8 @@
 
 #
 
-CONFIG_FILE=$1
-TO_RUN=$2
+TO_RUN=$1
+CONFIG_FILE=$HEXCALC/ops/config.sh
 
 if [ -z "$CONFIG_FILE" ]; then
     echo "Path to configuration file as first arg necessary."
@@ -84,27 +83,27 @@ fi
 
 # Note a (may be empty) __init__.py needs to exist in each tests directory
 # and each module directory to run auto-discovery tests.
-# i.e: in compute/www/upload and compute/www/upload/tests
+# i.e: in hexmap-data/www/upload and hexmap-data/www/upload/tests
 
 if [ $TO_RUN == 'all' ] || [ $TO_RUN == 'web' ] || [ $TO_RUN == 'docker_safe' ]; then
 
     # Run the tests in global tests directory.
-    echo Running tests under compute/test
+    echo Running tests under hexmap-data/test
     python2.7 -m unittest $RUN_THIS
 
-    # Run the tests under compute/www.
+    # Run the tests under hexmap-data/www.
     # Note an __init__.py needs to exist in each directory
     # in the path to the directory containing the tests.
     if [ $TO_RUN == 'all' ] || [ $TO_RUN == 'web' ]; then
-        echo Running tests under compute/www
+        echo Running tests under hexmap-data/www
         python2.7 -m unittest discover --start-directory $HEXCALC/www
     fi
 
-    # Run the tests under compute/calc and compute/standalone.
+    # Run the tests under hexmap-data/calc and hexmap-data/standalone.
     if [ $TO_RUN == 'all' ] || [ $TO_RUN == 'docker_safe' ]; then
-        echo Running tests under compute/calc
+        echo Running tests under hexmap-data/calc
         python2.7 -m unittest discover --start-directory $HEXCALC/calc
-        echo Running tests under compute/standalone
+        echo Running tests under hexmap-data/standalone
         python2.7 -m unittest discover --start-directory $HEXCALC/standalone
     fi
 else
